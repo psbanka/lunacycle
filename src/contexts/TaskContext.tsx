@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { Category, MonthData, Task, Template } from '@/types';
+import { Category, MonthData, Task, Template, TaskStatus } from '@/types';
 import { mockCurrentMonth, mockCategories, mockTemplate } from '@/data/mockData';
 import { toast } from "sonner";
 import { useAuth } from './AuthContext';
@@ -50,7 +50,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentMonth(prev => {
       const updatedCategories = prev.categories.map(category => {
         const updatedTasks = category.tasks.map(task => 
-          task.id === taskId ? { ...task, status: 'completed' } : task
+          task.id === taskId ? { ...task, status: 'completed' as TaskStatus } : task
         );
         
         return { ...category, tasks: updatedTasks };
@@ -74,7 +74,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { 
               ...task, 
               currentCount: newCount,
-              status: isComplete ? 'completed' : 'pending'
+              status: isComplete ? 'completed' as TaskStatus : 'pending' as TaskStatus
             };
           }
           return task;
