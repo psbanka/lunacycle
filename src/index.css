@@ -3,67 +3,68 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Add your custom styles here */
 @layer base {
   :root {
-    --background: 240 30% 98%;
-    --foreground: 240 10% 20%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 20%;
+    --card-foreground: 240 10% 3.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 20%;
+    --popover-foreground: 240 10% 3.9%;
 
-    --primary: 244 60% 70%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 260 50% 95%;
-    --secondary-foreground: 240 10% 20%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 240 30% 96%;
-    --muted-foreground: 240 10% 40%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 244 60% 90%;
-    --accent-foreground: 240 10% 20%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 30% 90%;
-    --input: 240 30% 90%;
-    --ring: 240 40% 60%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 240 10% 10%;
-    --foreground: 240 20% 98%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
 
-    --card: 240 10% 15%;
-    --card-foreground: 240 20% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 15%;
-    --popover-foreground: 240 20% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 244 60% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
 
-    --secondary: 260 30% 20%;
-    --secondary-foreground: 240 20% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 10% 20%;
-    --muted-foreground: 240 20% 80%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
 
-    --accent: 244 60% 30%;
-    --accent-foreground: 240 20% 98%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 240 20% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 240 10% 25%;
-    --input: 240 10% 25%;
-    --ring: 240 40% 60%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
   }
 }
 
@@ -71,19 +72,62 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-@layer utilities {
-  .glass-card {
-    @apply backdrop-blur-sm bg-white/40 dark:bg-lunar-navy/40 border border-white/60 dark:border-white/10 shadow-lg;
+/* Glass card style */
+.glass-card {
+  @apply bg-card/80 backdrop-blur-sm border border-border/50;
+}
+
+/* Print styles */
+@media print {
+  body * {
+    visibility: hidden;
   }
   
-  .moon-glow {
-    @apply animate-glow filter drop-shadow-[0_0_8px_rgba(241,240,251,0.8)];
+  .print\:visible,
+  [data-state="open"] .h-\\[95vh\\] > *,
+  [data-state="open"] .h-\\[90vh\\] > * {
+    visibility: visible;
+  }
+  
+  [data-state="open"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    background: white;
+    overflow: visible;
+  }
+  
+  [data-state="open"] button {
+    display: none;
+  }
+  
+  [data-state="open"] .print\:hidden {
+    display: none;
+  }
+  
+  [data-state="open"] .print\:block {
+    display: block;
+  }
+  
+  [data-state="open"] .print\:flex {
+    display: flex;
+  }
+  
+  [data-state="open"] .print\:border {
+    border: 1px solid #ddd;
+  }
+  
+  /* Fix for rating buttons in print view */
+  [data-state="open"] .gap-2 button {
+    display: inline-flex;
+    border: 1px solid #ddd;
   }
 }
