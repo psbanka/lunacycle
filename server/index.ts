@@ -2,10 +2,13 @@ import { db } from "./db.ts";
 import { type } from "arktype";
 import { publicProcedure, router } from "./trpc.ts";
 import { createHTTPServer } from "@trpc/server/adapters/standalone";
+import { TRPCError } from "@trpc/server";
 import { defaultScenario } from "./defaultScenario.ts";
+import { login } from "./login.ts";
 import cors from 'cors';
 
 const appRouter = router({
+  login,
   userList: publicProcedure.query(async () => {
     const users = await db.user.getAll();
     return users;
@@ -13,10 +16,13 @@ const appRouter = router({
   userById: publicProcedure
     .input(type({ id: "string" }))
     .query(async ({ input }) => {
-      const user = await db.user.findFirst({
+      const response = await db.user.findFirst({
         where: { id: { equals: input.id } },
       });
-      return user;
+      if (!response) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      }
+      return { ...response, passwordHash: undefined };
     }),
   userCreate: publicProcedure
     .input(type({ name: "string", email: "string" }))

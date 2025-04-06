@@ -23,11 +23,6 @@ export default function Admin() {
 
   useEffect(() => {
     trpc.userList.query().then((value) => setUsers(value));
-    /*
-    trpc.userList
-      .query()
-      .then((value) => console.log(JSON.stringify(value, null, 2)));
-      */
   }, []);
 
   // Check if user is admin, if not redirect
@@ -48,6 +43,7 @@ export default function Admin() {
         name: newUser.name,
         email: newUser.email,
         role: newUser.role as "user" | "admin",
+        passwordHash: null,
       },
     ]);
 
