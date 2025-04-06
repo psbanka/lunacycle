@@ -51,7 +51,7 @@ export default function LunarCycleProgressBand({
   };
   
   return (
-    <div className={`relative w-full h-12 rounded-lg overflow-hidden ${className || ''}`}>
+    <div className={`relative w-full h-6 rounded-lg overflow-hidden ${className || ''}`}>
       {/* Gradient band */}
       <div 
         className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-100 to-gray-900"
@@ -61,12 +61,6 @@ export default function LunarCycleProgressBand({
         }}
       />
       
-      {/* Text overlay */}
-      <div className="absolute inset-0 flex items-center px-4">
-        <div className="bg-black/20 backdrop-blur-sm px-3 py-1 rounded-md text-white font-medium">
-          {daysLeft} day{daysLeft !== 1 ? 's' : ''} left
-        </div>
-      </div>
     </div>
   );
 }
