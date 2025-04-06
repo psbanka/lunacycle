@@ -3,6 +3,7 @@ import { type } from "arktype";
 import { publicProcedure, router } from "./trpc.ts";
 import { createHTTPServer } from "@trpc/server/adapters/standalone";
 import { defaultScenario } from "./defaultScenario.ts";
+import cors from 'cors';
 
 const appRouter = router({
   userList: publicProcedure.query(async () => {
@@ -26,7 +27,15 @@ const appRouter = router({
     }),
 });
 
-const server = createHTTPServer({ router: appRouter });
+const server = createHTTPServer({
+  middleware: cors(),
+  router: appRouter,
+  createContext() {
+    console.log('context 3');
+    return {};
+  },
+});
+
 console.log("Seeding the database...");
 defaultScenario(db);
 console.log("Listening on http://localhost:3000");

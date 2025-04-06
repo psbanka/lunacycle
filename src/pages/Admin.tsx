@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { trpc } from "../api";
+import type { Value } from "../../server/db";
 
 export default function Admin() {
   const { user } = useAuth();
@@ -18,23 +19,15 @@ export default function Admin() {
     role: "user",
   });
 
-  // Mock list of users for demo
-  const [users, setUsers] = useState([
-    { id: "1", name: "Admin User", email: "admin@example.com", role: "admin" },
-    { id: "2", name: "Regular User", email: "user@example.com", role: "user" },
-    {
-      id: "3",
-      name: "Family Member",
-      email: "user2@example.com",
-      role: "user",
-    },
-  ]);
+  const [users, setUsers] = useState<Value<"user">[]>([]);
 
   useEffect(() => {
-    // trpc.userList.query().then((value) => setUsers(value));
+    trpc.userList.query().then((value) => setUsers(value));
+    /*
     trpc.userList
       .query()
       .then((value) => console.log(JSON.stringify(value, null, 2)));
+      */
   }, []);
 
   // Check if user is admin, if not redirect
