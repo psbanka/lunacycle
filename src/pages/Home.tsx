@@ -8,6 +8,8 @@ import TaskCard from "@/components/TaskCard";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
+import CheckInSheet from "@/components/CheckInSheet";
 
 export default function Home() {
   const { currentMonth, userTasks, loadingTasks } = useTask();
@@ -66,6 +68,25 @@ export default function Home() {
         <div className="flex items-center">
           <LunarPhase size="lg" />
         </div>
+      </div>
+      
+      {/* Lunar Cycle Progress Band */}
+      <div className="mb-8">
+        <LunarCycleProgressBand className="shadow-md" />
+      </div>
+      
+      {/* Action Buttons */}
+      <div className="mb-8 flex flex-wrap gap-3">
+        <Button 
+          variant="outline" 
+          className="gap-1"
+          onClick={() => setShowAddTask(true)}
+        >
+          <PlusCircle className="h-4 w-4" />
+          Add Task
+        </Button>
+        
+        <CheckInSheet />
       </div>
       
       {/* Up Next Section */}

@@ -9,7 +9,6 @@ import { Plus, FolderPlus } from "lucide-react";
 import { AddCategoryDialog } from "@/components/AddCategoryDialog";
 import { AddTaskDialog } from "@/components/AddTaskDialog";
 import { EmptyState } from "@/components/EmptyState";
-import CheckInSheet from "@/components/CheckInSheet";
 
 export default function Template() {
   const { currentMonth, categories, loadingTasks } = useTask();
@@ -65,8 +64,6 @@ export default function Template() {
           <Plus className="h-4 w-4" />
           Add Category
         </Button>
-        
-        <CheckInSheet />
         
         <AddCategoryDialog 
           open={isAddCategoryOpen} 
