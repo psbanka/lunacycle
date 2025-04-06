@@ -6,11 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Plus, FolderPlus } from "lucide-react";
 import { AddCategoryDialog } from "@/components/AddCategoryDialog";
+import { AddTaskDialog } from "@/components/AddTaskDialog";
 import { EmptyState } from "@/components/EmptyState";
 
 export default function Template() {
   const { currentMonth, categories, loadingTasks } = useTask();
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+
+  // Function to handle opening the AddTaskDialog
+  const handleAddTaskClick = (categoryId: string) => {
+    setActiveCategory(categoryId);
+    setIsAddTaskOpen(true);
+  };
 
   if (loadingTasks) {
     return (
@@ -54,6 +63,14 @@ export default function Template() {
           open={isAddCategoryOpen} 
           onOpenChange={setIsAddCategoryOpen} 
         />
+
+        {activeCategory && (
+          <AddTaskDialog
+            open={isAddTaskOpen}
+            onOpenChange={setIsAddTaskOpen}
+            categoryId={activeCategory}
+          />
+        )}
       </div>
       
       <Separator className="my-8" />
@@ -63,7 +80,12 @@ export default function Template() {
         <div key={category.id} className="mb-10">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">{category.name}</h2>
-            <Button variant="outline" size="sm" className="gap-1 text-xs">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1 text-xs"
+              onClick={() => handleAddTaskClick(category.id)}
+            >
               <Plus className="h-3.5 w-3.5" />
               Add Task
             </Button>
@@ -75,7 +97,12 @@ export default function Template() {
               description="This category doesn't have any tasks yet. Add your first task to get started."
               icon={<FolderPlus className="h-10 w-10 opacity-40" />}
               action={
-                <Button variant="outline" size="sm" className="gap-1 text-xs">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1 text-xs"
+                  onClick={() => handleAddTaskClick(category.id)}
+                >
                   <Plus className="h-3.5 w-3.5" />
                   Add First Task
                 </Button>
