@@ -16,12 +16,14 @@ type LunarPhaseProps = {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   currentDate?: Date;
+  showLabel?: boolean;
 };
 
 export default function LunarPhase({ 
   size = 'md', 
   className,
-  currentDate 
+  currentDate,
+  showLabel = true
 }: LunarPhaseProps) {
   const [phase, setPhase] = useState<MoonPhase>('full-moon');
   const [phaseName, setPhaseName] = useState('Full Moon');
@@ -143,7 +145,7 @@ export default function LunarPhase({
   return (
     <div className="flex flex-col items-center">
       {renderMoon()}
-      <p className="text-xs mt-1 text-muted-foreground">{phaseName}</p>
+      {showLabel && <p className="text-xs mt-1 text-muted-foreground">{phaseName}</p>}
     </div>
   );
 }

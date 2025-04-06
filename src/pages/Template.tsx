@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useTask } from "@/contexts/TaskContext";
 import LunarPhase from "@/components/LunarPhase";
+import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Plus, FolderPlus } from "lucide-react";
@@ -46,6 +47,11 @@ export default function Template() {
         <div className="flex items-center">
           <LunarPhase size="lg" />
         </div>
+      </div>
+      
+      {/* Lunar Cycle Progress Band */}
+      <div className="mb-8">
+        <LunarCycleProgressBand className="shadow-md" />
       </div>
       
       {/* Add Category Button */}
