@@ -1,6 +1,8 @@
-
+import { FIBONACCI } from "../../server/db";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import type { User } from "@/types";
+// FIXME: Convert to arktype
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTask } from "@/contexts/TaskContext";
@@ -78,15 +80,12 @@ export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogP
     try {
       addTask({
         title: values.title,
-        description: values.description,
-        storyPoints: values.storyPoints,
+        description: values.description || null,
+        storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
         targetCount: values.targetCount,
-        assignedTo: values.assignedTo,
-        categoryId: categoryId,
-        status: "pending",
-        currentCount: 0,
-        isRecurring: true,
-      });
+        assignedTo: values.assignedTo.map(userId => ({ id: userId })) as User[], // FIXME
+        completedCount: 0,
+      }, categoryId);
       
       // Reset form and close dialog
       form.reset();

@@ -13,12 +13,12 @@ type TaskCardProps = {
 };
 
 export default function TaskCard({ task, compact = false, className }: TaskCardProps) {
-  const { completeTask, incrementTaskCount } = useTask();
+  const { completeTask } = useTask();
   const { user } = useAuth();
   
-  const isAssignedToUser = user && task.assignedTo.includes(user.id);
-  const isCompleted = task.status === 'completed';
-  const progress = task.targetCount > 0 ? (task.currentCount / task.targetCount) * 100 : 0;
+  const isAssignedToUser = user && Boolean(task.assignedTo.find((u) => u.id === user.id));
+  const isCompleted = task.targetCount === task.completedCount;
+  const progress = task.targetCount > 0 ? (task.completedCount / task.targetCount) * 100 : 0;
   
   // Fibonacci numbers for story points badge color
   const getStoryPointsColor = (points: number) => {
@@ -35,11 +35,7 @@ export default function TaskCard({ task, compact = false, className }: TaskCardP
   };
   
   const handleComplete = () => {
-    if (task.targetCount === 1) {
-      completeTask(task.id);
-    } else {
-      incrementTaskCount(task.id);
-    }
+    completeTask(task.id);
   };
   
   return (
@@ -78,7 +74,7 @@ export default function TaskCard({ task, compact = false, className }: TaskCardP
             <div className="flex items-center">
               <CheckSquare className="h-4 w-4 mr-1" />
               <span>
-                {task.currentCount} / {task.targetCount}
+                {task.completedCount} / {task.targetCount}
               </span>
             </div>
             

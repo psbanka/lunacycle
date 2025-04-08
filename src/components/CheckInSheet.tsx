@@ -51,7 +51,7 @@ const RatingInput = ({ label, value, onChange }: RatingInputProps) => {
 };
 
 export default function CheckInSheet() {
-  const { currentMonth, categories } = useTask();
+  const { loadingTasks, currentMonth, categories } = useTask();
   const [isOpen, setIsOpen] = useState(false);
   
   // Form state
@@ -74,6 +74,17 @@ export default function CheckInSheet() {
     toast.success("Check-in sheet saved successfully!");
   };
 
+  if (loadingTasks || !currentMonth) {
+    return (
+      <div className="flex items-center justify-center h-[80vh]">
+        <div className="text-center">
+          <LunarPhase size="lg" />
+          <p className="mt-4 text-muted-foreground">Loading your tasks...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Calculate days remaining in the lunar cycle
   const daysRemaining = (() => {
     const today = new Date();
@@ -95,7 +106,7 @@ export default function CheckInSheet() {
     
     if (totalTasks === 0) return null;
     
-    const completedTasks = tasks.filter((t) => t.status === "completed").length;
+    const completedTasks = tasks.filter((t) => t.targetCount === t.completedCount).length;
     const recurringTasks = tasks.filter((t) => t.targetCount > 1);
     
     // Check if any recurring tasks are behind schedule
@@ -103,7 +114,7 @@ export default function CheckInSheet() {
       // If we have more than 0 days remaining
       if (daysRemaining <= 0) return false;
       
-      const remainingCount = task.targetCount - task.currentCount;
+      const remainingCount = task.targetCount - task.completedCount;
       const daysPerRemaining = daysRemaining / remainingCount;
       
       // If we need to do more than one every other day, we're behind
@@ -200,11 +211,11 @@ export default function CheckInSheet() {
                             <ul className="list-disc list-inside pl-2">
                               {status.behindScheduleTasks.map((task) => (
                                 <li key={task.id}>
-                                  {task.title}: {task.currentCount}/{task.targetCount} times
+                                  {task.title}: {task.completedCount}/{task.targetCount} times
                                   {daysRemaining > 0 && (
                                     <span>
                                       {" "}
-                                      (need {Math.ceil((task.targetCount - task.currentCount) / daysRemaining)} per day)
+                                      (need {Math.ceil((task.targetCount - task.completedCount) / daysRemaining)} per day)
                                     </span>
                                   )}
                                 </li>

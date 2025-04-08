@@ -56,7 +56,7 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
     try {
       addCategory({
         name: values.name,
-        description: values.description || undefined,
+        description: values.description || null,
       });
       
       // Reset form and close dialog

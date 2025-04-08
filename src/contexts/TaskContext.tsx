@@ -1,219 +1,134 @@
-
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { Category, MonthData, Task, Template, TaskStatus } from '@/types';
-import { mockCurrentMonth, mockCategories, mockTemplate } from '@/data/mockData';
+import {
+  type FC,
+  type ReactNode,
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+} from "react";
+import { Template, Category, MonthData, Task } from "@/types";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useTRPC } from "@/lib/trpc";
+import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
-import { useAuth } from './AuthContext';
 
 type TaskContextType = {
-  currentMonth: MonthData;
-  template: Template;
-  userTasks: Task[];
+  currentMonth: MonthData | undefined;
+  template: Template | undefined;
   categories: Category[];
+
   loadingTasks: boolean;
   completeTask: (taskId: string) => void;
-  incrementTaskCount: (taskId: string) => void;
-  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
-  updateTask: (taskId: string, updates: Partial<Task>) => void;
+  // incrementTaskCount: (taskId: string) => void;
+  addTask: (task: Omit<Task, "id" | "createdAt">, categoryId: string) => void;
+  updateTask: (taskId: string, updates: Omit<Task, "id">, categoryId: string) => void;
   deleteTask: (taskId: string) => void;
-  addCategory: (category: Omit<Category, 'id' | 'tasks'>) => void;
-  updateCategory: (categoryId: string, updates: Partial<Omit<Category, 'tasks'>>) => void;
+  addCategory: (category: Omit<Category, "id" | "tasks">) => void;
+  updateCategory: (
+    categoryId: string,
+    updates: Omit<Category, "tasks">
+  ) => void;
   deleteCategory: (categoryId: string) => void;
 };
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
-export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [currentMonth, setCurrentMonth] = useState<MonthData>(mockCurrentMonth);
-  const [template, setTemplate] = useState<Template>(mockTemplate);
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
-  const [loadingTasks, setLoadingTasks] = useState(true);
+  const trpc = useTRPC();
+  const monthQueryOptions = trpc.getCurrentMonth.queryOptions();
+  const monthQuery = useQuery(monthQueryOptions);
+  const templateQueryOptions = trpc.getTemplate.queryOptions();
+  const templateQuery = useQuery(templateQueryOptions);
 
-  // Filter tasks that are assigned to the current user
-  const userTasks = user ? 
-    currentMonth.categories
-      .flatMap(category => category.tasks)
-      .filter(task => task.assignedTo.includes(user.id)) : [];
+  const completeTaskOptions = trpc.completeTask.mutationOptions();
+  const completeTaskMutation = useMutation(completeTaskOptions);
+  const deleteTaskOptions = trpc.deleteTask.mutationOptions();
+  const deleteTaskMutation = useMutation(deleteTaskOptions);
+  const addCategoryOptions = trpc.addCategory.mutationOptions();
+  const addCategoryMutation = useMutation(addCategoryOptions);
+  const updateTaskOptions = trpc.updateTask.mutationOptions();
+  const updateTaskMutation = useMutation(updateTaskOptions);
+  const addTaskOptions = trpc.addTask.mutationOptions();
+  const addTaskMutation = useMutation(addTaskOptions);
+  const updateCategoryOptions = trpc.updateCategory.mutationOptions();
+  const updateCategoryMutation = useMutation(updateCategoryOptions);
+  const deleteCategoryOptions = trpc.deleteCategory.mutationOptions();
+  const deleteCategoryMutation = useMutation(deleteCategoryOptions);
 
-  // Initialize data
-  useEffect(() => {
-    // Simulate API loading
-    setLoadingTasks(true);
-    setTimeout(() => {
-      setLoadingTasks(false);
-    }, 1000);
-  }, []);
+  const completeTask = async (taskId: string) => {
+    if (monthQuery.isError || monthQuery.isLoading) return;
+    const newTask = await completeTaskMutation.mutate({ taskId });
+    console.log(newTask);
+    toast.success("Progress updated!");
+  };
 
-  // Complete a task
-  const completeTask = (taskId: string) => {
-    setCurrentMonth(prev => {
-      const updatedCategories = prev.categories.map(category => {
-        const updatedTasks = category.tasks.map(task => 
-          task.id === taskId ? { ...task, status: 'completed' as TaskStatus } : task
-        );
-        
-        return { ...category, tasks: updatedTasks };
-      });
-      
-      return { ...prev, categories: updatedCategories };
+  const addTask = async (
+    task: Omit<Task, "id" | "createdAt">,
+    categoryId: string
+  ) => {
+    const userIds = task.assignedTo.map((user) => user.id);
+    await addTaskMutation.mutate({
+      task: { ...task, categoryId, assignedTo: userIds },
     });
-    
-    toast.success('Task completed!');
+    toast.success("Task added successfully!");
   };
 
-  // Increment the current count of a task
-  const incrementTaskCount = (taskId: string) => {
-    setCurrentMonth(prev => {
-      const updatedCategories = prev.categories.map(category => {
-        const updatedTasks = category.tasks.map(task => {
-          if (task.id === taskId) {
-            const newCount = task.currentCount + 1;
-            const isComplete = newCount >= task.targetCount;
-            
-            return { 
-              ...task, 
-              currentCount: newCount,
-              status: isComplete ? 'completed' as TaskStatus : 'pending' as TaskStatus
-            };
-          }
-          return task;
-        });
-        
-        return { ...category, tasks: updatedTasks };
-      });
-      
-      return { ...prev, categories: updatedCategories };
+  const updateTask = async (taskId: string, updates: Omit<Task, "id">, categoryId: string) => {
+    const userIds = updates.assignedTo.map((user) => user.id);
+    await updateTaskMutation.mutate({
+      task: { ...updates, id: taskId, assignedTo: userIds, categoryId },
     });
-    
-    toast.success('Progress updated!');
+    toast.success("Task updated!");
   };
 
-  // Add a new task
-  const addTask = (task: Omit<Task, 'id' | 'createdAt'>) => {
-    const newTask: Task = {
-      ...task,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
-    
-    setCurrentMonth(prev => {
-      const updatedCategories = prev.categories.map(category => {
-        if (category.id === task.categoryId) {
-          return {
-            ...category,
-            tasks: [...category.tasks, newTask]
-          };
-        }
-        return category;
-      });
-      
-      return { ...prev, categories: updatedCategories };
+  const deleteTask = async (taskId: string) => {
+    await deleteTaskMutation.mutate({ taskId });
+    toast.success("Task deleted!");
+  };
+
+  const addCategory = async (category: Omit<Category, "id" | "tasks">) => {
+    await addCategoryMutation.mutate({ category });
+    toast.success("Category added!");
+  };
+
+  const updateCategory = async (
+    categoryId: string,
+    updates: Omit<Category, "tasks">
+  ) => {
+    await updateCategoryMutation.mutate({
+      name: updates.name,
+      description: updates.description,
+      id: categoryId,
     });
-    
-    toast.success('Task added successfully!');
+    toast.success("Category updated!");
   };
 
-  // Update a task
-  const updateTask = (taskId: string, updates: Partial<Task>) => {
-    setCurrentMonth(prev => {
-      const updatedCategories = prev.categories.map(category => {
-        const updatedTasks = category.tasks.map(task => 
-          task.id === taskId ? { ...task, ...updates } : task
-        );
-        
-        return { ...category, tasks: updatedTasks };
-      });
-      
-      return { ...prev, categories: updatedCategories };
-    });
-    
-    toast.success('Task updated!');
+  const deleteCategory = async (categoryId: string) => {
+    await deleteCategoryMutation.mutate({ id: categoryId });
+    toast.success("Category deleted!");
   };
 
-  // Delete a task
-  const deleteTask = (taskId: string) => {
-    setCurrentMonth(prev => {
-      const updatedCategories = prev.categories.map(category => ({
-        ...category,
-        tasks: category.tasks.filter(task => task.id !== taskId)
-      }));
-      
-      return { ...prev, categories: updatedCategories };
-    });
-    
-    toast.success('Task deleted!');
-  };
-
-  // Add a new category
-  const addCategory = (category: Omit<Category, 'id' | 'tasks'>) => {
-    const newCategory: Category = {
-      ...category,
-      id: crypto.randomUUID(),
-      tasks: [],
-    };
-    
-    setCurrentMonth(prev => ({
-      ...prev,
-      categories: [...prev.categories, newCategory]
-    }));
-    
-    setCategories(prev => [...prev, newCategory]);
-    
-    toast.success('Category added!');
-  };
-
-  // Update a category
-  const updateCategory = (categoryId: string, updates: Partial<Omit<Category, 'tasks'>>) => {
-    setCurrentMonth(prev => {
-      const updatedCategories = prev.categories.map(category => 
-        category.id === categoryId ? { ...category, ...updates } : category
-      );
-      
-      return { ...prev, categories: updatedCategories };
-    });
-    
-    setCategories(prev => 
-      prev.map(category => 
-        category.id === categoryId ? { ...category, ...updates } : category
-      )
-    );
-    
-    toast.success('Category updated!');
-  };
-
-  // Delete a category
-  const deleteCategory = (categoryId: string) => {
-    setCurrentMonth(prev => ({
-      ...prev,
-      categories: prev.categories.filter(category => category.id !== categoryId)
-    }));
-    
-    setCategories(prev => 
-      prev.filter(category => category.id !== categoryId)
-    );
-    
-    toast.success('Category deleted!');
-  };
+  const userTasks =
+    monthQuery.data?.categories.flatMap((category) => category.tasks) ?? [];
+  const categories = monthQuery.data?.categories ?? [];
 
   return (
     <TaskContext.Provider
       value={{
-        currentMonth,
-        template,
-        userTasks,
+        currentMonth: monthQuery.data,
+        template: templateQuery.data,
         categories,
-        loadingTasks,
+        loadingTasks: monthQuery.isLoading,
         completeTask,
-        incrementTaskCount,
+        // incrementTaskCount,
         addTask,
         updateTask,
         deleteTask,
         addCategory,
         updateCategory,
         deleteCategory,
-      }}
-    >
+      }}>
       {children}
     </TaskContext.Provider>
   );
@@ -222,7 +137,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useTask = () => {
   const context = useContext(TaskContext);
   if (context === undefined) {
-    throw new Error('useTask must be used within a TaskProvider');
+    throw new Error("useTask must be used within a TaskProvider");
   }
   return context;
 };

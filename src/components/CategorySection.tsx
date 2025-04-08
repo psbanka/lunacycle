@@ -15,7 +15,8 @@ export default function CategorySection({ category, onAddTask }: CategorySection
   
   // Filter tasks that are assigned to the current user
   const userTasks = user 
-    ? category.tasks.filter(task => task.assignedTo.includes(user.id))
+    ? category.tasks.filter(task => 
+       Boolean(task.assignedTo.find((u) => u.id === user.id)))
     : [];
   
   return (

@@ -1,33 +1,27 @@
+import { FIBONACCI } from "../../server/db";
 
 // User related types
 export type User = {
   id: string;
   name: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'family';
 };
-
-// Task related types
-export type TaskStatus = 'pending' | 'completed';
 
 export type Task = {
   id: string;
   title: string;
-  categoryId: string;
-  description?: string;
-  storyPoints: number;
+  description: string | null;
+  storyPoints: typeof FIBONACCI[number];
   targetCount: number; // How many times to complete this month
-  currentCount: number; // How many times completed so far
-  assignedTo: string[]; // Array of user IDs
-  status: TaskStatus;
-  isRecurring: boolean; // Is this a recurring task from the template?
-  createdAt: string;
+  completedCount: number; // How many times completed so far
+  assignedTo: User[]; // Array of users
 };
 
 // Category types
 export type Category = {
   id: string;
   name: string;
-  description?: string;
+  description: string | null;
   tasks: Task[];
 };
 
@@ -47,20 +41,20 @@ export type MonthData = {
 export type TemplateCategory = {
   id: string;
   name: string;
-  description?: string;
-  tasks: TemplateTask[];
+  description: string | null;
+  templateTasks: TemplateTask[];
 };
 
 export type TemplateTask = {
   id: string;
   title: string;
-  description?: string;
-  storyPoints: number;
+  description: string | null;
+  storyPoints: typeof FIBONACCI[number];
   targetCount: number;
-  assignedTo: string[];
+  assignedTo: User[];
 };
 
 export type Template = {
   id: string;
-  categories: TemplateCategory[];
+  templateCategories: TemplateCategory[];
 };

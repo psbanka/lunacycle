@@ -137,7 +137,7 @@ export default function Template() {
                   </div>
                   
                   <div className="mt-2 flex gap-1">
-                    {task.assignedTo.map(userId => {
+                    {task.assignedTo.map(user => {
                       // This would typically use real user data
                       const assigneeNames: Record<string, string> = {
                         '1': 'Admin',
@@ -147,10 +147,10 @@ export default function Template() {
                       
                       return (
                         <div 
-                          key={userId}
+                          key={user.id}
                           className="bg-accent text-xs px-2 py-0.5 rounded-full"
                         >
-                          {assigneeNames[userId] || 'User'}
+                          {assigneeNames[user.id] || 'User'}
                         </div>
                       );
                     })}
