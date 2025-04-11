@@ -1,18 +1,23 @@
-import { db, type Value, FIBONACCI } from "./db.ts";
+import { db } from "./db.ts";
 import { type } from "arktype";
 import { publicProcedure, router } from "./trpc.ts";
 import { createHTTPServer } from "@trpc/server/adapters/standalone";
 import { TRPCError } from "@trpc/server";
-import { defaultScenario } from "./defaultScenario.ts";
 import { login } from "./login.ts";
+import { eq, and, inArray } from "drizzle-orm";
 import cors from "cors";
+import * as schema from "./schema";
+import { fakerEN } from "@faker-js/faker";
+
+export const FIBONACCI = [1, 2, 3, 5, 8, 13, 21] as const;
 
 const appRouter = router({
   login,
-  userList: publicProcedure.query(async () => {
-    const users = await db.user.getAll();
+  getUsers: publicProcedure.query(async () => {
+    const users = await db.query.user.findMany();
     return users;
   }),
+  /*
   userById: publicProcedure
     .input(type({ id: "string" }))
     .query(async ({ input }) => {
@@ -31,7 +36,14 @@ const appRouter = router({
       const user = await db.user.create({ name, email });
       return user;
     }),
+    */
   getTemplate: publicProcedure.query(async () => {
+    const template = await await db.query.template.findFirst({
+      where: eq(schema.template.isActive, 1),
+    });
+    return template;
+
+    /*
     const template = await db.template.findFirst({
       where: { isActive: { equals: true } },
     });
@@ -39,10 +51,28 @@ const appRouter = router({
       throw new TRPCError({ code: "NOT_FOUND", message: "No active template" });
     }
     return template;
+    */
   }),
-  getCurrentMonth: publicProcedure.query(async () => {
-    const currentMonth = await db.month.findFirst({
-      where: { isActive: { equals: true } },
+  getActiveMonth: publicProcedure.query(async () => {
+    // const userId = "x";
+    const currentMonth = await db.query.month.findFirst({
+      where: eq(schema.month.isActive, 1),
+      with: {
+        monthCategories: {
+          with: {
+            category: {
+              with: {
+                categoryTasks: {
+                  with: {
+                    task: true,
+                    // where: eq(schema.user.id, userId),
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
     if (!currentMonth) {
       throw new TRPCError({ code: "NOT_FOUND", message: "No active month" });
@@ -52,20 +82,34 @@ const appRouter = router({
   getCategoriesByMonthId: publicProcedure
     .input(type({ monthId: "string" }))
     .query(async ({ input }) => {
-      const month = await db.month.findFirst({
-        where: { id: { equals: input.monthId } },
+      const month = await db.query.month.findFirst({
+        where: eq(schema.month.id, input.monthId),
+        with: {
+          monthCategories: {
+            with: {
+              // category: { columns: { id: true } },
+              category: true,
+            },
+          },
+        },
       });
       if (!month) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Month not found" });
       }
-      return month.categories;
+      const categories = month.monthCategories.map((monthCategory) => {
+        return monthCategory.category;
+      });
+      return categories;
     }),
   // TODO: Filter by user
   getTasksByCategoryId: publicProcedure
     .input(type({ categoryId: "string" }))
     .query(async ({ input }) => {
-      const category = await db.category.findFirst({
-        where: { id: { equals: input.categoryId } },
+      const category = await db.query.category.findFirst({
+        where: eq(schema.category.id, input.categoryId),
+        with: {
+          categoryTasks: true,
+        },
       });
       if (!category) {
         throw new TRPCError({
@@ -73,7 +117,22 @@ const appRouter = router({
           message: "Category not found",
         });
       }
-      return category.tasks;
+      return category.categoryTasks;
+    }),
+  getTasksByUserId: publicProcedure
+    .input(type({ userId: "string" }))
+    .query(async ({ input }) => {
+      const tasks = await db.query.task.findMany({
+        where: eq(schema.user.id, input.userId),
+        with: {
+          taskUsers: {
+            with: {
+              user: { columns: { id: true } },
+            },
+          },
+        }
+      });
+      return tasks;
     }),
   addCategory: publicProcedure
     .input(
@@ -86,11 +145,20 @@ const appRouter = router({
     )
     .mutation(async ({ input }) => {
       const { category } = input;
-      const newCategory = db.category.create({
-        name: category.name,
-        description: category.description,
-        tasks: [],
+      const id = fakerEN.string.uuid();
+      const result = db
+        .insert(schema.category)
+        .values({ ...category, id })
+        .run();
+      const newCategory = db.query.category.findFirst({
+        where: eq(schema.category.id, id),
       });
+      if (!newCategory) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to create category",
+        });
+      }
       return newCategory;
     }),
   updateCategory: publicProcedure
@@ -102,33 +170,38 @@ const appRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const { name, description } = input;
-      db.category.update({
-        where: { id: { equals: input.id } },
-        data: {
-          name,
-          description,
-        },
+      const { name, description, id } = input;
+      db.update(schema.category)
+        .set(input)
+        .where(eq(schema.category.id, id))
+        .run();
+
+      return db.query.category.findFirst({
+        where: eq(schema.category.id, input.id),
       });
     }),
   deleteCategory: publicProcedure
     .input(type({ id: "string" }))
     .mutation(async ({ input }) => {
-      const category = db.category.findFirst({
-        where: { id: { equals: input.id } },
+      const category = await db.query.category.findFirst({
+        where: eq(schema.category.id, input.id),
+        with: {
+          categoryTasks: true,
+        },
       });
       if (!category) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Category not found",
+        });
       }
-      if (category.tasks.length > 0) {
+      if (category.categoryTasks.length > 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Category has tasks assigned to it",
         });
       }
-      db.category.delete({
-        where: { id: { equals: input.id } },
-      });
+      db.delete(schema.category).where(eq(schema.category.id, input.id)).run();
     }),
   updateTask: publicProcedure
     .input(
@@ -139,21 +212,21 @@ const appRouter = router({
           description: "string | null",
           storyPoints: "number",
           targetCount: "number",
-          assignedTo: "string[]",
+          userIds: "string[]",
           categoryId: "string",
         }),
       })
     )
     .mutation(async ({ input }) => {
       const { task: taskInput } = input;
-      const task = db.task.findFirst({
-        where: { id: { equals: taskInput.id } },
+      const task = await db.query.task.findFirst({
+        where: eq(schema.task.id, taskInput.id),
       });
       if (!task) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
       }
-      const newCategory = db.category.findFirst({
-        where: { id: { equals: taskInput.categoryId } },
+      const newCategory = await db.query.category.findFirst({
+        where: eq(schema.category.id, taskInput.categoryId),
       });
       if (!newCategory) {
         throw new TRPCError({
@@ -161,19 +234,36 @@ const appRouter = router({
           message: "Category not found",
         });
       }
-      const oldCategory = db.category.getAll().find((category) => {
-        return category.tasks.includes(task);
-      });
+      const categories = await db
+        .select({
+          id: schema.category.id,
+          name: schema.category.name,
+          description: schema.category.description,
+        })
+        .from(schema.category)
+        .innerJoin(
+          schema.categoryTask,
+          eq(schema.category.id, schema.categoryTask.categoryId)
+        )
+        .where(eq(schema.categoryTask.taskId, taskInput.id))
+        .all();
+      if (categories.length !== 1)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Category not found associated with task",
+        });
+
+      const [oldCategory] = categories;
       if (!oldCategory) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Category not found",
         });
       }
-      const newUsers: Value<"user">[] = [];
-      for (const userId of taskInput.assignedTo) {
-        const user = db.user.findFirst({
-          where: { id: { equals: userId } },
+      const newUserIds: string[] = [];
+      for (const userId of taskInput.userIds) {
+        const user = await db.query.user.findFirst({
+          where: eq(schema.user.id, userId),
         });
         if (!user) {
           throw new TRPCError({
@@ -181,47 +271,84 @@ const appRouter = router({
             message: "User not found",
           });
         }
-        newUsers.push(user);
+        newUserIds.push(user.id);
       }
       if (newCategory !== oldCategory) {
-        db.category.update({
-          where: { id: { equals: newCategory.id } },
-          data: {
-            tasks: (prev) => [...prev, task],
-          },
-        });
-        db.category.update({
-          where: { id: { equals: oldCategory.id } },
-          data: {
-            tasks: (prev) => prev.filter((task) => task.id !== task.id),
-          },
-        });
+        // Delete the task relationship from the old category
+        await db
+          .delete(schema.categoryTask)
+          .where(
+            and(
+              eq(schema.categoryTask.categoryId, oldCategory.id),
+              eq(schema.categoryTask.taskId, taskInput.id)
+            )
+          )
+          .run();
+
+        await db
+          .insert(schema.categoryTask)
+          .values({
+            categoryId: newCategory.id,
+            taskId: taskInput.id,
+          })
+          .run();
       }
-      const updatedTask = db.task.update({
-        where: { id: { equals: task.id } },
-        data: {
-          title: task.title,
-          description: task.description,
-          storyPoints: task.storyPoints,
-          targetCount: task.targetCount,
-          assignedTo: newUsers,
+
+      // 1. Update the task
+      db.update(schema.task)
+        .set({
+          title: taskInput.title,
+          description: taskInput.description,
+          storyPoints: taskInput.storyPoints,
+          targetCount: taskInput.targetCount,
+        })
+        .where(eq(schema.task.id, taskInput.id))
+        .run();
+
+      // 2. Remove existing user relationships for this task.
+      // This deletes all rows in taskUser for this task.
+      await db
+        .delete(schema.taskUser)
+        .where(eq(schema.taskUser.taskId, taskInput.id))
+        .run();
+
+      // 3. Insert new user relationships.
+      // Map each new user id to a join record with the taskId.
+      const newRelations = newUserIds.map((userId) => ({
+        taskId: taskInput.id,
+        userId,
+      }));
+
+      await db.insert(schema.taskUser).values(newRelations).run();
+
+      return db.query.task.findFirst({
+        where: eq(schema.task.id, taskInput.id),
+        with: {
+          taskUsers: {
+            with: {
+              user: { columns: { id: true } },
+            },
+          },
         },
       });
-      return updatedTask;
     }),
   addTask: publicProcedure
-    .input(type({ task: type({
-      title: "string",
-      description: "string | null",
-      storyPoints: "number",
-      targetCount: "number",
-      assignedTo: "string[]",
-      categoryId: "string",
-    }) }))
+    .input(
+      type({
+        task: type({
+          title: "string",
+          description: "string | null",
+          storyPoints: "number",
+          targetCount: "number",
+          userIds: "string[]",
+          categoryId: "string",
+        }),
+      })
+    )
     .mutation(async ({ input }) => {
-      const { task } = input;
-      const category = db.category.findFirst({
-        where: { id: { equals: task.categoryId } },
+      const { task: taskInput } = input;
+      const category = await db.query.category.findFirst({
+        where: eq(schema.category.id, taskInput.categoryId),
       });
       if (!category) {
         throw new TRPCError({
@@ -229,49 +356,77 @@ const appRouter = router({
           message: "Category not found",
         });
       }
-      const users = db.user.findMany({
-        where: { id: { in: task.assignedTo } },
-      });
-      if (users.length !== task.assignedTo.length) {
+      const users = await db
+        .select()
+        .from(schema.user)
+        .where(inArray(schema.user.id, taskInput.userIds))
+        .all();
+
+      if (users.length !== taskInput.userIds.length) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "User not found",
         });
       }
-      const newTask = db.task.create({
-        title: task.title,
-        description: task.description,
-        // FIXME
-        storyPoints: task.storyPoints as typeof FIBONACCI[number],
-        targetCount: task.targetCount,
-        assignedTo: users,
+      const newTaskId = fakerEN.string.uuid();
+      const newTask = db.insert(schema.task).values({
+        id: newTaskId,
+        title: taskInput.title,
+        description: taskInput.description,
+        completedCount: 0,
+        storyPoints: taskInput.storyPoints as (typeof FIBONACCI)[number],
+        targetCount: taskInput.targetCount,
       });
-      db.category.update({
-        where: { id: { equals: task.categoryId } },
-        data: {
-          tasks: (prev) => [...prev, newTask]
+
+      const newRelations = taskInput.userIds.map((userId) => ({
+        taskId: newTaskId,
+        userId,
+      }));
+
+      await db.insert(schema.taskUser).values(newRelations).run();
+
+      await db
+        .insert(schema.categoryTask)
+        .values({
+          categoryId: taskInput.categoryId,
+          taskId: newTaskId,
+        })
+        .run();
+
+      return db.query.task.findFirst({
+        where: eq(schema.task.id, newTaskId),
+        with: {
+          taskUsers: {
+            with: {
+              user: { columns: { id: true } },
+            },
+          },
         },
       });
-      return newTask;
     }),
   deleteTask: publicProcedure
     .input(type({ taskId: "string" }))
     .mutation(async ({ input }) => {
-      const task = db.task.findFirst({
-        where: { id: { equals: input.taskId } },
+      const task = await db.query.task.findFirst({
+        where: eq(schema.task.id, input.taskId),
       });
       if (!task) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
       }
-      db.task.delete({
-        where: { id: { equals: input.taskId } },
-      });
+      db.delete(schema.taskUser)
+        .where(eq(schema.taskUser.taskId, input.taskId))
+        .run();
+      db.delete(schema.categoryTask)
+        .where(eq(schema.categoryTask.taskId, input.taskId))
+        .run();
+      db.delete(schema.task).where(eq(schema.task.id, input.taskId)).run();
+      return { success: true };
     }),
   completeTask: publicProcedure
     .input(type({ taskId: "string" }))
     .mutation(async ({ input }) => {
-      const task = db.task.findFirst({
-        where: { id: { equals: input.taskId } },
+      const task = await db.query.task.findFirst({
+        where: eq(schema.task.id, input.taskId),
       });
       if (!task) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
@@ -282,9 +437,13 @@ const appRouter = router({
           message: "Task already completed",
         });
       }
-      const updatedTask = await db.task.update({
-        where: { id: { equals: input.taskId } },
-        data: { completedCount: task.completedCount + 1 },
+      db.update(schema.task)
+        .set({ completedCount: task.completedCount + 1 })
+        .where(eq(schema.task.id, input.taskId))
+        .run();
+
+      const updatedTask = await db.query.task.findFirst({
+        where: eq(schema.task.id, input.taskId),
       });
       return updatedTask;
     }),
@@ -299,8 +458,6 @@ const server = createHTTPServer({
   },
 });
 
-console.log("Seeding the database...");
-defaultScenario(db);
 console.log("Listening on http://localhost:3000");
 server.listen(3000);
 

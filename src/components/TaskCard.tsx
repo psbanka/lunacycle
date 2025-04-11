@@ -1,22 +1,29 @@
 
-import { Task } from "@/types";
-import { useTask } from "@/contexts/TaskContext";
+import type { Task, Category } from "../../server/schema";
+import { useTask, type UserTask } from "@/contexts/TaskContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Calendar, CheckCircle, CheckSquare, Clock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTRPC } from "@/lib/trpc";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 type TaskCardProps = {
-  task: Task;
+  userTask: UserTask;
   compact?: boolean;
   className?: string;
 };
 
-export default function TaskCard({ task, compact = false, className }: TaskCardProps) {
-  const { completeTask } = useTask();
+export default function TaskCard({ userTask, compact = false, className }: TaskCardProps) {
+  const { completeTask, taskUsers, tasks } = useTask();
   const { user } = useAuth();
+  const trpc = useTRPC();
   
-  const isAssignedToUser = user && Boolean(task.assignedTo.find((u) => u.id === user.id));
+  const task = tasks?.find(t => t.id === userTask.taskId);
+  if (!task) return null;
+  
+  // const isAssignedToUser = user && Boolean(task.assignedTo.find((u) => u.id === user.id));
+  const isAssignedToUser = Boolean(taskUsers?.find(tu => tu.userId === user?.id && tu.taskId === userTask.taskId));
   const isCompleted = task.targetCount === task.completedCount;
   const progress = task.targetCount > 0 ? (task.completedCount / task.targetCount) * 100 : 0;
   

@@ -51,7 +51,7 @@ const RatingInput = ({ label, value, onChange }: RatingInputProps) => {
 };
 
 export default function CheckInSheet() {
-  const { loadingTasks, currentMonth, categories } = useTask();
+  const { loadingTasks, currentMonth } = useTask();
   const [isOpen, setIsOpen] = useState(false);
   
   // Form state
@@ -98,10 +98,12 @@ export default function CheckInSheet() {
 
   // Analyze category progress
   const getCategoryStatus = (categoryId: string) => {
-    const category = categories.find((c) => c.id === categoryId);
+    const category = currentMonth.monthCategories.flatMap(mc => mc.category).find(c => c.id === categoryId);
     if (!category) return null;
 
-    const tasks = category.tasks;
+    if (!category) return null;
+
+    const tasks = category.categoryTasks;
     const totalTasks = tasks.length;
     
     if (totalTasks === 0) return null;
@@ -188,16 +190,16 @@ export default function CheckInSheet() {
               <h2 className="text-xl font-semibold mb-4 print:text-black">Current Status</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {categories.map((category) => {
-                  const status = getCategoryStatus(category.id);
+                {currentMonth.monthCategories.map((monthCategory) => {
+                  const status = getCategoryStatus(monthCategory.category.id);
                   if (!status) return null;
                   
                   return (
                     <div 
-                      key={category.id} 
+                      key={monthCategory.category.id} 
                       className="glass-card p-4 rounded-lg print:border print:border-gray-300 print:rounded"
                     >
-                      <h3 className="font-semibold mb-2">{category.name}</h3>
+                      <h3 className="font-semibold mb-2">{monthCategory.category.name}</h3>
                       
                       <div className="space-y-2 text-sm">
                         <p>

@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+db.sqlite
+repomix-output.xml
+*.tsbuildinfo

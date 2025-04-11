@@ -1,9 +1,12 @@
 import { publicProcedure } from "./trpc.ts";
 import { compare } from "@node-rs/bcrypt";
 import { type } from "arktype";
-import { db, type Value } from "./db.ts";
+import { db } from "./db.ts";
 import { TRPCError } from "@trpc/server";
 import { AccessToken } from "../shared/types";
+import * as schema from "./schema";
+import { eq } from "drizzle-orm";
+import { fakerEN } from "@faker-js/faker";
 
 export const login = publicProcedure
   .input(type({ email: "string", password: "string" }))
@@ -21,11 +24,7 @@ const BASIC_ACCESS_TOKEN = AccessToken({
   azp: "manage-arcticfox-net",
   session_state: "a1eb1b21-97de-4783-b87e-62074ee24e73",
   acr: "default",
-  "allowed-origins": [
-    "",
-    "https://manage.secretcdn-stg.net",
-    "http://localhost:4200",
-  ],
+  "allowed-origins": ["", "https://www.arcticfox.com", "http://localhost:4200"],
   scope: "openid email profile api_audience customer_role",
   sid: "a1eb1b21-97de-4783-b87e-62074ee24e73",
   email_verified: true,
@@ -75,10 +74,18 @@ export async function encodeJwt(
   return encodedHeader + "." + encodedPayload + "." + encodedSignature;
 }
 
+type AccessTokenConfig = {
+  userId: string,
+  name: string,
+  email: string,
+  iat: number,
+  exp: number,
+  authTime: number,
+}
 async function generateAccessToken(
-  savedAccessToken: Value<"savedAccessToken">
+  savedAccessToken: AccessTokenConfig
 ) {
-  if (!savedAccessToken.user) {
+  if (!savedAccessToken.userId) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Invalid credentials",
@@ -86,19 +93,19 @@ async function generateAccessToken(
   }
   const accessToken = AccessToken({
     ...BASIC_ACCESS_TOKEN,
-    jti: savedAccessToken.id,
-    sub: savedAccessToken.user.id,
-    iss: "https://accounts.secretcdn-stg.net/realms/fastly",
-    aud: "https://api.secretcdn-stg.net/",
+    jti: fakerEN.string.uuid(),
+    sub: savedAccessToken.userId,
+    iss: "https://accounts.arcticfox.com/realms/arctic-fox",
+    aud: "https://api.arcticfox.com/",
     typ: "Bearer",
-    azp: "manage-fastly-com",
+    azp: "arctic-fox",
     acr: "default",
     "allowed-origins": ["*"],
     exp: savedAccessToken.exp,
     iat: savedAccessToken.iat,
     auth_time: savedAccessToken.iat,
-    preferred_username: savedAccessToken.user.name,
-    email: savedAccessToken.user.email,
+    preferred_username: savedAccessToken.name,
+    email: savedAccessToken.email,
   });
   if (accessToken instanceof type.errors) {
     throw new TRPCError({
@@ -116,12 +123,10 @@ async function handleLogin({
   email: string;
   password: string;
 }) {
-  const user = db.user.findFirst({
-    where: {
-      email: { equals: email },
-    },
+  const user = await db.query.user.findFirst({
+    where: eq(schema.user.email, email),
   });
-  if (!user || user.passwordHash == null)
+  if (user == null || user.passwordHash == null)
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Invalid credentials",
@@ -135,12 +140,20 @@ async function handleLogin({
     });
   }
   console.log("handleLogin ------------LOGGED IN-------------------------- ");
-  const savedAccessToken = db.savedAccessToken.create({ user: user });
-  const accessToken = await generateAccessToken(savedAccessToken);
+  const now = new Date();
+  const accessToken = await generateAccessToken({
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    iat: now.getTime(),
+    exp: now.getTime() + 90 * 24 * 60 * 60 * 1000,
+    authTime: now.getTime(),
+  })
   const encodedAccessToken = await encodeJwt(accessToken);
-  db.savedAccessToken.update({
-    where: { id: { equals: savedAccessToken.id } },
-    data: { encodedAccessToken },
-  });
+  /*
+  db.insert(schema.savedAccessToken).values({
+    encodedAccessToken,
+  }).run();
+  */
   return { user, accessToken: encodedAccessToken };
 }

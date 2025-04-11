@@ -1,4 +1,4 @@
-import { FIBONACCI } from "../../server/db";
+import { FIBONACCI } from "../../server/index";
 
 // User related types
 export type User = {
@@ -7,6 +7,7 @@ export type User = {
   role: 'user' | 'admin' | 'family';
 };
 
+/*
 export type Task = {
   id: string;
   title: string;
@@ -16,15 +17,19 @@ export type Task = {
   completedCount: number; // How many times completed so far
   assignedTo: User[]; // Array of users
 };
+*/
 
 // Category types
+/*
 export type Category = {
   id: string;
   name: string;
   description: string | null;
   tasks: Task[];
 };
+*/
 
+/*
 // Month related types
 export type MonthData = {
   id: string;
@@ -36,6 +41,7 @@ export type MonthData = {
   categories: Category[];
   isActive: boolean;
 };
+*/
 
 // Template related types
 export type TemplateCategory = {

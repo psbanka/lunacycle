@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { LoadingScreen } from "../components/LoadingScreen";
 import { useTask } from "@/contexts/TaskContext";
 import { useAuth } from "@/contexts/AuthContext";
 import LunarPhase from "@/components/LunarPhase";
@@ -25,37 +26,25 @@ export default function Home() {
     0
   );
   const daysRemaining = lastDayOfMonth.getDate() - currentDate.getDate();
-  if (loadingTasks || !currentMonth) {
-    return (
-      <div className="flex items-center justify-center h-[80vh]">
-        <div className="text-center">
-          <LunarPhase size="lg" />
-          <p className="mt-4 text-muted-foreground">Loading your tasks...</p>
-        </div>
-      </div>
-    );
+  if (loadingTasks || !currentMonth) {    return <LoadingScreen />;
   }
 
   // Filter tasks for "Up Next" section - pending tasks from user
-  const pendingTasks = currentMonth.categories
-    .flatMap((category) => category.tasks)
-    .filter((task) => task.targetCount > task.completedCount );
+  const pendingTasks = currentMonth.monthCategories
+    .flatMap((mc) => mc.category.categoryTasks)
+    .filter((task) => task.targetCount > task.completedCount )
+    .flatMap((task) => task.taskUsers)
+    
 
   // Filter tasks for "Recently Completed" section - completed tasks from user
-  const completedTasks = currentMonth.categories
-    .flatMap((category) => category.tasks)
+  const completedTasks = currentMonth.monthCategories
+    .flatMap((mc) => mc.category.categoryTasks)
     .filter((task) => task.targetCount === task.completedCount)
+    .flatMap((task) => task.taskUsers)
     .slice(0, 5);
 
   if (loadingTasks) {
-    return (
-      <div className="flex items-center justify-center h-[80vh]">
-        <div className="text-center">
-          <LunarPhase size="lg" />
-          <p className="mt-4 text-muted-foreground">Loading your tasks...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -111,8 +100,8 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {pendingTasks.slice(0, 4).map((task) => (
-              <TaskCard key={task.id} task={task} />
+            {pendingTasks.slice(0, 4).map((userTask) => (
+              <TaskCard key={userTask.taskId} userTask={userTask} />
             ))}
           </div>
         )}
@@ -123,8 +112,8 @@ export default function Home() {
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Recently Completed</h2>
           <div className="flex space-x-4 overflow-x-auto pb-4">
-            {completedTasks.map((task) => (
-              <TaskCard key={task.id} task={task} compact className="w-56" />
+            {completedTasks.map((userTask) => (
+              <TaskCard key={userTask.taskId} userTask={userTask} compact className="w-56" />
             ))}
           </div>
         </div>
@@ -136,8 +125,8 @@ export default function Home() {
       <h2 className="text-2xl font-semibold mb-6">Categories</h2>
 
       <div>
-        {currentMonth.categories.map((category) => (
-          <CategorySection key={category.id} category={category} />
+        {currentMonth.monthCategories.map((mc) => (
+          <CategorySection key={mc.category.id} category={mc.category} />
         ))}
       </div>
     </div>

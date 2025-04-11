@@ -1,123 +1,240 @@
-import { hash } from "@node-rs/bcrypt";
-import { type Db, type Value } from "./db";
+import { db } from "./db.ts";
+import { type } from "arktype";
+import { publicProcedure, router } from "./trpc.ts";
+import { createHTTPServer } from "@trpc/server/adapters/standalone";
+import { TRPCError } from "@trpc/server";
+import { login } from "./login.ts";
+import { eq, and, inArray } from "drizzle-orm";
+import cors from "cors";
+import * as schema from "./schema";
+import { fakerEN } from "@faker-js/faker";
 
-export async function defaultScenario(db: Db) {
+import { hash } from "@node-rs/bcrypt";
+
+export async function defaultScenario() {
+  console.log("🌱 Seeing the database...");
   const passwordHash = await hash("abc123", 10);
 
-  const adminUser = db.user.create({
+  // TODO: LEFT OFF HERE. I should log a lot more stuff and things.
+
+  db.insert(schema.user).values({
     id: "1",
     name: "Admin User",
     email: "admin@example.com",
     role: "admin",
     passwordHash,
   });
-  const jane = db.user.create({
+  const adminUser = db.query.user.findFirst({
+    where: eq(schema.user.email, "admin@example.com"),
+  });
+  if (!adminUser) {
+    throw new Error("Admin user not found");
+  }
+  
+  db.insert(schema.user).values({
     id: "2",
     name: "Jane Doe",
     email: "janedoe@gmail.com",
     role: "user",
     passwordHash,
   });
-  const john = db.user.create({
+  const jane = db.query.user.findFirst({
+    where: eq(schema.user.email, "janedoe@gmail.com"),
+  });
+  if (!jane) {
+    throw new Error("Jane user not found");
+  }
+  
+  db.insert(schema.user).values({
     id: "3",
     name: "John Doe",
     email: "johndoe@gmail.com",
     role: "user",
     passwordHash,
   });
-
+  const john = db.query.user.findFirst({
+    where: eq(schema.user.email, "johndoe@gmail.com"),
+  });
+  if (!john) {
+    throw new Error("John user not found");
+  }
+  
   const today = new Date();
   const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-  const weed = db.task.create({
+  db.insert(schema.task).values({
+    id: fakerEN.string.uuid(),
     title: "Weed",
     storyPoints: 1,
     targetCount: 5,
-    assignedTo: [john],
+    completedCount: 0,
   });
-  const walkway = db.task.create({
+  const weed = db.query.task.findFirst({
+    where: eq(schema.task.title, "Weed"),
+  });
+  if (!weed) {
+    throw new Error("Weed task not found");
+  }
+  
+  db.insert(schema.task).values({
+    id: fakerEN.string.uuid(),
     title: "Make walkway",
     storyPoints: 5,
     targetCount: 1,
-    assignedTo: [john, jane],
+    completedCount: 0,
   });
-  const gardening = db.category.create({
+  // assignedTo: [john, jane],
+  const walkway = db.query.task.findFirst({
+    where: eq(schema.task.title, "Make walkway"),
+  });
+  if (!weed) {
+    throw new Error("Weed task not found");
+  }
+  
+  db.insert(schema.category).values({
+    id: fakerEN.string.uuid(),
     name: "Garden",
     description: "Gardening tasks",
-    tasks: [weed, walkway],
   });
-  const meditate = db.task.create({
+  // tasks: [weed, walkway],
+  const gardening = db.query.category.findFirst({
+    where: eq(schema.category.name, "Garden"),
+  });
+  if (!gardening) {
+    throw new Error("Garden category not found");
+  }
+  
+  db.insert(schema.task).values({
+    id: fakerEN.string.uuid(),
     title: "Meditation practice",
     storyPoints: 1,
     targetCount: 20,
-    assignedTo: [john],
+    completedCount: 0,
   });
-  const spirituality = db.category.create({
+    // assignedTo: [john],
+  const meditate = db.query.task.findFirst({
+    where: eq(schema.task.title, "Meditation practice"),
+  });
+  if (!meditate) {
+    throw new Error("Meditation task not found");
+  }
+  
+  db.insert(schema.category).values({
+    id: fakerEN.string.uuid(),
     name: "Spirituality",
     description: "Spirituality tasks",
-    tasks: [meditate],
   });
-  const danceClass = db.task.create({
+    // tasks: [meditate],
+  const spirituality = db.query.category.findFirst({
+    where: eq(schema.category.name, "Spirituality"),
+  });
+  if (!spirituality) {
+    throw new Error("Spirituality category not found");
+  }
+  
+  db.insert(schema.task).values({
+    id: fakerEN.string.uuid(),
     title: "Dance Class",
     storyPoints: 2,
     targetCount: 4,
-    assignedTo: [john, jane],
+    completedCount: 0,
   });
-  const dancing = db.category.create({
-    name: "Dancing",
-    description: "Dancing tasks",
-    tasks: [danceClass],
+    // assignedTo: [john, jane],
+  const danceClass = db.query.task.findFirst({
+    where: eq(schema.task.title, "Dance Class"),
   });
-  const bna = db.task.create({
+  if (!danceClass) {
+    throw new Error("Dance Class task not found");
+  }
+  
+  db.insert(schema.task).values({
+    id: fakerEN.string.uuid(),
     title: "Neighborhood Association meeting",
     storyPoints: 1,
     targetCount: 1,
-    assignedTo: [john],
+    completedCount: 0,
   });
-  const net = db.task.create({
+    // assignedTo: [john],
+  const bna = db.query.task.findFirst({
+    where: eq(schema.task.title, "Neighborhood Association meeting"),
+  });
+  if (!bna) {
+    throw new Error("BNA task not found");
+  }
+  
+  db.insert(schema.task).values({
+    id: fakerEN.string.uuid(),
     title: "NET Meeting",
     storyPoints: 1,
     targetCount: 1,
-    assignedTo: [jane],
+    completedCount: 0,
   });
-  const community = db.category.create({
+    // assignedTo: [jane],
+  const net = db.query.task.findFirst({
+    where: eq(schema.task.title, "NET Meeting"),
+  });
+  if (!net) {
+    throw new Error("NET task not found");
+  }
+  
+  db.insert(schema.category).values({
+    id: fakerEN.string.uuid(),
     name: "Community",
     description: "Community tasks",
-    tasks: [bna, net],
   });
+    // tasks: [bna, net],
+  const community = db.query.category.findFirst({
+    where: eq(schema.category.name, "Community"),
+  });
+  if (!community) {
+    throw new Error("Community category not found");
+  }
   
-  const currentMonth = db.month.create({
-    name: "April 2025",
-    startDate: today,
-    endDate: thirtyDaysFromNow,
-    newMoonDate: today,
-    fullMoonDate: thirtyDaysFromNow,
-    categories: [gardening, spirituality, dancing, community],
-    isActive: true,
+  db.insert(schema.month).values({
+    id: fakerEN.string.uuid(),
+    name: "foo",
+    startDate: today.toISOString(),
+    endDate: thirtyDaysFromNow.toISOString(),
+    newMoonDate: today.toISOString(),
+    fullMoonDate: thirtyDaysFromNow.toISOString(),
+    isActive: 1,
   });
-
-  const sTask = db.templateTask.create({ title: "Meditation practice" });
-  const dTask = db.templateTask.create({ title: "Dance Class" });
-  const gTask = db.templateTask.create({ title: "Weed" });
-  const cClass1 = db.templateTask.create({
-    title: "Neighborhood Association meeting",
+    // categories: [gardening, spirituality, danceClass, community],
+  const currentMonth = db.query.month.findFirst({
+    where: eq(schema.month.name, "April 2025"),
   });
-  const cClass2 = db.templateTask.create({ title: "NET Meeting" });
-
-  const templateCategories: Value<"templateCategory">[] = [];
-
-  templateCategories.push(
-    db.templateCategory.create({ name: "Garden", templateTasks: [gTask] })
-  );
-  templateCategories.push(
-    db.templateCategory.create({ name: "Spirituality", templateTasks: [sTask] })
-  );
-  templateCategories.push(
-    db.templateCategory.create({ name: "Dancing", templateTasks: [dTask] })
-  );
-  templateCategories.push(
-    db.templateCategory.create({ name: "Community", templateTasks: [cClass1, cClass2] })
-  );
-
-  db.template.create({ templateCategories });
+  if (!currentMonth) {
+    throw new Error("Current month not found");
+  }
+  
+  db.insert(schema.templateTask).values({
+    id: fakerEN.string.uuid(),
+    title: "Meditation practice",
+    storyPoints: 13,
+    targetCount: 20,
+  });
+  const sTask = db.query.templateTask.findFirst({
+    where: eq(schema.templateTask.title, "Meditation practice"),
+  });
+  if (!sTask) {
+    throw new Error("Meditation task not found");
+  }
+  
+  db.insert(schema.templateTask).values({
+    title: "Dance Class",
+    id: fakerEN.string.uuid(),
+    storyPoints: 13,
+    targetCount: 20,
+  });
+  const dTask = db.query.templateTask.findFirst({
+    where: eq(schema.templateTask.title, "Dance Class"),
+  });
+  if (!dTask) {
+    throw new Error("Dance Class task not found");
+  }
+  
+  db.insert(schema.template).values({
+    id: fakerEN.string.uuid(),
+    isActive: 1
+  });
 }

@@ -11,7 +11,7 @@ import { AddTaskDialog } from "@/components/AddTaskDialog";
 import { EmptyState } from "@/components/EmptyState";
 
 export default function Template() {
-  const { currentMonth, categories, loadingTasks } = useTask();
+  const { currentMonth, template, loadingTasks } = useTask();
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
@@ -81,7 +81,7 @@ export default function Template() {
       
       <Separator className="my-8" />
       
-      {/* Categories */}
+      {/* Categories
       {categories.map(category => (
         <div key={category.id} className="mb-10">
           <div className="flex justify-between items-center mb-4">
@@ -179,6 +179,7 @@ export default function Template() {
           }
         />
       )}
+        */}
     </div>
   );
 }

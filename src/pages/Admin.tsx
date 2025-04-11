@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { trpc } from "../api";
-import type { Value } from "../../server/db";
+import { useTask } from "@/contexts/TaskContext";
+import { LoadingScreen } from "@/components/LoadingScreen";
+
 
 export default function Admin() {
   const { user } = useAuth();
+  const { users } = useTask();
   const navigate = useNavigate();
 
   const [newUser, setNewUser] = useState({
@@ -19,11 +21,10 @@ export default function Admin() {
     role: "user",
   });
 
-  const [users, setUsers] = useState<Value<"user">[]>([]);
-
-  useEffect(() => {
-    trpc.userList.query().then((value) => setUsers(value));
-  }, []);
+  if (!users || !user) {
+    return <LoadingScreen />;
+  }
+  
 
   // Check if user is admin, if not redirect
   if (user?.role !== "admin") {
@@ -35,17 +36,6 @@ export default function Admin() {
     e.preventDefault();
 
     const newId = (users.length + 1).toString();
-
-    setUsers([
-      ...users,
-      {
-        id: newId,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role as "user" | "admin",
-        passwordHash: null,
-      },
-    ]);
 
     setNewUser({
       name: "",
@@ -168,7 +158,7 @@ export default function Admin() {
                         size="sm"
                         className="h-8 px-2 text-destructive"
                         onClick={() => {
-                          setUsers(users.filter((u) => u.id !== user.id));
+                          console.log('do a thing?');
                           toast.success("User removed successfully");
                         }}>
                         Delete

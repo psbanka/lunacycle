@@ -1,8 +1,10 @@
-import { FIBONACCI } from "../../server/db";
+import { FIBONACCI } from "../../server/index";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import type { User } from "@/types";
+// import type { User } from "@/types";
 // FIXME: Convert to arktype
+import { LoadingScreen } from "./LoadingScreen";
+
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTask } from "@/contexts/TaskContext";
@@ -38,7 +40,7 @@ const taskSchema = z.object({
   description: z.string().optional(),
   storyPoints: z.number().min(1).max(13),
   targetCount: z.number().min(1).max(31),
-  assignedTo: z.array(z.string()).min(1, "At least one person must be assigned"),
+  users: z.array(z.string()).min(1, "At least one person must be assigned"),
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
@@ -50,17 +52,11 @@ interface AddTaskDialogProps {
 }
 
 // Available story points (Fibonacci sequence)
+// FIXME
 const STORY_POINTS = [1, 2, 3, 5, 8, 13];
 
-// Mock users (normally would come from API)
-const USERS = [
-  { id: "1", name: "Admin", initials: "A" },
-  { id: "2", name: "User", initials: "U" },
-  { id: "3", name: "Family", initials: "F" },
-];
-
 export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogProps) {
-  const { addTask } = useTask();
+  const { addTask, users } = useTask();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<TaskFormValues>({
@@ -70,22 +66,21 @@ export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogP
       description: "",
       storyPoints: 1,
       targetCount: 1,
-      assignedTo: ["1"], // Default to first user
+      users: ["1"], // Default to first user
     },
   });
 
   const onSubmit = async (values: TaskFormValues) => {
     setIsSubmitting(true);
-    
+    const userIds = values.users
     try {
       addTask({
         title: values.title,
         description: values.description || null,
         storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
         targetCount: values.targetCount,
-        assignedTo: values.assignedTo.map(userId => ({ id: userId })) as User[], // FIXME
         completedCount: 0,
-      }, categoryId);
+      }, categoryId, userIds);
       
       // Reset form and close dialog
       form.reset();
@@ -97,6 +92,10 @@ export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogP
     }
   };
 
+  if (!users) {
+    return <LoadingScreen />;
+  }
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -194,16 +193,16 @@ export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogP
             
             <FormField
               control={form.control}
-              name="assignedTo"
+              name="users"
               render={() => (
                 <FormItem>
                   <FormLabel>Assign to</FormLabel>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {USERS.map((user) => (
+                    {users.map((user) => (
                       <FormField
                         key={user.id}
                         control={form.control}
-                        name="assignedTo"
+                        name="users"
                         render={({ field }) => {
                           const isSelected = field.value?.includes(user.id);
                           return (
@@ -226,7 +225,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogP
                               <div className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
                                   <AvatarFallback className={isSelected ? "bg-primary text-primary-foreground" : ""}>
-                                    {user.initials}
+                                    FIXME
                                   </AvatarFallback>
                                 </Avatar>
                                 <span>{user.name}</span>
