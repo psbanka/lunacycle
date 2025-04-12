@@ -12,8 +12,7 @@ import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import CheckInSheet from "@/components/CheckInSheet";
 
 export default function Home() {
-  const { currentMonth, tasksByUser, loadingTasks } = useTask();
-  const { user } = useAuth();
+  const { currentMonth, loadingTasks, createMonthFromTemplate } = useTask();
   const [showAddTask, setShowAddTask] = useState(false);
 
   // Get current date
@@ -26,7 +25,28 @@ export default function Home() {
     0
   );
   const daysRemaining = lastDayOfMonth.getDate() - currentDate.getDate();
-  if (loadingTasks || !currentMonth) {    return <LoadingScreen />;
+  if (loadingTasks) {    return <LoadingScreen />;
+  }
+
+  if (!currentMonth) {
+    return (
+    <div className="max-w-6xl mx-auto">
+      <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">No Current Month Exists</h1>
+            <div className="mb-8 flex flex-wrap gap-3">
+              <Button
+                variant="outline"
+                className="gap-1"
+                onClick={() => createMonthFromTemplate()}>
+                <PlusCircle className="h-4 w-4" />
+                Create Month
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Filter tasks for "Up Next" section - pending tasks from user

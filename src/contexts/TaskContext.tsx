@@ -42,6 +42,8 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const getTasksByUserQueryOptions = trpc.getTasksByUserId.queryOptions({ userId: user?.id || ''});
   const getTasksByUserQuery = useQuery(getTasksByUserQueryOptions);
 
+  const createMonthFromTemplateOptions = trpc.createMonthFromTemplate.mutationOptions();
+  const createMonthFromTemplateMutation = useMutation(createMonthFromTemplateOptions);
   const completeTaskOptions = trpc.completeTask.mutationOptions();
   const completeTaskMutation = useMutation(completeTaskOptions);
   const deleteTaskOptions = trpc.deleteTask.mutationOptions();
@@ -123,6 +125,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
         tasksByUser: getTasksByUserQuery.data,
         template: templateQuery.data,
         loadingTasks: monthQuery.isLoading,
+        createMonthFromTemplate: createMonthFromTemplateMutation.mutate,
         completeTask,
         addTask,
         updateTask,
@@ -145,6 +148,7 @@ type TaskContextType = {
 
   // FIXME: Rename to 'loadingData'
   loadingTasks: boolean;
+  createMonthFromTemplate: () => void;
   completeTask: (taskId: string) => void;
   addTask: (
     task: Omit<Task, "id" | "createdAt">,

@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "db:generate": "bun drizzle-kit generate",
     "db:migrate": "bun drizzle-kit migrate",
+    "db:recreate": "rm db.sqlite;bun ./scripts/setup-db.bun.ts",
     "typecheck": "tsc -b",
     "preview": "vite preview"
   },
@@ -88,6 +89,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.20",
+    "better-sqlite3": "^11.9.1",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",

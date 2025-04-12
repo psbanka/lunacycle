@@ -61,6 +61,7 @@ export const monthRelations = relations(month, ({ many }) => ({
 export const category = sqliteTable("category", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  emoji: text("emoji"),
   description: text("description"),
 });
 
@@ -104,6 +105,7 @@ export const templateCategory = sqliteTable("template_category", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  emoji: text("emoji"),
 });
 
 export type TemplateCategory = typeof templateCategory.$inferSelect;

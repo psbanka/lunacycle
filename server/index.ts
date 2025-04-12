@@ -2,6 +2,7 @@ import { db } from "./db.ts";
 import { type } from "arktype";
 import { publicProcedure, router } from "./trpc.ts";
 import { createHTTPServer } from "@trpc/server/adapters/standalone";
+import { createMonthFromActiveTemplate } from "./createMonth.ts";
 import { TRPCError } from "@trpc/server";
 import { login } from "./login.ts";
 import { eq, and, inArray } from "drizzle-orm";
@@ -58,6 +59,8 @@ const appRouter = router({
     });
     return template;
   }),
+  createMonthFromTemplate: publicProcedure
+    .mutation(createMonthFromActiveTemplate),
   getActiveMonth: publicProcedure.query(async () => {
     // const userId = "x";
     const currentMonth = await db.query.month.findFirst({
