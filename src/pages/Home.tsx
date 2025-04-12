@@ -12,7 +12,7 @@ import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import CheckInSheet from "@/components/CheckInSheet";
 
 export default function Home() {
-  const { currentMonth, loadingTasks } = useTask();
+  const { currentMonth, tasksByUser, loadingTasks } = useTask();
   const { user } = useAuth();
   const [showAddTask, setShowAddTask] = useState(false);
 
@@ -30,17 +30,14 @@ export default function Home() {
   }
 
   // Filter tasks for "Up Next" section - pending tasks from user
-  const pendingTasks = currentMonth.monthCategories
-    .flatMap((mc) => mc.category.categoryTasks)
-    .filter((task) => task.targetCount > task.completedCount )
-    .flatMap((task) => task.taskUsers)
+  const pendingCategoryTasks = currentMonth.monthCategories
+    .flatMap((mc) => mc.category?.categoryTasks ?? []) // FIXME: shouldn't need to do this
+    .filter((ct) => ct.task.targetCount > ct.task.completedCount )
     
-
   // Filter tasks for "Recently Completed" section - completed tasks from user
-  const completedTasks = currentMonth.monthCategories
-    .flatMap((mc) => mc.category.categoryTasks)
-    .filter((task) => task.targetCount === task.completedCount)
-    .flatMap((task) => task.taskUsers)
+  const completedCategoryTasks = currentMonth.monthCategories
+    .flatMap((mc) => mc.category?.categoryTasks ?? []) // FIXME: shouldn't need to do this
+    .filter((ct) => ct.task.targetCount === ct.task.completedCount)
     .slice(0, 5);
 
   if (loadingTasks) {
@@ -49,7 +46,6 @@ export default function Home() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Month Header */}
       <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold">{currentMonth.name}</h1>
@@ -63,12 +59,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Lunar Cycle Progress Band */}
       <div className="mb-8">
         <LunarCycleProgressBand className="shadow-md" />
       </div>
 
-      {/* Action Buttons */}
       <div className="mb-8 flex flex-wrap gap-3">
         <Button
           variant="outline"
@@ -81,11 +75,10 @@ export default function Home() {
         <CheckInSheet />
       </div>
 
-      {/* Up Next Section */}
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Up Next</h2>
 
-        {pendingTasks.length === 0 ? (
+        {pendingCategoryTasks.length === 0 ? (
           <div className="glass-card p-8 text-center rounded-lg">
             <p className="text-muted-foreground">
               All caught up! No pending tasks.
@@ -100,20 +93,19 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {pendingTasks.slice(0, 4).map((userTask) => (
-              <TaskCard key={userTask.taskId} userTask={userTask} />
+            {pendingCategoryTasks.slice(0, 4).map((task) => (
+              <TaskCard key={task.taskId} categoryTask={task} />
             ))}
           </div>
         )}
       </div>
 
-      {/* Recently Completed */}
-      {completedTasks.length > 0 && (
+      {completedCategoryTasks.length > 0 && (
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Recently Completed</h2>
           <div className="flex space-x-4 overflow-x-auto pb-4">
-            {completedTasks.map((userTask) => (
-              <TaskCard key={userTask.taskId} userTask={userTask} compact className="w-56" />
+            {completedCategoryTasks.map((ct) => (
+              <TaskCard key={ct.taskId} categoryTask={ct} compact className="w-56" />
             ))}
           </div>
         </div>
@@ -121,12 +113,11 @@ export default function Home() {
 
       <Separator className="my-8" />
 
-      {/* Categories */}
       <h2 className="text-2xl font-semibold mb-6">Categories</h2>
 
       <div>
         {currentMonth.monthCategories.map((mc) => (
-          <CategorySection key={mc.category.id} category={mc.category} />
+          <CategorySection key={mc?.categoryId} id={mc?.categoryId} />
         ))}
       </div>
     </div>

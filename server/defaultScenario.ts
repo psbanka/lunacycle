@@ -15,21 +15,20 @@ export async function defaultScenario() {
   console.log("🌱 Seeing the database...");
   const passwordHash = await hash("abc123", 10);
 
-  // TODO: LEFT OFF HERE. I should log a lot more stuff and things.
-
   db.insert(schema.user).values({
     id: "1",
     name: "Admin User",
     email: "admin@example.com",
     role: "admin",
     passwordHash,
-  });
-  const adminUser = db.query.user.findFirst({
+  }).run();
+  const adminUser = await db.query.user.findFirst({
     where: eq(schema.user.email, "admin@example.com"),
   });
   if (!adminUser) {
     throw new Error("Admin user not found");
   }
+  console.log('adminUser', adminUser.id)
   
   db.insert(schema.user).values({
     id: "2",
@@ -37,13 +36,14 @@ export async function defaultScenario() {
     email: "janedoe@gmail.com",
     role: "user",
     passwordHash,
-  });
-  const jane = db.query.user.findFirst({
+  }).run();
+  const jane = await db.query.user.findFirst({
     where: eq(schema.user.email, "janedoe@gmail.com"),
   });
   if (!jane) {
     throw new Error("Jane user not found");
   }
+  console.log('jane:', jane)
   
   db.insert(schema.user).values({
     id: "3",
@@ -51,13 +51,14 @@ export async function defaultScenario() {
     email: "johndoe@gmail.com",
     role: "user",
     passwordHash,
-  });
-  const john = db.query.user.findFirst({
+  }).run();
+  const john = await db.query.user.findFirst({
     where: eq(schema.user.email, "johndoe@gmail.com"),
   });
   if (!john) {
     throw new Error("John user not found");
   }
+  console.log('john', john);
   
   const today = new Date();
   const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -68,13 +69,18 @@ export async function defaultScenario() {
     storyPoints: 1,
     targetCount: 5,
     completedCount: 0,
-  });
-  const weed = db.query.task.findFirst({
+  }).run();
+  const weed = await db.query.task.findFirst({
     where: eq(schema.task.title, "Weed"),
   });
   if (!weed) {
     throw new Error("Weed task not found");
   }
+  console.log('weed', weed)
+  db.insert(schema.taskUser).values({
+    taskId: weed.id,
+    userId: john.id,
+  }).run();
   
   db.insert(schema.task).values({
     id: fakerEN.string.uuid(),
@@ -82,27 +88,44 @@ export async function defaultScenario() {
     storyPoints: 5,
     targetCount: 1,
     completedCount: 0,
-  });
+  }).run();
   // assignedTo: [john, jane],
-  const walkway = db.query.task.findFirst({
+  const walkway = await db.query.task.findFirst({
     where: eq(schema.task.title, "Make walkway"),
   });
-  if (!weed) {
+  if (!walkway) {
     throw new Error("Weed task not found");
   }
+  db.insert(schema.taskUser).values({
+    taskId: walkway.id,
+    userId: john.id,
+  }).run();
+  db.insert(schema.taskUser).values({
+    taskId: walkway.id,
+    userId: jane.id,
+  }).run();
+  console.log('walkway', walkway)
   
   db.insert(schema.category).values({
     id: fakerEN.string.uuid(),
     name: "Garden",
     description: "Gardening tasks",
-  });
-  // tasks: [weed, walkway],
-  const gardening = db.query.category.findFirst({
+  }).run();
+  const gardening = await db.query.category.findFirst({
     where: eq(schema.category.name, "Garden"),
   });
   if (!gardening) {
     throw new Error("Garden category not found");
   }
+  console.log('gardening', gardening)
+  db.insert(schema.categoryTask).values({
+    categoryId: gardening.id,
+    taskId: weed.id,
+  }).run();
+  db.insert(schema.categoryTask).values({
+    categoryId: gardening.id,
+    taskId: walkway.id,
+  }).run();
   
   db.insert(schema.task).values({
     id: fakerEN.string.uuid(),
@@ -110,27 +133,33 @@ export async function defaultScenario() {
     storyPoints: 1,
     targetCount: 20,
     completedCount: 0,
-  });
-    // assignedTo: [john],
-  const meditate = db.query.task.findFirst({
+  }).run();
+  const meditate = await db.query.task.findFirst({
     where: eq(schema.task.title, "Meditation practice"),
   });
   if (!meditate) {
     throw new Error("Meditation task not found");
   }
+  db.insert(schema.taskUser).values({
+    taskId: meditate.id,
+    userId: john.id,
+  }).run();
   
   db.insert(schema.category).values({
     id: fakerEN.string.uuid(),
     name: "Spirituality",
     description: "Spirituality tasks",
-  });
-    // tasks: [meditate],
-  const spirituality = db.query.category.findFirst({
+  }).run();
+  const spirituality = await db.query.category.findFirst({
     where: eq(schema.category.name, "Spirituality"),
   });
   if (!spirituality) {
     throw new Error("Spirituality category not found");
   }
+  db.insert(schema.categoryTask).values({
+    categoryId: spirituality.id,
+    taskId: meditate.id,
+  }).run();
   
   db.insert(schema.task).values({
     id: fakerEN.string.uuid(),
@@ -138,14 +167,22 @@ export async function defaultScenario() {
     storyPoints: 2,
     targetCount: 4,
     completedCount: 0,
-  });
+  }).run();
     // assignedTo: [john, jane],
-  const danceClass = db.query.task.findFirst({
+  const danceClass = await db.query.task.findFirst({
     where: eq(schema.task.title, "Dance Class"),
   });
   if (!danceClass) {
     throw new Error("Dance Class task not found");
   }
+  db.insert(schema.taskUser).values({
+    taskId: danceClass.id,
+    userId: john.id,
+  }).run();
+  db.insert(schema.taskUser).values({
+    taskId: danceClass.id,
+    userId: jane.id,
+  }).run();
   
   db.insert(schema.task).values({
     id: fakerEN.string.uuid(),
@@ -153,14 +190,18 @@ export async function defaultScenario() {
     storyPoints: 1,
     targetCount: 1,
     completedCount: 0,
-  });
+  }).run();
     // assignedTo: [john],
-  const bna = db.query.task.findFirst({
+  const bna = await db.query.task.findFirst({
     where: eq(schema.task.title, "Neighborhood Association meeting"),
   });
   if (!bna) {
     throw new Error("BNA task not found");
   }
+  db.insert(schema.taskUser).values({
+    taskId: bna.id,
+    userId: john.id,
+  }).run();
   
   db.insert(schema.task).values({
     id: fakerEN.string.uuid(),
@@ -168,27 +209,39 @@ export async function defaultScenario() {
     storyPoints: 1,
     targetCount: 1,
     completedCount: 0,
-  });
+  }).run();
     // assignedTo: [jane],
-  const net = db.query.task.findFirst({
+  const net = await db.query.task.findFirst({
     where: eq(schema.task.title, "NET Meeting"),
   });
   if (!net) {
     throw new Error("NET task not found");
   }
+  db.insert(schema.taskUser).values({
+    taskId: net.id,
+    userId: jane.id,
+  }).run();
   
   db.insert(schema.category).values({
     id: fakerEN.string.uuid(),
     name: "Community",
     description: "Community tasks",
-  });
+  }).run();
     // tasks: [bna, net],
-  const community = db.query.category.findFirst({
+  const community = await db.query.category.findFirst({
     where: eq(schema.category.name, "Community"),
   });
   if (!community) {
     throw new Error("Community category not found");
   }
+  db.insert(schema.categoryTask).values({
+    categoryId: community.id,
+    taskId: bna.id,
+  }).run();
+  db.insert(schema.categoryTask).values({
+    categoryId: community.id,
+    taskId: net.id,
+  }).run();
   
   db.insert(schema.month).values({
     id: fakerEN.string.uuid(),
@@ -198,22 +251,34 @@ export async function defaultScenario() {
     newMoonDate: today.toISOString(),
     fullMoonDate: thirtyDaysFromNow.toISOString(),
     isActive: 1,
-  });
+  }).run();
     // categories: [gardening, spirituality, danceClass, community],
-  const currentMonth = db.query.month.findFirst({
-    where: eq(schema.month.name, "April 2025"),
+  const currentMonth = await db.query.month.findFirst({
+    where: eq(schema.month.name, "foo"),
   });
   if (!currentMonth) {
     throw new Error("Current month not found");
   }
+  db.insert(schema.monthCategory).values({
+    monthId: currentMonth.id,
+    categoryId: spirituality.id,
+  }).run();
+  db.insert(schema.monthCategory).values({
+    monthId: currentMonth.id,
+    categoryId: danceClass.id,
+  }).run();
+  db.insert(schema.monthCategory).values({
+    monthId: currentMonth.id,
+    categoryId: community.id,
+  }).run();
   
   db.insert(schema.templateTask).values({
     id: fakerEN.string.uuid(),
     title: "Meditation practice",
     storyPoints: 13,
     targetCount: 20,
-  });
-  const sTask = db.query.templateTask.findFirst({
+  }).run();
+  const sTask = await db.query.templateTask.findFirst({
     where: eq(schema.templateTask.title, "Meditation practice"),
   });
   if (!sTask) {
@@ -225,8 +290,8 @@ export async function defaultScenario() {
     id: fakerEN.string.uuid(),
     storyPoints: 13,
     targetCount: 20,
-  });
-  const dTask = db.query.templateTask.findFirst({
+  }).run();
+  const dTask = await db.query.templateTask.findFirst({
     where: eq(schema.templateTask.title, "Dance Class"),
   });
   if (!dTask) {
@@ -236,5 +301,5 @@ export async function defaultScenario() {
   db.insert(schema.template).values({
     id: fakerEN.string.uuid(),
     isActive: 1
-  });
+  }).run();
 }

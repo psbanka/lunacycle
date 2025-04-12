@@ -8,22 +8,30 @@ import { Button } from "@/components/ui/button";
 import { useTRPC } from "@/lib/trpc";
 import { useQuery, useMutation } from "@tanstack/react-query";
 
+// FIXME: find this elsewhere
+type CategoryTask = {
+  categoryId: string;
+  taskId: string;
+  task: Task;
+};
+
 type TaskCardProps = {
-  userTask: UserTask;
+  categoryTask: CategoryTask;
   compact?: boolean;
   className?: string;
 };
 
-export default function TaskCard({ userTask, compact = false, className }: TaskCardProps) {
-  const { completeTask, taskUsers, tasks } = useTask();
+export default function TaskCard({ categoryTask, compact = false, className }: TaskCardProps) {
+  const { completeTask, tasksByUser } = useTask();
   const { user } = useAuth();
   const trpc = useTRPC();
   
-  const task = tasks?.find(t => t.id === userTask.taskId);
+  const task = categoryTask?.task
   if (!task) return null;
   
   // const isAssignedToUser = user && Boolean(task.assignedTo.find((u) => u.id === user.id));
-  const isAssignedToUser = Boolean(taskUsers?.find(tu => tu.userId === user?.id && tu.taskId === userTask.taskId));
+  // const isAssignedToUser = Boolean(taskUsers?.find(tu => tu.userId === user?.id && tu.taskId === userTask.taskId));
+  const isAssignedToUser = true;
   const isCompleted = task.targetCount === task.completedCount;
   const progress = task.targetCount > 0 ? (task.completedCount / task.targetCount) * 100 : 0;
   

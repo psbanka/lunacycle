@@ -2,14 +2,11 @@ import {
   type FC,
   type ReactNode,
   createContext,
-  useState,
   useContext,
-  useEffect,
 } from "react";
 import { inferProcedureOutput } from "@trpc/server";
 import type { AppRouter } from "../../server/index";
 
-// import { Template, Category, MonthData, Task } from "@/types";
 import type { User, Task, Category, TaskUser } from "../../server/schema";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/lib/trpc";
@@ -29,35 +26,6 @@ export type UserTask = {
   taskId: string;
 }
 
-type TaskContextType = {
-  currentMonth: CurrentMonthType | undefined;
-  template: TemplateType | undefined;
-  users: User[] | undefined;
-  tasks: Task[] | undefined;
-
-  loadingTasks: boolean;
-  completeTask: (taskId: string) => void;
-  // incrementTaskCount: (taskId: string) => void;
-  addTask: (
-    task: Omit<Task, "id" | "createdAt">,
-    categoryId: string,
-    userIds: string[]
-  ) => void;
-  updateTask: (
-    taskId: string,
-    updates: Omit<Task, "id">,
-    categoryId: string,
-    userIds: string[]
-  ) => void;
-  deleteTask: (taskId: string) => void;
-  addCategory: (category: Omit<Category, "id" | "tasks">) => void;
-  updateCategory: (
-    categoryId: string,
-    updates: Omit<Category, "tasks">
-  ) => void;
-  deleteCategory: (categoryId: string) => void;
-};
-
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
@@ -69,6 +37,10 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const templateQuery = useQuery(templateQueryOptions);
   const userQueryOptions = trpc.getUsers.queryOptions();
   const userQuery = useQuery(userQueryOptions);
+  const getCategoriesByMonthId = trpc.getCategoriesByMonthId.queryOptions({ monthId: monthQuery.data?.id || ''});
+  const getCategoriesByMonthIdQuery = useQuery(getCategoriesByMonthId);
+  const getTasksByUserQueryOptions = trpc.getTasksByUserId.queryOptions({ userId: user?.id || ''});
+  const getTasksByUserQuery = useQuery(getTasksByUserQueryOptions);
 
   const completeTaskOptions = trpc.completeTask.mutationOptions();
   const completeTaskMutation = useMutation(completeTaskOptions);
@@ -84,8 +56,6 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const updateCategoryMutation = useMutation(updateCategoryOptions);
   const deleteCategoryOptions = trpc.deleteCategory.mutationOptions();
   const deleteCategoryMutation = useMutation(deleteCategoryOptions);
-  const getTasksByUserQueryOptions = trpc.getTasksByUserId.queryOptions({ userId: user?.id || ''});
-  const getTasksByUserQuery = useQuery(getTasksByUserQueryOptions);
 
   const completeTask = async (taskId: string) => {
     if (monthQuery.isError || monthQuery.isLoading) return;
@@ -153,7 +123,8 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
       value={{
         currentMonth: monthQuery.data,
         users: userQuery.data,
-        tasks: getTasksByUserQuery.data,
+        categories: getCategoriesByMonthIdQuery.data,
+        tasksByUser: getTasksByUserQuery.data,
         template: templateQuery.data,
         loadingTasks: monthQuery.isLoading,
         completeTask,
@@ -167,6 +138,35 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
       {children}
     </TaskContext.Provider>
   );
+};
+
+type TaskContextType = {
+  currentMonth: CurrentMonthType | undefined;
+  users: User[] | undefined;
+  categories: Category[] | undefined;
+  tasksByUser: Task[] | undefined;
+  template: TemplateType | undefined;
+
+  loadingTasks: boolean;
+  completeTask: (taskId: string) => void;
+  addTask: (
+    task: Omit<Task, "id" | "createdAt">,
+    categoryId: string,
+    userIds: string[]
+  ) => void;
+  updateTask: (
+    taskId: string,
+    updates: Omit<Task, "id">,
+    categoryId: string,
+    userIds: string[]
+  ) => void;
+  deleteTask: (taskId: string) => void;
+  addCategory: (category: Omit<Category, "id" | "tasks">) => void;
+  updateCategory: (
+    categoryId: string,
+    updates: Omit<Category, "tasks">
+  ) => void;
+  deleteCategory: (categoryId: string) => void;
 };
 
 export const useTask = () => {

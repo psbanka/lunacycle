@@ -98,7 +98,7 @@ export default function CheckInSheet() {
 
   // Analyze category progress
   const getCategoryStatus = (categoryId: string) => {
-    const category = currentMonth.monthCategories.flatMap(mc => mc.category).find(c => c.id === categoryId);
+    const category = currentMonth.monthCategories.flatMap(mc => mc.category).find(c => c?.id === categoryId);
     if (!category) return null;
 
     if (!category) return null;
@@ -108,15 +108,22 @@ export default function CheckInSheet() {
     
     if (totalTasks === 0) return null;
     
+    /*
     const completedTasks = tasks.filter((t) => t.targetCount === t.completedCount).length;
     const recurringTasks = tasks.filter((t) => t.targetCount > 1);
+    */
+   const completedTasks = 0
+   const recurringTasks = []
     
     // Check if any recurring tasks are behind schedule
     const behindScheduleTasks = recurringTasks.filter((task) => {
       // If we have more than 0 days remaining
       if (daysRemaining <= 0) return false;
       
+      /*
       const remainingCount = task.targetCount - task.completedCount;
+      */
+      const remainingCount = 1
       const daysPerRemaining = daysRemaining / remainingCount;
       
       // If we need to do more than one every other day, we're behind
@@ -191,15 +198,15 @@ export default function CheckInSheet() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {currentMonth.monthCategories.map((monthCategory) => {
-                  const status = getCategoryStatus(monthCategory.category.id);
+                  const status = getCategoryStatus(monthCategory.category?.id);
                   if (!status) return null;
                   
                   return (
                     <div 
-                      key={monthCategory.category.id} 
+                      key={monthCategory.category?.id} 
                       className="glass-card p-4 rounded-lg print:border print:border-gray-300 print:rounded"
                     >
-                      <h3 className="font-semibold mb-2">{monthCategory.category.name}</h3>
+                      <h3 className="font-semibold mb-2">{monthCategory.category?.name}</h3>
                       
                       <div className="space-y-2 text-sm">
                         <p>
@@ -207,6 +214,7 @@ export default function CheckInSheet() {
                           {status.completion}% ({status.completedTasks}/{status.totalTasks} tasks)
                         </p>
                         
+                        {/*
                         {status.behindScheduleTasks.length > 0 && (
                           <div className="text-destructive print:text-red-700">
                             <p className="font-medium">Needs attention:</p>
@@ -225,6 +233,7 @@ export default function CheckInSheet() {
                             </ul>
                           </div>
                         )}
+                          */}
                       </div>
                     </div>
                   );

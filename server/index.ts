@@ -123,7 +123,7 @@ const appRouter = router({
     .input(type({ userId: "string" }))
     .query(async ({ input }) => {
       const tasks = await db.query.task.findMany({
-        where: eq(schema.user.id, input.userId),
+        // where: eq(schema.user.id, input.userId),
         with: {
           taskUsers: {
             with: {
@@ -307,7 +307,7 @@ const appRouter = router({
 
       // 2. Remove existing user relationships for this task.
       // This deletes all rows in taskUser for this task.
-      await db
+      db
         .delete(schema.taskUser)
         .where(eq(schema.taskUser.taskId, taskInput.id))
         .run();
@@ -319,7 +319,7 @@ const appRouter = router({
         userId,
       }));
 
-      await db.insert(schema.taskUser).values(newRelations).run();
+      db.insert(schema.taskUser).values(newRelations).run();
 
       return db.query.task.findFirst({
         where: eq(schema.task.id, taskInput.id),
@@ -376,16 +376,16 @@ const appRouter = router({
         completedCount: 0,
         storyPoints: taskInput.storyPoints as (typeof FIBONACCI)[number],
         targetCount: taskInput.targetCount,
-      });
+      }).run();
 
       const newRelations = taskInput.userIds.map((userId) => ({
         taskId: newTaskId,
         userId,
       }));
 
-      await db.insert(schema.taskUser).values(newRelations).run();
+      db.insert(schema.taskUser).values(newRelations).run();
 
-      await db
+      db
         .insert(schema.categoryTask)
         .values({
           categoryId: taskInput.categoryId,
