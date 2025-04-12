@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -38,6 +37,7 @@ interface AddCategoryDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// FIXME: This should be for templateCategories not categories
 export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps) {
   const { addCategory } = useTask();
   const [isSubmitting, setIsSubmitting] = useState(false);

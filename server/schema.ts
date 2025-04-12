@@ -93,12 +93,24 @@ export const template = sqliteTable("template", {
   isActive: integer("is_active").$type<0 | 1>().notNull(),
 });
 
+export type Template = typeof template.$inferSelect;
+
+export const templateRelations = relations(template, ({ many }) => ({
+  templateTemplateCategories: many(templateTemplateCategory),
+}));
+
 // templateCategory table
 export const templateCategory = sqliteTable("template_category", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
 });
+
+export type TemplateCategory = typeof templateCategory.$inferSelect;
+
+export const templateCategoryRelations = relations(templateCategory, ({ many }) => ({
+  templateCategoryTemplateTasks: many(templateCategoryTemplateTask),
+}));
 
 // templateTask table
 export const templateTask = sqliteTable("template_task", {
@@ -108,6 +120,12 @@ export const templateTask = sqliteTable("template_task", {
   storyPoints: integer("story_points").notNull(),
   targetCount: integer("target_count").notNull(),
 });
+
+export type TemplateTask = typeof templateTask.$inferSelect;
+
+export const templateTaskRelations = relations(templateTask, ({ many }) => ({
+  templateTaskUsers: many(templateTaskUser),
+}));
 
 // ====================================================================
 // Join Tables for Many-to-Many Relationships
@@ -177,7 +195,6 @@ export const categoryTaskRelations = relations(categoryTask, ({
   }),
 }));
 
-// foo
 // task <-> user (user) join table
 export const taskUser = sqliteTable(
   "task_user",
@@ -196,8 +213,6 @@ export const taskUser = sqliteTable(
     }),
   ]
 );
-
-export type TaskUser = typeof taskUser.$inferSelect;
 
 export const taskUserRelations = relations(taskUser, ({
   one,
@@ -231,6 +246,19 @@ export const templateTemplateCategory = sqliteTable(
   ]
 );
 
+export const templateTemplateCategoryRelations = relations(templateTemplateCategory, ({
+  one,
+}) => ({
+  template: one(template, {
+    fields: [templateTemplateCategory.templateId],
+    references: [template.id],
+  }),
+  templateCategory: one(templateCategory, {
+    fields: [templateTemplateCategory.templateCategoryId],
+    references: [templateCategory.id],
+  }),
+}));
+
 // templateCategory <-> templateTask join table
 export const templateCategoryTemplateTask = sqliteTable(
   "template_category_template_task",
@@ -250,6 +278,19 @@ export const templateCategoryTemplateTask = sqliteTable(
   ] 
 );
 
+export const templateCategoryTemplateTaskRelations = relations(templateCategoryTemplateTask, ({
+  one,
+}) => ({
+  templateCategory: one(templateCategory, {
+    fields: [templateCategoryTemplateTask.templateCategoryId],
+    references: [templateCategory.id],
+  }),
+  templateTask: one(templateTask, {
+    fields: [templateCategoryTemplateTask.templateTaskId],
+    references: [templateTask.id],
+  }),
+}));
+
 // templateTask <-> user (user) join table
 export const templateTaskUser = sqliteTable(
   "template_task_user",
@@ -268,3 +309,16 @@ export const templateTaskUser = sqliteTable(
     }),
   ]
 );
+
+export const templateTaskUserRelations = relations(templateTaskUser, ({
+  one,
+}) => ({
+  templateTask: one(templateTask, {
+    fields: [templateTaskUser.templateTaskId],
+    references: [templateTask.id],
+  }),
+  user: one(user, {
+    fields: [templateTaskUser.userId],
+    references: [user.id],
+  }),
+}));

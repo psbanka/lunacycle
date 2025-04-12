@@ -40,18 +40,23 @@ const appRouter = router({
   getTemplate: publicProcedure.query(async () => {
     const template = await await db.query.template.findFirst({
       where: eq(schema.template.isActive, 1),
+      with: {
+        templateTemplateCategories: {
+          with: {
+            templateCategory: {
+              with: {
+                templateCategoryTemplateTasks: {
+                  with: {
+                    templateTask: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
     return template;
-
-    /*
-    const template = await db.template.findFirst({
-      where: { isActive: { equals: true } },
-    });
-    if (!template) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "No active template" });
-    }
-    return template;
-    */
   }),
   getActiveMonth: publicProcedure.query(async () => {
     // const userId = "x";

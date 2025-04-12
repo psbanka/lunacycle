@@ -7,7 +7,7 @@ import {
 import { inferProcedureOutput } from "@trpc/server";
 import type { AppRouter } from "../../server/index";
 
-import type { User, Task, Category, TaskUser } from "../../server/schema";
+import type { User, Task, Category } from "../../server/schema";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/lib/trpc";
 import { useAuth } from "./AuthContext";
@@ -114,10 +114,6 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
     toast.success("Category deleted!");
   };
 
-  const categories =
-    monthQuery.data?.monthCategories.map((mc) => mc.category) ?? [];
-
-
   return (
     <TaskContext.Provider
       value={{
@@ -147,6 +143,7 @@ type TaskContextType = {
   tasksByUser: Task[] | undefined;
   template: TemplateType | undefined;
 
+  // FIXME: Rename to 'loadingData'
   loadingTasks: boolean;
   completeTask: (taskId: string) => void;
   addTask: (

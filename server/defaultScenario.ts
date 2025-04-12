@@ -15,6 +15,7 @@ export async function defaultScenario() {
   console.log("🌱 Seeing the database...");
   const passwordHash = await hash("abc123", 10);
 
+  console.log("👨‍💻 Create the users...");
   db.insert(schema.user).values({
     id: "1",
     name: "Admin User",
@@ -63,6 +64,9 @@ export async function defaultScenario() {
   const today = new Date();
   const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
+  // TODO: CHANGE ALL THESE TO TEMPLATE TASKS, ETC, THEN CALL
+  // A FUNCTION THAT CREATES A MONTH BASED ON A TEMPLATE!!
+  console.log('📝 Create month tasks...')
   db.insert(schema.task).values({
     id: fakerEN.string.uuid(),
     title: "Weed",
@@ -272,34 +276,51 @@ export async function defaultScenario() {
     categoryId: community.id,
   }).run();
   
-  db.insert(schema.templateTask).values({
-    id: fakerEN.string.uuid(),
-    title: "Meditation practice",
-    storyPoints: 13,
-    targetCount: 20,
-  }).run();
-  const sTask = await db.query.templateTask.findFirst({
-    where: eq(schema.templateTask.title, "Meditation practice"),
-  });
-  if (!sTask) {
-    throw new Error("Meditation task not found");
-  }
-  
-  db.insert(schema.templateTask).values({
-    title: "Dance Class",
-    id: fakerEN.string.uuid(),
-    storyPoints: 13,
-    targetCount: 20,
-  }).run();
-  const dTask = await db.query.templateTask.findFirst({
-    where: eq(schema.templateTask.title, "Dance Class"),
-  });
-  if (!dTask) {
-    throw new Error("Dance Class task not found");
-  }
-  
+  // Templates
+  // ---------------------------------------------------------------------------
+
   db.insert(schema.template).values({
     id: fakerEN.string.uuid(),
     isActive: 1
   }).run();
+  const template = await db.query.template.findFirst({
+    where: eq(schema.template.isActive, 1),
+  });
+
+  db.insert(schema.templateCategory).values({
+    id: fakerEN.string.uuid(),
+    name: "Garden",
+    description: "Gardening tasks",
+  }).run();
+  const gardeningTc = await db.query.category.findFirst({
+    where: eq(schema.templateCategory.name, "Garden"),
+  });
+  if (!gardeningTc) {
+    throw new Error("Garden tc not found");
+  }
+  db.insert(schema.templateCategory).values({
+    templateCategoryId: gardeningTc.id,
+    templateId: template!.id,
+  }).run();
+    
+  console.log('gardeningTc', gardening)
+
+  db.insert(schema.templateTask).values({
+    id: fakerEN.string.uuid(),
+    title: "Weeding",
+    storyPoints: 13,
+    targetCount: 20,
+  }).run();
+  const wTask = await db.query.templateTask.findFirst({
+    where: eq(schema.templateTask.title, "Weeding"),
+  });
+  if (!wTask) {
+    throw new Error("Meditation task not found");
+  }
+  db.insert(schema.templateCategoryTemplateTask).values({
+    templateCategoryId: gardeningTc.id,
+    templateTaskId: wTask.id,
+  }).run();
+  
+  
 }
