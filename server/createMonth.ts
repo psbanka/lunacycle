@@ -18,20 +18,14 @@ export async function createMonthFromActiveTemplate() {
   }
 
   // 1. Create month
+  console.log("🕍 Create month...");
   const month = await createNewMonth();
 
   // 2. Create the categories
+  console.log("📝 Create categories...");
   const templateCategories = await db.query.templateCategory.findMany();
   for (const templateCategory of templateCategories) {
-    const category = await createCategoryFromTemplate(templateCategory);
-    const templateTaskRelations =
-      await db.query.templateCategoryTemplateTask.findMany({
-        where: eq(
-          schema.templateCategoryTemplateTask.templateCategoryId,
-          templateCategory.id
-        ),
-      });
-    await createTasksFromTemplate(templateTaskRelations, category.id);
+    const category = await createCategoryTasksAndAssignmentsFromTemplate(templateCategory);
 
     // 2c. Add new category to month
     db.insert(schema.monthCategory)
@@ -82,7 +76,7 @@ async function createTasksFromTemplate(
 ) {
   const tasks = [];
   for (const templateTaskRelation of templateTaskRelations) {
-    // 1. Get the template-task
+    // 1. Get the template-task -----------------------------------------
     const templateTask = await db.query.templateTask.findFirst({
       where: eq(schema.templateTask.id, templateTaskRelation.templateTaskId),
     });
@@ -93,7 +87,8 @@ async function createTasksFromTemplate(
       });
     }
 
-    // 2. Create new task from template
+    // 2. Create new task from template ----------------------------------
+    console.log(`> Copy ${templateTask.title} task...`);
     db.insert(schema.task)
       .values({
         id: fakerEN.string.uuid(),
@@ -104,26 +99,26 @@ async function createTasksFromTemplate(
         completedCount: 0,
       })
       .run();
-    const task = await db.query.task.findFirst({
+    const taskRecord = await db.query.task.findFirst({
       where: eq(schema.task.title, templateTask.title),
     });
-    if (!task) {
+    if (!taskRecord) {
       throw new TRPCError({
         code: "NOT_FOUND",
         message: `Could not create task ${templateTask.title}`,
       });
     }
-    tasks.push(task);
+    tasks.push(taskRecord);
 
-    // 2a. Associate the new task with the category
+    // 3. Associate the new task with the category -------------------------
     db.insert(schema.categoryTask)
       .values({
         categoryId: categoryId,
-        taskId: fakerEN.string.uuid(),
+        taskId: taskRecord.id,
       })
       .run();
 
-    // 2b. Create assignments based on users from template
+    // 3. Associate the task to the users ---------------------------------
     for (const templateTaskUser of await db.query.templateTaskUser.findMany({
       where: eq(schema.templateTaskUser.templateTaskId, templateTask.id),
     })) {
@@ -138,28 +133,39 @@ async function createTasksFromTemplate(
   return tasks;
 }
 
-async function createCategoryFromTemplate(templateCategory: {
-  id: string;
+async function createCategoryTasksAndAssignmentsFromTemplate({id, name, description, emoji}: {
+  id: string,
   name: string;
   description: string | null;
   emoji: string | null;
 }) {
+  console.log (`> Create ${emoji} ${name} category...`);
   db.insert(schema.category)
     .values({
       id: fakerEN.string.uuid(),
-      name: templateCategory.name,
-      description: templateCategory.description,
-      emoji: templateCategory.emoji,
+      name,
+      description,
+      emoji,
     })
     .run();
-  const category = await db.query.category.findFirst({
-    where: eq(schema.category.name, templateCategory.name),
+  const categoryRecord = await db.query.category.findFirst({
+    where: eq(schema.category.name, name),
   });
-  if (!category) {
+  if (!categoryRecord) {
     throw new TRPCError({
       code: "NOT_FOUND",
-      message: `Could not create category ${templateCategory.name}`,
+      message: `Could not create category ${name}`,
     });
   }
-  return category;
+
+  // 2. tasks with user assignments and categoryRecords
+  const templateTaskRelations =
+    await db.query.templateCategoryTemplateTask.findMany({
+      where: eq(
+        schema.templateCategoryTemplateTask.templateCategoryId,
+        id
+      ),
+    });
+  await createTasksFromTemplate(templateTaskRelations, categoryRecord.id);
+  return categoryRecord;
 }
