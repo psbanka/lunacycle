@@ -280,6 +280,8 @@ export const templateCategoryTemplateTask = sqliteTable(
   ] 
 );
 
+export type TemplateCategoryTemplateTask = typeof templateCategoryTemplateTask.$inferSelect;
+
 export const templateCategoryTemplateTaskRelations = relations(templateCategoryTemplateTask, ({
   one,
 }) => ({
@@ -311,6 +313,8 @@ export const templateTaskUser = sqliteTable(
     }),
   ]
 );
+
+export type TemplateTaskUser = typeof templateTaskUser.$inferSelect;
 
 export const templateTaskUserRelations = relations(templateTaskUser, ({
   one,
