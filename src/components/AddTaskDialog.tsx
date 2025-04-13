@@ -9,6 +9,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTask } from "@/contexts/TaskContext";
 import { Check, UserCircle } from "lucide-react";
+import { UserAvatar } from "@/components/UserAvatar";
 
 import {
   Dialog,
@@ -32,7 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar } from "@/components/ui/avatar";
 
 // Schema for task creation
 const taskSchema = z.object({
@@ -306,9 +307,12 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
                               </FormControl>
                               <div className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
-                                  <AvatarFallback className={isSelected ? "bg-primary text-primary-foreground" : ""}>
-                                    FIXME
-                                  </AvatarFallback>
+                                  <UserAvatar
+                                    key={user.id}
+                                    email={user.email}
+                                    dimmed={true}
+                                    avatarData={user.avatar}
+                                  />
                                 </Avatar>
                                 <span>{user.name}</span>
                               </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { useTask } from "@/contexts/TaskContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,17 +14,62 @@ import CheckInSheet from "@/components/CheckInSheet";
 export default function Home() {
   const { currentMonth, loadingTasks, createMonthFromTemplate } = useTask();
   const [showAddTask, setShowAddTask] = useState(false);
+  const [daysRemaining, setDaysRemaining] = useState(0);
 
   // Get current date
   const currentDate = new Date();
 
-  // Calculate days remaining in month
-  const lastDayOfMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() + 1,
-    0
-  );
-  const daysRemaining = lastDayOfMonth.getDate() - currentDate.getDate();
+  useEffect(() => {
+    const calculateDaysUntilNextFullMoon = () => {
+      const getLunarPhase = (date: Date): { phase: string; name: string } => {
+        // Known new moon date for reference
+        const knownNewMoon = new Date('2023-06-18');
+        const daysSinceKnownNewMoon = Math.floor(
+          (date.getTime() - knownNewMoon.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        
+        // Normalize to get position in current cycle (0 to 29.53)
+        const dayInCycle = (daysSinceKnownNewMoon % 29.53);
+        
+        // Convert to a position in the cycle from 0 to 1
+        const cyclePosition = dayInCycle / 29.53;
+        
+        // Determine phase
+        if (cyclePosition < 0.025) return { phase: 'new-moon', name: 'New Moon' };
+        if (cyclePosition < 0.25) return { phase: 'waxing-crescent', name: 'Waxing Crescent' };
+        if (cyclePosition < 0.275) return { phase: 'first-quarter', name: 'First Quarter' };
+        if (cyclePosition < 0.475) return { phase: 'waxing-gibbous', name: 'Waxing Gibbous' };
+        if (cyclePosition < 0.525) return { phase: 'full-moon', name: 'Full Moon' };
+        if (cyclePosition < 0.725) return { phase: 'waning-gibbous', name: 'Waning Gibbous' };
+        if (cyclePosition < 0.775) return { phase: 'last-quarter', name: 'Last Quarter' };
+        if (cyclePosition < 0.975) return { phase: 'waning-crescent', name: 'Waning Crescent' };
+        return { phase: 'new-moon', name: 'New Moon' };
+      };
+
+      const daysInLunarCycle = 29.53;
+      const { phase: currentPhase } = getLunarPhase(currentDate);
+
+      if (currentPhase === 'full-moon') {
+        setDaysRemaining(0);
+        return;
+      }
+
+      let daysUntilFullMoon = 0;
+      const tempDate = new Date(currentDate);
+      while (daysUntilFullMoon < daysInLunarCycle) {
+        tempDate.setDate(tempDate.getDate() + 1);
+        const { phase } = getLunarPhase(tempDate);
+        daysUntilFullMoon++;
+        if (phase === 'full-moon') {
+          setDaysRemaining(daysUntilFullMoon);
+          return;
+        }
+      }
+    };
+
+    calculateDaysUntilNextFullMoon();
+  }, [currentDate]);
+
   if (loadingTasks) {    return <LoadingScreen />;
   }
 
@@ -70,7 +115,7 @@ export default function Home() {
         <div>
           <h1 className="text-3xl font-bold">{currentMonth.name}</h1>
           <p className="text-muted-foreground">
-            {daysRemaining} days remaining in this lunar cycle
+            {daysRemaining} days until the next full moon
           </p>
         </div>
 
