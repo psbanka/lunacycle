@@ -16,6 +16,7 @@ import Template from "./pages/Template";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 function makeQueryClient() {
   return new QueryClient({
@@ -121,6 +122,8 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+        <ReactQueryDevtools initialIsOpen={false} />
+
           <TooltipProvider>
             <ThemeProvider>
               <AuthProvider>
