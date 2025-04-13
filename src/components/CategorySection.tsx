@@ -3,15 +3,18 @@ import TaskCard from "./TaskCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useTask } from "@/contexts/TaskContext";
+import { AddTaskDialog } from "@/components/AddTaskDialog";
+import { useState } from "react";
+
 
 type CategorySectionProps = {
   id: string;
-  onAddTask?: (categoryId: string) => void;
 };
 
-export default function CategorySection({ id, onAddTask }: CategorySectionProps) {
-  const { user } = useAuth();
-  const { currentMonth } = useTask();
+export default function CategorySection({ id }: CategorySectionProps) {
+  const { addTask, currentMonth } = useTask();
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  
   if (!currentMonth) return null;
   
   // Filter tasks that are assigned to the current user
@@ -23,20 +26,22 @@ export default function CategorySection({ id, onAddTask }: CategorySectionProps)
     
   return (
     <div className="mb-8">
+      <AddTaskDialog
+        open={isAddTaskOpen}
+        onOpenChange={setIsAddTaskOpen}
+        categoryId={id}
+      />
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-semibold">{categoryMonth.category?.name}</h2>
-        
-        {onAddTask && (
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => onAddTask(categoryMonth.category?.id)}
+            onClick={() => setIsAddTaskOpen(true)}
             className="text-xs gap-1"
           >
             <Plus className="h-3.5 w-3.5" />
             Add Task
           </Button>
-        )}
       </div>
       
       {categoryTasks.length === 0 ? (

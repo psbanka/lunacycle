@@ -1,4 +1,4 @@
-import { FIBONACCI } from "../../server/index";
+import { FIBONACCI } from "../../shared/types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 // import type { User } from "@/types";
@@ -48,15 +48,12 @@ type TaskFormValues = z.infer<typeof taskSchema>;
 interface AddTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  categoryId: string;
+  categoryId?: string;
+  templateCategoryId?: string;
 }
 
-// Available story points (Fibonacci sequence)
-// FIXME
-const STORY_POINTS = [1, 2, 3, 5, 8, 13];
-
-export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogProps) {
-  const { addTask, users } = useTask();
+export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategoryId, }: AddTaskDialogProps) {
+  const { addTask, addTemplateTask, users } = useTask();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<TaskFormValues>({
@@ -70,17 +67,28 @@ export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogP
     },
   });
 
+  if (!categoryId && !templateCategoryId) return null;
+
   const onSubmit = async (values: TaskFormValues) => {
     setIsSubmitting(true);
     const userIds = values.users
     try {
-      addTask({
-        title: values.title,
-        description: values.description || null,
-        storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
-        targetCount: values.targetCount,
-        completedCount: 0,
-      }, categoryId, userIds);
+      if (categoryId) {
+        await addTask({
+          title: values.title,
+          description: values.description || null,
+          storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
+          targetCount: values.targetCount,
+          completedCount: 0,
+        }, userIds, categoryId);
+      } else if (templateCategoryId) {
+        await addTemplateTask({
+          title: values.title,
+          description: values.description || null,
+          storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
+          targetCount: values.targetCount,
+        }, userIds, templateCategoryId);
+      }
       
       // Reset form and close dialog
       form.reset();
@@ -144,7 +152,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogP
                 <FormItem>
                   <FormLabel>Story Points</FormLabel>
                   <div className="flex gap-2 flex-wrap">
-                    {STORY_POINTS.map((points) => (
+                    {FIBONACCI.map((points) => (
                       <Button
                         key={points}
                         type="button"
@@ -164,6 +172,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogP
               )}
             />
             
+            {templateCategoryId && (
             <FormField
               control={form.control}
               name="targetCount"
@@ -190,6 +199,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogP
                 </FormItem>
               )}
             />
+            )}
             
             <FormField
               control={form.control}
@@ -249,7 +259,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId }: AddTaskDialogP
                 <Button type="button" variant="outline">Cancel</Button>
               </DialogClose>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : "Add Task"}
+                {isSubmitting ? "Adding..." : categoryId ? "Add Task" : "Add Template Task"}
               </Button>
             </DialogFooter>
           </form>

@@ -1,4 +1,4 @@
-import { FIBONACCI } from "../../server/index";
+import { FIBONACCI } from "../../shared/types";
 
 // User related types
 export type User = {

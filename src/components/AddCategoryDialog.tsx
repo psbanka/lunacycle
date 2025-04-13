@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 const categorySchema = z.object({
   name: z.string().min(1, "Category name is required"),
   description: z.string().optional(),
+  emoji: z.string().optional(),
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
@@ -55,6 +56,7 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
     
     try {
       addCategory({
+        emoji: values.emoji || null,
         name: values.name,
         description: values.description || null,
       });

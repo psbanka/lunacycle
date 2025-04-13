@@ -3,12 +3,14 @@ import { eq } from "drizzle-orm";
 import * as schema from "./schema";
 import { TRPCError } from "@trpc/server";
 import { fakerEN } from "@faker-js/faker";
+import { createTaskWithCategoryAndAssignments } from "./addTask";
 
 export async function createMonthFromActiveTemplate() {
   const template = await db.query.template.findFirst({
     where: eq(schema.template.isActive, 1),
   });
-  // TODO: if there is another active month, find all the incomplete singleton
+
+  // TODO: if there is already an active month, find all the incomplete singleton
   // tasks and move them.
   if (!template) {
     throw new TRPCError({
@@ -74,7 +76,7 @@ async function createTasksFromTemplate(
   }[],
   categoryId: string,
 ) {
-  const tasks = [];
+  const tasks: schema.Task[] = [];
   for (const templateTaskRelation of templateTaskRelations) {
     // 1. Get the template-task -----------------------------------------
     const templateTask = await db.query.templateTask.findFirst({
@@ -89,46 +91,14 @@ async function createTasksFromTemplate(
 
     // 2. Create new task from template ----------------------------------
     console.log(`> Copy ${templateTask.title} task...`);
-    db.insert(schema.task)
-      .values({
-        id: fakerEN.string.uuid(),
-        title: templateTask.title,
-        description: templateTask.description,
-        storyPoints: templateTask.storyPoints,
-        targetCount: templateTask.targetCount,
-        completedCount: 0,
-      })
-      .run();
-    const taskRecord = await db.query.task.findFirst({
-      where: eq(schema.task.title, templateTask.title),
-    });
-    if (!taskRecord) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: `Could not create task ${templateTask.title}`,
-      });
-    }
-    tasks.push(taskRecord);
-
-    // 3. Associate the new task with the category -------------------------
-    db.insert(schema.categoryTask)
-      .values({
-        categoryId: categoryId,
-        taskId: taskRecord.id,
-      })
-      .run();
-
-    // 3. Associate the task to the users ---------------------------------
+    const userIds: string[] = [];
     for (const templateTaskUser of await db.query.templateTaskUser.findMany({
       where: eq(schema.templateTaskUser.templateTaskId, templateTask.id),
     })) {
-      db.insert(schema.taskUser)
-        .values({
-          taskId: templateTask.id,
-          userId: templateTaskUser.userId,
-        })
-        .run();
+      userIds.push(templateTaskUser.userId);
     }
+    const task = await createTaskWithCategoryAndAssignments({...templateTask, categoryId, userIds});
+    tasks.push(task);
   }
   return tasks;
 }

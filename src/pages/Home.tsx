@@ -84,14 +84,6 @@ export default function Home() {
       </div>
 
       <div className="mb-8 flex flex-wrap gap-3">
-        <Button
-          variant="outline"
-          className="gap-1"
-          onClick={() => setShowAddTask(true)}>
-          <PlusCircle className="h-4 w-4" />
-          Add Task
-        </Button>
-
         <CheckInSheet />
       </div>
 

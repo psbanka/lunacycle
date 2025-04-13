@@ -7,7 +7,7 @@ import {
 import { inferProcedureOutput } from "@trpc/server";
 import type { AppRouter } from "../../server/index";
 
-import type { User, Task, Category } from "../../server/schema";
+import type { User, Task, TemplateTask, Category } from "../../server/schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/lib/trpc";
 import { useAuth } from "./AuthContext";
@@ -46,55 +46,54 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const createMonthFromTemplateOptions = trpc.createMonthFromTemplate.mutationOptions();
   const createMonthFromTemplateMutation = useMutation(createMonthFromTemplateOptions);
   const completeTaskOptions = trpc.completeTask.mutationOptions({
-    onSuccess: () => {
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
-      queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
+      await queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
     },
   });
   const completeTaskMutation = useMutation(completeTaskOptions);
   const deleteTaskOptions = trpc.deleteTask.mutationOptions({
-    onSuccess: () => {
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
-      queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
+      await queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
     },
   });
   const deleteTaskMutation = useMutation(deleteTaskOptions);
   const addCategoryOptions = trpc.addCategory.mutationOptions({
-    onSuccess: () => {
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
+    onSuccess:  async() => {
+      await queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
     },
   });
   const addCategoryMutation = useMutation(addCategoryOptions);
   const updateTaskOptions = trpc.updateTask.mutationOptions({
-    onSuccess: () => {
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
-      queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
+    onSuccess:  async() => {
+      await queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
+      await queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
     },
   });
   const updateTaskMutation = useMutation(updateTaskOptions);
   const addTaskOptions = trpc.addTask.mutationOptions({
-    onSuccess: () => {
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
-      queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
+    onSuccess:  async() => {
+      await queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
+      await queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
     },
   });
   const addTaskMutation = useMutation(addTaskOptions);
+  const addTemplateTaskOptions = trpc.addTemplateTask.mutationOptions({
+    onSuccess:  async() => {
+      await queryClient.invalidateQueries({ queryKey: trpc.getTemplate.queryKey() });
+    },
+  });
+  const addTemplateTaskMutation = useMutation(addTemplateTaskOptions);
   const updateCategoryOptions = trpc.updateCategory.mutationOptions({
-    onSuccess: () => {
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
+    onSuccess:  async() => {
+      await queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
     },
   });
   const updateCategoryMutation = useMutation(updateCategoryOptions);
   const deleteCategoryOptions = trpc.deleteCategory.mutationOptions({
-    onSuccess: () => {
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
+    onSuccess:  async() => {
+      await queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
     },
   });
   const deleteCategoryMutation = useMutation(deleteCategoryOptions);
@@ -108,11 +107,21 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const addTask = async (
     task: Omit<Task, "id" | "createdAt">,
+    userIds: string[],
     categoryId: string,
-    userIds: string[]
   ) => {
     await addTaskMutation.mutateAsync({
       task: { ...task, categoryId, userIds: userIds },
+    });
+  };
+
+  const addTemplateTask = async (
+    templateTask: Omit<TemplateTask, "id" | "createdAt">,
+    userIds: string[],
+    templateCategoryId: string,
+  ) => {
+    await addTemplateTaskMutation.mutateAsync({
+      task: { ...templateTask, templateCategoryId, userIds: userIds },
     });
     toast.success("Task added successfully!");
   };
@@ -168,6 +177,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
         createMonthFromTemplate: createMonthFromTemplateMutation.mutate,
         completeTask,
         addTask,
+        addTemplateTask,
         updateTask,
         deleteTask,
         addCategory,
@@ -192,8 +202,13 @@ type TaskContextType = {
   completeTask: (taskId: string) => void;
   addTask: (
     task: Omit<Task, "id" | "createdAt">,
+    userIds: string[],
     categoryId: string,
-    userIds: string[]
+  ) => void;
+  addTemplateTask: (
+    templateTask: Omit<TemplateTask, "id" | "createdAt">,
+    userIds: string[],
+    categoryId: string,
   ) => void;
   updateTask: (
     taskId: string,

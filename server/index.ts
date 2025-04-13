@@ -9,8 +9,7 @@ import { eq, and, inArray } from "drizzle-orm";
 import cors from "cors";
 import * as schema from "./schema";
 import { fakerEN } from "@faker-js/faker";
-
-export const FIBONACCI = [1, 2, 3, 5, 8, 13, 21] as const;
+import { addTask, addTemplateTask } from "./addTask.ts";
 
 const appRouter = router({
   login,
@@ -340,78 +339,8 @@ const appRouter = router({
         },
       });
     }),
-  addTask: publicProcedure
-    .input(
-      type({
-        task: type({
-          title: "string",
-          description: "string | null",
-          storyPoints: "number",
-          targetCount: "number",
-          userIds: "string[]",
-          categoryId: "string",
-        }),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const { task: taskInput } = input;
-      const category = await db.query.category.findFirst({
-        where: eq(schema.category.id, taskInput.categoryId),
-      });
-      if (!category) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Category not found",
-        });
-      }
-      const users = await db
-        .select()
-        .from(schema.user)
-        .where(inArray(schema.user.id, taskInput.userIds))
-        .all();
-
-      if (users.length !== taskInput.userIds.length) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found",
-        });
-      }
-      const newTaskId = fakerEN.string.uuid();
-      const newTask = db.insert(schema.task).values({
-        id: newTaskId,
-        title: taskInput.title,
-        description: taskInput.description,
-        completedCount: 0,
-        storyPoints: taskInput.storyPoints as (typeof FIBONACCI)[number],
-        targetCount: taskInput.targetCount,
-      }).run();
-
-      const newRelations = taskInput.userIds.map((userId) => ({
-        taskId: newTaskId,
-        userId,
-      }));
-
-      db.insert(schema.taskUser).values(newRelations).run();
-
-      db
-        .insert(schema.categoryTask)
-        .values({
-          categoryId: taskInput.categoryId,
-          taskId: newTaskId,
-        })
-        .run();
-
-      return db.query.task.findFirst({
-        where: eq(schema.task.id, newTaskId),
-        with: {
-          taskUsers: {
-            with: {
-              user: { columns: { id: true } },
-            },
-          },
-        },
-      });
-    }),
+  addTask,
+  addTemplateTask,
   deleteTask: publicProcedure
     .input(type({ taskId: "string" }))
     .mutation(async ({ input }) => {
