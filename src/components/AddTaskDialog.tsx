@@ -41,6 +41,7 @@ const taskSchema = z.object({
   description: z.string().optional(),
   storyPoints: z.number().min(1).max(13),
   targetCount: z.number().min(1).max(31),
+  completedCount: z.number().optional(),
   users: z.array(z.string()).min(1, "At least one person must be assigned"),
 });
 
@@ -58,6 +59,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
   const { addTask, updateTask, updateTemplateTask, addTemplateTask, users } = useTask();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditingId = initialValues?.id;
+  const isEditingTask = isEditingId && categoryId;
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -66,6 +68,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
       description: "",
       storyPoints: 1,
       targetCount: 1,
+      completedCount: 0,
       users: ["1"], // Default to first user
       ...initialValues,
     },
@@ -83,6 +86,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
           description: values.description || null,
           storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
           targetCount: values.targetCount,
+          completedCount: values.completedCount || 0,
         }, categoryId, values.users)
       } else if (isEditingId && templateCategoryId) {
         await updateTemplateTask(isEditingId, {
@@ -217,6 +221,56 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
                 </FormItem>
               )}
             />
+            )}
+
+            {isEditingTask && initialValues?.targetCount === 1 && (
+              <FormField
+                control={form.control}
+                name="completedCount"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel>Completed</FormLabel>
+                      <FormDescription>
+                        Mark this task as complete
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value === 1}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked ? 1 : 0);
+                        }}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {isEditingTask && initialValues?.targetCount && initialValues.targetCount > 1 && (
+              <FormField
+                control={form.control}
+                name="completedCount"
+                render={({ field: { value, onChange } }) => (
+                  <FormItem>
+                    <FormLabel>Completed Count: {value}</FormLabel>
+                    <FormControl>
+                      <Slider
+                        min={0}
+                        max={initialValues.targetCount}
+                        step={1}
+                        value={[value ?? 0]}
+                        onValueChange={(vals) => onChange(vals[0])}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Set the number of times this task has been completed.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
             
             <FormField

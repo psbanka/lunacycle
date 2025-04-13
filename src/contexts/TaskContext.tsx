@@ -147,7 +147,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const updateTask = async (
     taskId: string,
-    updates: Omit<Task, "completedCount" | "id">,
+    updates: Omit<Task, "id">,
     categoryId: string,
     userIds: string[]
   ) => {
@@ -244,13 +244,13 @@ type TaskContextType = {
   ) => void;
   updateTask: (
     taskId: string,
-    updates: Omit<Task, "completedCount" | "id">,
+    updates: Omit<Task, "id">,
     categoryId: string,
     userIds: string[]
   ) => void;
   updateTemplateTask: (
     templateTaskId: string,
-    updates: Omit<TemplateTask, "completedCount" | "id">,
+    updates: Omit<TemplateTask, "id">,
     templateCategoryId: string,
     userIds: string[]
   ) => void;
