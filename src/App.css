@@ -5,6 +5,10 @@
   text-align: center;
 }
 
+.avatar-container {
+  filter: grayscale(0.5) opacity(0.5); /* Dim the avatars */
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

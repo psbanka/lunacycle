@@ -1,16 +1,16 @@
-// src/components/UserAvatar.tsx
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
   email: string;
   avatarData: string | null;
+  dimmed?: boolean; // Add a prop to control dimming
 }
 
-export const UserAvatar: React.FC<UserAvatarProps> = ({ email, avatarData }) => {
-
+export const UserAvatar: React.FC<UserAvatarProps> = ({ email, avatarData, dimmed }) => {
   return (
-    <Avatar>
+    <Avatar className={cn(dimmed && "avatar-dimmed")}> {/* Apply dimmed class conditionally */}
       {avatarData ? (
         <AvatarImage src={avatarData} alt={email} />
       ) : (
