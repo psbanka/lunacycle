@@ -36,6 +36,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 // Schema for task creation
 const taskSchema = z.object({
+  id: z.string().optional(),
   title: z.string().min(1, "Task title is required"),
   description: z.string().optional(),
   storyPoints: z.number().min(1).max(13),
@@ -50,11 +51,13 @@ interface AddTaskDialogProps {
   onOpenChange: (open: boolean) => void;
   categoryId?: string;
   templateCategoryId?: string;
+  initialValues?: Partial<TaskFormValues>;
 }
 
-export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategoryId, }: AddTaskDialogProps) {
-  const { addTask, addTemplateTask, users } = useTask();
+export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategoryId, initialValues }: AddTaskDialogProps) {
+  const { addTask, updateTask, updateTemplateTask, addTemplateTask, users } = useTask();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditingId = initialValues?.id;
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -64,6 +67,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
       storyPoints: 1,
       targetCount: 1,
       users: ["1"], // Default to first user
+      ...initialValues,
     },
   });
 
@@ -73,7 +77,21 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
     setIsSubmitting(true);
     const userIds = values.users
     try {
-      if (categoryId) {
+      if (isEditingId && categoryId) {
+        await updateTask(isEditingId, {
+          title: values.title,
+          description: values.description || null,
+          storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
+          targetCount: values.targetCount,
+        }, categoryId, values.users)
+      } else if (isEditingId && templateCategoryId) {
+        await updateTemplateTask(isEditingId, {
+          title: values.title,
+          description: values.description || null,
+          storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
+          targetCount: values.targetCount,
+        }, templateCategoryId, values.users)
+      } else if (categoryId) {
         await addTask({
           title: values.title,
           description: values.description || null,
@@ -108,7 +126,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Task</DialogTitle>
+          <DialogTitle>{isEditingId ? "Edit Task" : "Add New Task"}</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
@@ -258,9 +276,15 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
               <DialogClose asChild>
                 <Button type="button" variant="outline">Cancel</Button>
               </DialogClose>
+              {isEditingId ? (
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Updating..." : categoryId ? "Edit Task" : "Edit Template Task"}
+                </Button>
+              ) : (
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Adding..." : categoryId ? "Add Task" : "Add Template Task"}
               </Button>
+              )}
             </DialogFooter>
           </form>
         </Form>

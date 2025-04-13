@@ -9,7 +9,12 @@ import { eq, and, inArray } from "drizzle-orm";
 import cors from "cors";
 import * as schema from "./schema";
 import { fakerEN } from "@faker-js/faker";
-import { addTask, addTemplateTask } from "./addTask.ts";
+import {
+  addTask,
+  addTemplateTask,
+  updateTaskWithCategoryAndAssignments,
+  updateTemplateTaskWithCategoryAndAssignments,
+} from "./addTask.ts";
 
 const appRouter = router({
   login,
@@ -54,8 +59,8 @@ const appRouter = router({
                             user: true,
                           },
                         },
-                      }
-                    }
+                      },
+                    },
                   },
                 },
               },
@@ -66,8 +71,9 @@ const appRouter = router({
     });
     return template;
   }),
-  createMonthFromTemplate: publicProcedure
-    .mutation(createMonthFromActiveTemplate),
+  createMonthFromTemplate: publicProcedure.mutation(
+    createMonthFromActiveTemplate
+  ),
   getActiveMonth: publicProcedure.query(async () => {
     // const userId = "x";
     const currentMonth = await db.query.month.findFirst({
@@ -145,7 +151,7 @@ const appRouter = router({
               user: { columns: { id: true } },
             },
           },
-        }
+        },
       });
       return tasks;
     }),
@@ -169,8 +175,8 @@ const appRouter = router({
           code: "NOT_FOUND",
           message: "No active template",
         });
-      } 
-      
+      }
+
       const result = db
         .insert(schema.templateCategory)
         .values({ ...templateCategory, id: templateCategoryId })
@@ -188,8 +194,9 @@ const appRouter = router({
         .values({
           templateId: template.id,
           templateCategoryId,
-        }).run();
-        
+        })
+        .run();
+
       return newTemplateCategory;
     }),
   updateCategory: publicProcedure
@@ -248,120 +255,26 @@ const appRouter = router({
         }),
       })
     )
+    .mutation(
+      async ({ input }) =>
+        await updateTaskWithCategoryAndAssignments(input.task)
+    ),
+  updateTemplateTask: publicProcedure
+    .input(
+      type({
+        task: type({
+          id: "string",
+          title: "string",
+          description: "string | null",
+          storyPoints: "number",
+          targetCount: "number",
+          userIds: "string[]",
+          templateCategoryId: "string",
+        }),
+      })
+    )
     .mutation(async ({ input }) => {
-      const { task: taskInput } = input;
-      const task = await db.query.task.findFirst({
-        where: eq(schema.task.id, taskInput.id),
-      });
-      if (!task) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
-      }
-      const newCategory = await db.query.category.findFirst({
-        where: eq(schema.category.id, taskInput.categoryId),
-      });
-      if (!newCategory) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Category not found",
-        });
-      }
-      const categories = await db
-        .select({
-          id: schema.category.id,
-          name: schema.category.name,
-          description: schema.category.description,
-        })
-        .from(schema.category)
-        .innerJoin(
-          schema.categoryTask,
-          eq(schema.category.id, schema.categoryTask.categoryId)
-        )
-        .where(eq(schema.categoryTask.taskId, taskInput.id))
-        .all();
-      if (categories.length !== 1)
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Category not found associated with task",
-        });
-
-      const [oldCategory] = categories;
-      if (!oldCategory) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Category not found",
-        });
-      }
-      const newUserIds: string[] = [];
-      for (const userId of taskInput.userIds) {
-        const user = await db.query.user.findFirst({
-          where: eq(schema.user.id, userId),
-        });
-        if (!user) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "User not found",
-          });
-        }
-        newUserIds.push(user.id);
-      }
-      if (newCategory !== oldCategory) {
-        // Delete the task relationship from the old category
-        await db
-          .delete(schema.categoryTask)
-          .where(
-            and(
-              eq(schema.categoryTask.categoryId, oldCategory.id),
-              eq(schema.categoryTask.taskId, taskInput.id)
-            )
-          )
-          .run();
-
-        await db
-          .insert(schema.categoryTask)
-          .values({
-            categoryId: newCategory.id,
-            taskId: taskInput.id,
-          })
-          .run();
-      }
-
-      // 1. Update the task
-      db.update(schema.task)
-        .set({
-          title: taskInput.title,
-          description: taskInput.description,
-          storyPoints: taskInput.storyPoints,
-          targetCount: taskInput.targetCount,
-        })
-        .where(eq(schema.task.id, taskInput.id))
-        .run();
-
-      // 2. Remove existing user relationships for this task.
-      // This deletes all rows in taskUser for this task.
-      db
-        .delete(schema.taskUser)
-        .where(eq(schema.taskUser.taskId, taskInput.id))
-        .run();
-
-      // 3. Insert new user relationships.
-      // Map each new user id to a join record with the taskId.
-      const newRelations = newUserIds.map((userId) => ({
-        taskId: taskInput.id,
-        userId,
-      }));
-
-      db.insert(schema.taskUser).values(newRelations).run();
-
-      return db.query.task.findFirst({
-        where: eq(schema.task.id, taskInput.id),
-        with: {
-          taskUsers: {
-            with: {
-              user: { columns: { id: true } },
-            },
-          },
-        },
-      });
+      await updateTemplateTaskWithCategoryAndAssignments(input.task);
     }),
   addTask,
   addTemplateTask,

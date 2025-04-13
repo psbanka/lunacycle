@@ -7,13 +7,13 @@ import * as schema from "./schema";
 import { fakerEN } from "@faker-js/faker";
 import { FIBONACCI } from "../shared/types";
 
-type TaskCreationInfo = Omit<schema.Task, "id" | "createdAt" | "completedCount"> & {
+type TaskCreationProps = Omit<schema.Task, "id" | "createdAt" | "completedCount"> & {
   userIds: string[];
   categoryId: string;
 };
 
-export async function createTaskWithCategoryAndAssignments(taskInfo: TaskCreationInfo) {
-  const taskId = fakerEN.string.uuid()
+export async function createTaskWithCategoryAndAssignments(taskInfo: TaskCreationProps, taskId?: string) {
+  taskId = taskId ?? fakerEN.string.uuid()
   // 1. Create the task --------------------------------------------------
   db.insert(schema.task)
     .values({
@@ -55,13 +55,81 @@ export async function createTaskWithCategoryAndAssignments(taskInfo: TaskCreatio
   return taskRecord;
 }
 
-type TemplateTaskCreationInfo = Omit<schema.TemplateTask, "id" | "createdAt"> & {
+type TaskMofificationProps = Omit<schema.Task, "createdAt" | "completedCount"> & {
+  userIds: string[];
+  categoryId: string;
+};
+
+export async function updateTaskWithCategoryAndAssignments(taskInfo: TaskMofificationProps) {
+  // 0. Remove old task
+  const currentTask = await db.query.task.findFirst({
+    where: eq(schema.task.id, taskInfo.id),
+  });
+  if (!currentTask) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: `Could not find task ${taskInfo.id}`,
+    });
+  }
+  db.delete(schema.task)
+    .where(eq(schema.task.id, taskInfo.id))
+    .run();
+
+  // 1. Remove existing category assignments
+  db.delete(schema.categoryTask)
+    .where(eq(schema.categoryTask.taskId, taskInfo.id))
+    .run();
+  
+  // 2. Remove old user assignments
+  db.delete(schema.taskUser)
+    .where(eq(schema.taskUser.taskId, taskInfo.id))
+    .run();
+
+  // 3. Call createTaskWithCategoryAndAssignments
+  return createTaskWithCategoryAndAssignments(taskInfo, taskInfo.id);
+}
+
+type TemplateTaskMofificationProps = Omit<schema.TemplateTask, "createdAt"> & {
   userIds: string[];
   templateCategoryId: string;
 };
 
-export async function createTemplateTaskWithCategoryAndAssignments(taskInfo: TemplateTaskCreationInfo) {
-  const templateTaskId = fakerEN.string.uuid()
+export async function updateTemplateTaskWithCategoryAndAssignments(templateTaskInfo: TemplateTaskMofificationProps) {
+  // 0. Verify that the thing we want exists and then get rid of it.
+  const currentTemplateTask = await db.query.templateTask.findFirst({
+    where: eq(schema.templateTask.id, templateTaskInfo.id),
+  });
+  if (!currentTemplateTask) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: `Could not find templateTask ${templateTaskInfo.id}`,
+    });
+  }
+  db.delete(schema.templateTask)
+    .where(eq(schema.templateTask.id, templateTaskInfo.id))
+    .run();
+
+  // 1. Remove old templateCategory assignments
+  db.delete(schema.templateCategoryTemplateTask)
+    .where(eq(schema.templateCategoryTemplateTask.templateTaskId, templateTaskInfo.id))
+    .run();
+  
+  // 2. Remove old user assignments
+  db.delete(schema.templateTaskUser)
+    .where(eq(schema.templateTaskUser.templateTaskId, templateTaskInfo.id))
+    .run();
+
+  // 3. Call createTaskWithCategoryAndAssignments
+  return createTemplateTaskWithCategoryAndAssignments(templateTaskInfo, templateTaskInfo.id);
+}
+
+type TemplateTaskCreationProps = Omit<schema.TemplateTask, "id" | "createdAt"> & {
+  userIds: string[];
+  templateCategoryId: string;
+};
+
+export async function createTemplateTaskWithCategoryAndAssignments(taskInfo: TemplateTaskCreationProps, templateTaskId?: string) {
+  templateTaskId = templateTaskId ?? fakerEN.string.uuid()
   // 1. Create the task --------------------------------------------------
   db.insert(schema.templateTask)
     .values({
