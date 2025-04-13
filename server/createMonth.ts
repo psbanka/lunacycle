@@ -40,12 +40,35 @@ export async function createMonthFromActiveTemplate() {
   return month;
 }
 
+function moonName() {
+  const MOON_LOOKUP = [
+    "Wolf Moon",
+    "Snow Moon",
+    "Worm Moon",
+    "Pink Moon",
+    "Flower Moon",
+    "Strawberry Moon",
+    "Buck Moon",
+    "Sturgeon Moon",
+    "Corn Moon or Harvest Moon*",
+    "Hunter’s Moon",
+    "Beaver Moon",
+    "Cold Moon",
+  ]
+  // return the name of the moon based on the current month:
+  const now = new Date();
+  const month = now.getMonth();
+  return MOON_LOOKUP[month];
+}
+
 async function createNewMonth() {
   const today = new Date();
   const thirtyDaysFromNow = new Date(
     today.getTime() + 30 * 24 * 60 * 60 * 1000
   );
-  const monthName = `${today.getFullYear()}/${today.getMonth() + 1}`;
+  const lastTwoDigitsOfYear = today.getFullYear().toString().slice(-2);
+  
+  const monthName = `${moonName()} - ${lastTwoDigitsOfYear}`;
   db.insert(schema.month)
     .values({
       id: fakerEN.string.uuid(),
