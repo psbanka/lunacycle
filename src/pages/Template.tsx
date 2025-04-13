@@ -6,7 +6,7 @@ import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Plus, FolderPlus } from "lucide-react";
-import { AddCategoryDialog } from "@/components/AddCategoryDialog";
+import { AddTemplateCategoryDialog } from "@/components/AddTemplateCategoryDialog";
 import { AddTaskDialog } from "@/components/AddTaskDialog";
 import { EmptyState } from "@/components/EmptyState";
 
@@ -67,7 +67,7 @@ export default function Template() {
           Add Category
         </Button>
         
-        <AddCategoryDialog 
+        <AddTemplateCategoryDialog 
           open={isAddCategoryOpen} 
           onOpenChange={setIsAddCategoryOpen} 
         />

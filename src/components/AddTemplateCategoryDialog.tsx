@@ -24,34 +24,33 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-// Schema for category creation
-const categorySchema = z.object({
+// Schema for template category creation
+const templateCategorySchema = z.object({
   name: z.string().min(1, "Category name is required"),
   description: z.string().optional(),
   emoji: z.string().optional(),
 });
 
-type CategoryFormValues = z.infer<typeof categorySchema>;
+type TemplateCategoryFormValues = z.infer<typeof templateCategorySchema>;
 
-interface AddCategoryDialogProps {
+interface AddTemplateCategoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-// FIXME: This should be for templateCategories not categories
-export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps) {
+export function AddTemplateCategoryDialog({ open, onOpenChange }: AddTemplateCategoryDialogProps) {
   const { addTemplateCategory } = useTask();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<CategoryFormValues>({
-    resolver: zodResolver(categorySchema),
+  const form = useForm<TemplateCategoryFormValues>({
+    resolver: zodResolver(templateCategorySchema),
     defaultValues: {
       name: "",
       description: "",
     },
   });
 
-  const onSubmit = async (values: CategoryFormValues) => {
+  const onSubmit = async (values: TemplateCategoryFormValues) => {
     setIsSubmitting(true);
     
     try {
@@ -71,6 +70,7 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
     }
   };
 
+  // TODO: ADD EMOJI PICKER
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
