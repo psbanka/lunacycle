@@ -85,8 +85,15 @@ const appRouter = router({
               with: {
                 categoryTasks: {
                   with: {
-                    task: true,
-                    // where: eq(schema.user.id, userId),
+                    task: {
+                      with: {
+                        taskUsers: {
+                          with: {
+                            user: true,
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               },

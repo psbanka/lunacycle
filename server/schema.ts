@@ -68,7 +68,6 @@ export const category = sqliteTable("category", {
 export type Category = typeof category.$inferSelect;
 
 export const categoryRelations = relations(category, ({ many }) => ({
-  // categoryTasks: many(task),
   categoryTasks: many(categoryTask),
 }));
 

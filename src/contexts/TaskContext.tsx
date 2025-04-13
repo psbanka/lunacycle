@@ -13,7 +13,7 @@ import { useTRPC } from "@/lib/trpc";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
 
-type CurrentMonthType = inferProcedureOutput<AppRouter["getActiveMonth"]>;
+export type CurrentMonthType = inferProcedureOutput<AppRouter["getActiveMonth"]>;
 type TemplateType = inferProcedureOutput<AppRouter["getTemplate"]>;
 
 export type UserTasks = UserTask[] | undefined;

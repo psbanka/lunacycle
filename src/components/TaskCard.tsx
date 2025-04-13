@@ -1,5 +1,5 @@
 import type { Task } from "../../server/schema";
-import { useTask } from "@/contexts/TaskContext";
+import { useTask, type CurrentMonthType } from "@/contexts/TaskContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { CheckCircle, CheckSquare, Plus } from "lucide-react";
@@ -21,8 +21,17 @@ type TaskCardProps = {
   className?: string;
 };
 
+function userIdsForTask(taskId: string, currentMonth: CurrentMonthType | undefined) {
+  if (!currentMonth || !taskId) return [];
+  return currentMonth.monthCategories
+    .flatMap((mc) => mc.category?.categoryTasks ?? [])
+    .filter((ct) => ct.task.id === taskId)
+    .flatMap((ct) => ct.task.taskUsers.map(tu => tu.userId))
+}
+
+
 export default function TaskCard({ categoryTask, compact = false, className }: TaskCardProps) {
-  const { completeTask, tasksByUser } = useTask();
+  const { completeTask, currentMonth } = useTask();
   const { user } = useAuth();
   const trpc = useTRPC();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -166,7 +175,7 @@ export default function TaskCard({ categoryTask, compact = false, className }: T
         storyPoints: task.storyPoints,
         targetCount: task.targetCount,
         completedCount: task.completedCount,
-        users: [], // FIXME: need to get users
+        userIds: userIdsForTask(task.id, currentMonth),
       }}
     />
     </>

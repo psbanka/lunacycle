@@ -42,7 +42,7 @@ const taskSchema = z.object({
   storyPoints: z.number().min(1).max(13),
   targetCount: z.number().min(1).max(31),
   completedCount: z.number().optional(),
-  users: z.array(z.string()).min(1, "At least one person must be assigned"),
+  userIds: z.array(z.string()).min(1, "At least one person must be assigned"),
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
@@ -69,7 +69,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
       storyPoints: 1,
       targetCount: 1,
       completedCount: 0,
-      users: ["1"], // Default to first user
+      userIds: [],
       ...initialValues,
     },
   });
@@ -78,7 +78,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
 
   const onSubmit = async (values: TaskFormValues) => {
     setIsSubmitting(true);
-    const userIds = values.users
+    const userIds = values.userIds
     try {
       if (isEditingId && categoryId) {
         await updateTask(isEditingId, {
@@ -87,14 +87,14 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
           storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
           targetCount: values.targetCount,
           completedCount: values.completedCount || 0,
-        }, categoryId, values.users)
+        }, categoryId, values.userIds)
       } else if (isEditingId && templateCategoryId) {
         await updateTemplateTask(isEditingId, {
           title: values.title,
           description: values.description || null,
           storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
           targetCount: values.targetCount,
-        }, templateCategoryId, values.users)
+        }, templateCategoryId, values.userIds)
       } else if (categoryId) {
         await addTask({
           title: values.title,
@@ -275,7 +275,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
             
             <FormField
               control={form.control}
-              name="users"
+              name="userIds"
               render={() => (
                 <FormItem>
                   <FormLabel>Assign to</FormLabel>
@@ -284,7 +284,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
                       <FormField
                         key={user.id}
                         control={form.control}
-                        name="users"
+                        name="userIds"
                         render={({ field }) => {
                           const isSelected = field.value?.includes(user.id);
                           return (
