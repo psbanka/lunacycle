@@ -138,26 +138,16 @@ export default function Template() {
                   </div>
                   
                   <div className="mt-2 flex gap-1">
-                    <p>fixme</p>
-                    {/*
-                    {tctc.templateTask.assignedTo.map(user => {
-                      // FIXME!!!!
-                      const assigneeNames: Record<string, string> = {
-                        '1': 'Admin',
-                        '2': 'User',
-                        '3': 'Family'
-                      };
-                      
+                    {tctc.templateTask.templateTaskUsers.map(ttu => {
                       return (
                         <div 
-                          key={user.id}
+                          key={ttu.user?.id}
                           className="bg-accent text-xs px-2 py-0.5 rounded-full"
                         >
-                          {assigneeNames[user.id] || 'User'}
+                          {ttu.user?.name}
                         </div>
                       );
                     })}
-                      */}
                   </div>
                 </div>
               ))}

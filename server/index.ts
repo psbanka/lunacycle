@@ -47,7 +47,15 @@ const appRouter = router({
               with: {
                 templateCategoryTemplateTasks: {
                   with: {
-                    templateTask: true,
+                    templateTask: {
+                      with: {
+                        templateTaskUsers: {
+                          with: {
+                            user: true,
+                          },
+                        },
+                      }
+                    }
                   },
                 },
               },
