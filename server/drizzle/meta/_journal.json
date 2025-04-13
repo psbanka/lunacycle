@@ -15,6 +15,13 @@
       "when": 1744493208389,
       "tag": "0001_outgoing_tigra",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1744526519852,
+      "tag": "0002_yellow_whistler",
+      "breakpoints": true
     }
   ]
 }

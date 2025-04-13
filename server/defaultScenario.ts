@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "./schema";
 import { fakerEN } from "@faker-js/faker";
 import { createMonthFromActiveTemplate } from "./createMonth";
+import { fetchRandomAvatar } from "./avatarUtils.ts";
 
 import { hash } from "@node-rs/bcrypt";
 
@@ -90,12 +91,14 @@ async function createCategoryTasksAndAssignments({
 
 async function createUser(name: string, email: string, role: string) {
   const passwordHash = await hash("abc123", 10);
+  const avatar = await fetchRandomAvatar(email);
   db.insert(schema.user)
     .values({
       id: fakerEN.string.uuid(),
       name,
       email,
       role,
+      avatar,
       passwordHash,
     })
     .run();

@@ -7,11 +7,13 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useTask } from "@/contexts/TaskContext";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { UserAvatar } from "@/components/UserAvatar";
 
 
 export default function Admin() {
   const { user } = useAuth();
   const { users } = useTask();
+  const [selectedFiles, setSelectedFiles] = useState<{ [userId: string]: File | null }>({});
   const navigate = useNavigate();
 
   const [newUser, setNewUser] = useState({
@@ -25,12 +27,38 @@ export default function Admin() {
     return <LoadingScreen />;
   }
   
-
   // Check if user is admin, if not redirect
   if (user?.role !== "admin") {
     navigate("/");
     return null;
   }
+
+  const handleFileChange = (userId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setSelectedFiles({ ...selectedFiles, [userId]: file });
+  };
+
+  const handleAvatarUpload = async (userId: string) => {
+    const file = selectedFiles[userId];
+    if (!file) {
+      toast.error("No file selected");
+      return;
+    }
+
+    try {
+      // Convert the file to a Blob or ArrayBuffer
+      const fileBlob = new Blob([await file.arrayBuffer()], { type: file.type });
+
+      // Update the user's avatar in the database (replace with your actual logic)
+      // await updateUserAvatar(userId, fileBlob);
+
+      // Update the UI (you might need to refetch the user data)
+      toast.success("Avatar updated successfully!");
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast.error("Failed to update avatar");
+    }
+  };
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,6 +157,7 @@ export default function Admin() {
                 <th className="text-left p-2">Name</th>
                 <th className="text-left p-2">Email</th>
                 <th className="text-left p-2">Role</th>
+                <th className="text-left p-2">Avatar</th>
                 <th className="text-left p-2">Actions</th>
               </tr>
             </thead>
@@ -147,6 +176,9 @@ export default function Admin() {
                       }`}>
                       {user.role}
                     </span>
+                  </td>
+                  <td className="p-2">
+                    <UserAvatar email={user.email} avatarData={user.avatar} />
                   </td>
                   <td className="p-2">
                     <Button variant="ghost" size="sm" className="h-8 px-2">

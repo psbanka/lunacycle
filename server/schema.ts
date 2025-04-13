@@ -3,6 +3,7 @@ import {
   text,
   integer,
   primaryKey,
+  blob,
 } from "drizzle-orm/sqlite-core";
 
 import { relations } from "drizzle-orm";
@@ -17,6 +18,7 @@ export const user = sqliteTable("user", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   role: text("role").notNull(), // Optionally add a CHECK constraint for ('admin','user','family')
+  avatar: text("avatar"),
   passwordHash: text("password_hash"),
 });
 

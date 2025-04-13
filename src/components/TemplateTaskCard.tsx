@@ -80,7 +80,7 @@ export function TemplateTaskCard({
           description: templateTask.description || "",
           storyPoints: templateTask.storyPoints,
           targetCount: templateTask.targetCount,
-          users: templateTask.templateTaskUsers.map((ttu) => ttu.userId),
+          userIds: templateTask.templateTaskUsers.map((ttu) => ttu.userId),
         }}
       />
     </>

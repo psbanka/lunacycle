@@ -22,6 +22,36 @@ const appRouter = router({
     const users = await db.query.user.findMany();
     return users;
   }),
+  uploadAvatar: publicProcedure
+  .input(
+    type({
+      userId: "string",
+      file: "string", // This would be a base64 encoded string
+    })
+  )
+  .mutation(async ({ input }) => {
+    const { userId, file } = input;
+    const user = await db.query.user.findFirst({
+      where: eq(schema.user.id, userId),
+    });
+    if (!user) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "User not found",
+      });
+    }
+
+    // 1. Validate the base64 string (optional)
+    // You might want to add some validation here to ensure it's a valid image format
+
+    // 2. Update the user's avatar in the database
+    db.update(schema.user)
+      .set({ avatar: file })
+      .where(eq(schema.user.id, userId))
+      .run();
+
+    return { success: true, avatar: file };
+  }),
   /*
   userById: publicProcedure
     .input(type({ id: "string" }))
