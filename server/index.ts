@@ -15,6 +15,7 @@ import {
   updateTaskWithCategoryAndAssignments,
   updateTemplateTaskWithCategoryAndAssignments,
 } from "./addTask.ts";
+import { fetchRandomAvatar } from "./avatarUtils.ts";
 
 const appRouter = router({
   login,
@@ -22,6 +23,27 @@ const appRouter = router({
     const users = await db.query.user.findMany();
     return users;
   }),
+  generateNewAvatar: publicProcedure
+    .input(type({ userId: "string" }))
+    .mutation(async ({ input }) => {
+      const { userId } = input;
+      const user = await db.query.user.findFirst({
+        where: eq(schema.user.id, userId),
+      });
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+      // TODO: Make this boy/girl relevant
+      const avatar = await fetchRandomAvatar(user.email);
+      db.update(schema.user)
+        .set({ avatar })
+        .where(eq(schema.user.id, userId))
+        .run();
+      return { success: true, avatar };
+    }),
   uploadAvatar: publicProcedure
   .input(
     type({

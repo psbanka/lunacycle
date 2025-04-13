@@ -8,13 +8,15 @@ import { toast } from "sonner";
 import { useTask } from "@/contexts/TaskContext";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { UserAvatar } from "@/components/UserAvatar";
-
+import { EditUserDialog } from "@/components/EditUserDialog";
+import { User } from "../../server/schema";
 
 export default function Admin() {
   const { user } = useAuth();
   const { users } = useTask();
-  const [selectedFiles, setSelectedFiles] = useState<{ [userId: string]: File | null }>({});
   const navigate = useNavigate();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const [newUser, setNewUser] = useState({
     name: "",
@@ -26,38 +28,22 @@ export default function Admin() {
   if (!users || !user) {
     return <LoadingScreen />;
   }
-  
+
   // Check if user is admin, if not redirect
   if (user?.role !== "admin") {
     navigate("/");
     return null;
   }
 
-  const handleFileChange = (userId: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-    setSelectedFiles({ ...selectedFiles, [userId]: file });
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setIsEditDialogOpen(true);
   };
 
-  const handleAvatarUpload = async (userId: string) => {
-    const file = selectedFiles[userId];
-    if (!file) {
-      toast.error("No file selected");
-      return;
-    }
-
-    try {
-      // Convert the file to a Blob or ArrayBuffer
-      const fileBlob = new Blob([await file.arrayBuffer()], { type: file.type });
-
-      // Update the user's avatar in the database (replace with your actual logic)
-      // await updateUserAvatar(userId, fileBlob);
-
-      // Update the UI (you might need to refetch the user data)
-      toast.success("Avatar updated successfully!");
-    } catch (error) {
-      console.error("Error uploading avatar:", error);
-      toast.error("Failed to update avatar");
-    }
+  const handleUserUpdated = (updatedUser: User) => {
+    // Logic to update the user in the database
+    // You might need to refetch the user data here
+    console.log("User updated:", updatedUser);
   };
 
   const handleAddUser = (e: React.FormEvent) => {
@@ -132,7 +118,8 @@ export default function Admin() {
                   setNewUser({ ...newUser, role: e.target.value })
                 }
                 className="w-full p-2 rounded-md border border-input"
-                required>
+                required
+              >
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
               </select>
@@ -153,7 +140,6 @@ export default function Admin() {
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="text-left p-2">ID</th>
                 <th className="text-left p-2">Name</th>
                 <th className="text-left p-2">Email</th>
                 <th className="text-left p-2">Role</th>
@@ -164,7 +150,6 @@ export default function Admin() {
             <tbody>
               {users.map((user) => (
                 <tr key={user.id} className="border-b">
-                  <td className="p-2">{user.id}</td>
                   <td className="p-2">{user.name}</td>
                   <td className="p-2">{user.email}</td>
                   <td className="p-2">
@@ -173,7 +158,8 @@ export default function Admin() {
                         user.role === "admin"
                           ? "bg-primary/15 text-primary"
                           : "bg-muted text-muted-foreground"
-                      }`}>
+                      }`}
+                    >
                       {user.role}
                     </span>
                   </td>
@@ -181,7 +167,12 @@ export default function Admin() {
                     <UserAvatar email={user.email} avatarData={user.avatar} />
                   </td>
                   <td className="p-2">
-                    <Button variant="ghost" size="sm" className="h-8 px-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2"
+                      onClick={() => handleEditUser(user)}
+                    >
                       Edit
                     </Button>
                     {user.id !== "1" && (
@@ -190,9 +181,10 @@ export default function Admin() {
                         size="sm"
                         className="h-8 px-2 text-destructive"
                         onClick={() => {
-                          console.log('do a thing?');
+                          console.log("do a thing?");
                           toast.success("User removed successfully");
-                        }}>
+                        }}
+                      >
                         Delete
                       </Button>
                     )}
@@ -203,6 +195,14 @@ export default function Admin() {
           </table>
         </div>
       </div>
+      {selectedUser && (
+        <EditUserDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          user={selectedUser}
+          onUserUpdated={handleUserUpdated}
+        />
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ interface UserAvatarProps {
   email: string;
   avatarData: string | null;
   dimmed?: boolean; // Add a prop to control dimming
+  size?: "sm" | "md" | "lg";
 }
 
 export const UserAvatar: React.FC<UserAvatarProps> = ({ email, avatarData, dimmed }) => {

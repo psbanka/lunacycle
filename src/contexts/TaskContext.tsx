@@ -16,16 +16,6 @@ import { toast } from "sonner";
 export type CurrentMonthType = inferProcedureOutput<AppRouter["getActiveMonth"]>;
 type TemplateType = inferProcedureOutput<AppRouter["getTemplate"]>;
 
-export type UserTasks = UserTask[] | undefined;
-
-// TODO: DELETE THIS?
-export type UserTask = {
-  user: { id: string };
-  userId: string;
-  task: Task;
-  taskId: string;
-}
-
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
@@ -116,11 +106,27 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   });
   const deleteCategoryMutation = useMutation(deleteCategoryOptions);
 
+  const generateNewAvatarOptions = trpc.generateNewAvatar.mutationOptions({
+    onSuccess:  async() => {
+      await queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
+      await queryClient.invalidateQueries({ queryKey: trpc.getUsers.queryKey() });
+      await queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
+      await queryClient.invalidateQueries({ queryKey: trpc.getTemplate.queryKey() });
+    },
+  });
+  const generateNewAvatarMutation = useMutation(generateNewAvatarOptions);
+
   // Helper functions ----------------------------------------------
+
+  const newAvatarTask = async (userId: string) => {
+    if (monthQuery.isError || monthQuery.isLoading) return;
+    await generateNewAvatarMutation.mutateAsync({ userId });
+    toast.success("Progress updated!");
+  };
+
   const completeTask = async (taskId: string) => {
     if (monthQuery.isError || monthQuery.isLoading) return;
-    const newTask = await completeTaskMutation.mutateAsync({ taskId });
-    console.log(newTask);
+    await completeTaskMutation.mutateAsync({ taskId });
     toast.success("Progress updated!");
   };
 
@@ -215,6 +221,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
         addTemplateCategory,
         updateCategory,
         deleteCategory,
+        newAvatarTask,
       }}>
       {children}
     </TaskContext.Provider>
@@ -261,6 +268,7 @@ type TaskContextType = {
     updates: Omit<Category, "tasks">
   ) => void;
   deleteCategory: (categoryId: string) => void;
+  newAvatarTask: (userId: string) => void;
 };
 
 export const useTask = () => {

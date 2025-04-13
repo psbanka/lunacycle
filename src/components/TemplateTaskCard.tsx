@@ -1,9 +1,3 @@
-import type { Task, Category } from "../../server/schema";
-import { useTask, type UserTask } from "@/contexts/TaskContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { cn } from "@/lib/utils";
-import { Calendar, CheckCircle, CheckSquare, Clock, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   type TemplateCategoryTemplateTask,
   TemplateTask,
@@ -24,7 +18,6 @@ type TemplateTaskCardProps = {
 
 export function TemplateTaskCard({
   templateCategoryTemplateTask,
-  className,
 }: TemplateTaskCardProps) {
   const { templateTask, templateTaskId, templateCategoryId } = templateCategoryTemplateTask;
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
