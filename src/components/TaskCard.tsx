@@ -1,4 +1,3 @@
-
 import type { Task, Category } from "../../server/schema";
 import { useTask, type UserTask } from "@/contexts/TaskContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +6,8 @@ import { Calendar, CheckCircle, CheckSquare, Clock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTRPC } from "@/lib/trpc";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { AddTaskDialog } from "./AddTaskDialog";
 
 // FIXME: find this elsewhere
 type CategoryTask = {
@@ -25,7 +26,8 @@ export default function TaskCard({ categoryTask, compact = false, className }: T
   const { completeTask, tasksByUser } = useTask();
   const { user } = useAuth();
   const trpc = useTRPC();
-  
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
   const task = categoryTask?.task
   if (!task) return null;
   
@@ -52,17 +54,23 @@ export default function TaskCard({ categoryTask, compact = false, className }: T
   const handleComplete = () => {
     completeTask(task.id);
   };
+
+  const handleEditClick = () => {
+    setIsEditDialogOpen(true);
+  };
   
   return (
+    <>
     <div 
       className={cn(
-        "group relative p-4 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md",
+        "group relative p-4 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer",
         isCompleted 
           ? "bg-secondary/50 border border-secondary" 
           : "glass-card hover:shadow-md",
         compact ? "w-full max-w-[200px]" : "w-full",
         className
       )}
+      onClick={handleEditClick}
     >
       {/* Task Details */}
       <div className="flex flex-col h-full">
@@ -144,5 +152,21 @@ export default function TaskCard({ categoryTask, compact = false, className }: T
         )}
       </div>
     </div>
+    
+    {/* Edit Dialog */}
+    <AddTaskDialog
+      open={isEditDialogOpen}
+      onOpenChange={setIsEditDialogOpen}
+      categoryId={categoryTask.categoryId}
+      initialValues={{
+        id: task.id,
+        title: task.title,
+        description: task.description || "",
+        storyPoints: task.storyPoints,
+        targetCount: task.targetCount,
+        users: [], // FIXME: need to get users
+      }}
+    />
+    </>
   );
 }
