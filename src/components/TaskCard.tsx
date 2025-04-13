@@ -1,11 +1,10 @@
-import type { Task, Category } from "../../server/schema";
-import { useTask, type UserTask } from "@/contexts/TaskContext";
+import type { Task } from "../../server/schema";
+import { useTask } from "@/contexts/TaskContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { Calendar, CheckCircle, CheckSquare, Clock, Plus } from "lucide-react";
+import { CheckCircle, CheckSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTRPC } from "@/lib/trpc";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { AddTaskDialog } from "./AddTaskDialog";
 
@@ -31,6 +30,7 @@ export default function TaskCard({ categoryTask, compact = false, className }: T
   const task = categoryTask?.task
   if (!task) return null;
   
+  // FIXME!
   // const isAssignedToUser = user && Boolean(task.assignedTo.find((u) => u.id === user.id));
   // const isAssignedToUser = Boolean(taskUsers?.find(tu => tu.userId === user?.id && tu.taskId === userTask.taskId));
   const isAssignedToUser = true;
@@ -51,7 +51,8 @@ export default function TaskCard({ categoryTask, compact = false, className }: T
     }
   };
   
-  const handleComplete = () => {
+  const handleComplete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the click from propagating to the parent div
     completeTask(task.id);
   };
 
@@ -164,6 +165,7 @@ export default function TaskCard({ categoryTask, compact = false, className }: T
         description: task.description || "",
         storyPoints: task.storyPoints,
         targetCount: task.targetCount,
+        completedCount: task.completedCount,
         users: [], // FIXME: need to get users
       }}
     />
