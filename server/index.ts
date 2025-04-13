@@ -141,32 +141,48 @@ const appRouter = router({
       });
       return tasks;
     }),
-  addCategory: publicProcedure
+  addTemplateCategory: publicProcedure
     .input(
       type({
-        category: type({
+        templateCategory: type({
           name: "string",
           description: "string | null",
         }),
       })
     )
     .mutation(async ({ input }) => {
-      const { category } = input;
-      const id = fakerEN.string.uuid();
-      const result = db
-        .insert(schema.category)
-        .values({ ...category, id })
-        .run();
-      const newCategory = db.query.category.findFirst({
-        where: eq(schema.category.id, id),
+      const { templateCategory } = input;
+      const templateCategoryId = fakerEN.string.uuid();
+      const template = await db.query.template.findFirst({
+        where: eq(schema.template.isActive, 1),
       });
-      if (!newCategory) {
+      if (!template) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No active template",
+        });
+      } 
+      
+      const result = db
+        .insert(schema.templateCategory)
+        .values({ ...templateCategory, id: templateCategoryId })
+        .run();
+      const newTemplateCategory = db.query.templateCategory.findFirst({
+        where: eq(schema.templateCategory.id, templateCategoryId),
+      });
+      if (!newTemplateCategory) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Unable to create category",
         });
       }
-      return newCategory;
+      db.insert(schema.templateTemplateCategory)
+        .values({
+          templateId: template.id,
+          templateCategoryId,
+        }).run();
+        
+      return newTemplateCategory;
     }),
   updateCategory: publicProcedure
     .input(

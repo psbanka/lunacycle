@@ -7,7 +7,7 @@ import {
 import { inferProcedureOutput } from "@trpc/server";
 import type { AppRouter } from "../../server/index";
 
-import type { User, Task, TemplateTask, Category } from "../../server/schema";
+import type { User, Task, TemplateTask, TemplateCategory, Category } from "../../server/schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/lib/trpc";
 import { useAuth } from "./AuthContext";
@@ -59,12 +59,12 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
     },
   });
   const deleteTaskMutation = useMutation(deleteTaskOptions);
-  const addCategoryOptions = trpc.addCategory.mutationOptions({
+  const addTemplateCategoryOptions = trpc.addTemplateCategory.mutationOptions({
     onSuccess:  async() => {
-      await queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
+      await queryClient.invalidateQueries({ queryKey: trpc.getTemplate.queryKey() });
     },
   });
-  const addCategoryMutation = useMutation(addCategoryOptions);
+  const addTemplateCategoryMutation = useMutation(addTemplateCategoryOptions);
   const updateTaskOptions = trpc.updateTask.mutationOptions({
     onSuccess:  async() => {
       await queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
@@ -143,8 +143,8 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
     toast.success("Task deleted!");
   };
 
-  const addCategory = async (category: Omit<Category, "id" | "tasks">) => {
-    await addCategoryMutation.mutateAsync({ category });
+  const addTemplateCategory = async (templateCategory: Omit<TemplateCategory, "id" | "tasks">) => {
+    await addTemplateCategoryMutation.mutateAsync({ templateCategory });
     toast.success("Category added!");
   };
 
@@ -180,7 +180,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
         addTemplateTask,
         updateTask,
         deleteTask,
-        addCategory,
+        addTemplateCategory,
         updateCategory,
         deleteCategory,
       }}>
@@ -217,7 +217,7 @@ type TaskContextType = {
     userIds: string[]
   ) => void;
   deleteTask: (taskId: string) => void;
-  addCategory: (category: Omit<Category, "id" | "tasks">) => void;
+  addTemplateCategory: (category: Omit<Category, "id" | "tasks">) => void;
   updateCategory: (
     categoryId: string,
     updates: Omit<Category, "tasks">

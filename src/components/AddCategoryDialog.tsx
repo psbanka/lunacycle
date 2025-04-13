@@ -40,7 +40,7 @@ interface AddCategoryDialogProps {
 
 // FIXME: This should be for templateCategories not categories
 export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps) {
-  const { addCategory } = useTask();
+  const { addTemplateCategory } = useTask();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CategoryFormValues>({
@@ -55,7 +55,7 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
     setIsSubmitting(true);
     
     try {
-      addCategory({
+      addTemplateCategory({
         emoji: values.emoji || null,
         name: values.name,
         description: values.description || null,

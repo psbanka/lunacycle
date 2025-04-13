@@ -13,12 +13,12 @@ import { EmptyState } from "@/components/EmptyState";
 export default function Template() {
   const { template, loadingTasks } = useTask();
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeTemplateCategory, setActiveTemplateCategory] = useState<string | null>(null);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
   // Function to handle opening the AddTaskDialog
-  const handleAddTaskClick = (categoryId: string) => {
-    setActiveCategory(categoryId);
+  const handleAddTaskClick = (templateCategoryId: string) => {
+    setActiveTemplateCategory(templateCategoryId);
     setIsAddTaskOpen(true);
   };
 
@@ -72,11 +72,11 @@ export default function Template() {
           onOpenChange={setIsAddCategoryOpen} 
         />
 
-        {activeCategory && (
+        {activeTemplateCategory && (
           <AddTaskDialog
             open={isAddTaskOpen}
             onOpenChange={setIsAddTaskOpen}
-            categoryId={activeCategory}
+            templateCategoryId={activeTemplateCategory}
           />
         )}
       </div>
