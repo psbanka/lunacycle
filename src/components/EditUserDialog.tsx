@@ -5,13 +5,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User } from "../../server/schema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useTask } from "@/contexts/TaskContext";
 import { toast } from "sonner";
@@ -32,6 +31,11 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   const [editedUser, setEditedUser] = useState<User>({ ...user });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { generateAvatarTask, uploadAvatarTask, updateUserTask } = useTask();
+
+  // Update the editedUser state when the user prop changes
+  useEffect(() => {
+    setEditedUser({ ...user });
+  }, [user]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -58,10 +62,16 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   };
 
   const handleSave = async () => {
-    // Logic to save the edited user data
-    onUserUpdated(editedUser);
-    onOpenChange(false);
-    await updateUserTask(editedUser);
+    try {
+      // Optimistically update the UI
+      onUserUpdated(editedUser);
+      await updateUserTask(editedUser);
+      toast.success("User updated successfully!");
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast.error("Failed to update user");
+    }
   };
 
   return (
@@ -163,7 +173,11 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button type="button" onClick={handleSave}>
