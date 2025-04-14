@@ -44,6 +44,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
 
   const handleGenerateNewAvatar = async () => {
     await generateAvatarTask(editedUser.id);
+    onOpenChange(false);
     toast.success("New avatar generated!");
   };
 
@@ -54,6 +55,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
     }
     try {
       await uploadAvatarTask(editedUser.id, selectedFile);
+      onOpenChange(false);
       toast.success("Avatar updated successfully!");
     } catch (error) {
       console.error("Error uploading avatar:", error);

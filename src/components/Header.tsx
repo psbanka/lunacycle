@@ -5,6 +5,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { LogOut, Moon, Sun, User } from "lucide-react";
 import LunarPhase from "./LunarPhase";
 import { Link } from "react-router-dom";
+import { Logo } from "@/components/Logo";
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -14,8 +15,8 @@ export default function Header() {
     <header className="py-4 px-4 sm:px-6 flex items-center justify-between border-b">
       <div className="flex items-center gap-2">
         <Link to="/" className="flex items-center">
-          <LunarPhase size="sm" />
-          <h1 className="ml-2 text-xl font-bold text-foreground">Lunar Task Haven</h1>
+          <Logo />
+          <h1 className="ml-2 text-xl font-bold text-foreground">Luneria</h1>
         </Link>
       </div>
       
