@@ -9,6 +9,7 @@ import { eq, and, inArray } from "drizzle-orm";
 import cors from "cors";
 import * as schema from "./schema";
 import { fakerEN } from "@faker-js/faker";
+import { hash } from "@node-rs/bcrypt";
 import {
   addTask,
   addTemplateTask,
@@ -45,35 +46,63 @@ const appRouter = router({
       return { success: true, avatar };
     }),
   uploadAvatar: publicProcedure
-  .input(
-    type({
-      userId: "string",
-      file: "string", // This would be a base64 encoded string
-    })
-  )
-  .mutation(async ({ input }) => {
-    const { userId, file } = input;
-    const user = await db.query.user.findFirst({
-      where: eq(schema.user.id, userId),
-    });
-    if (!user) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "User not found",
+    .input(type({ userId: "string", file: "string" }))
+    .mutation(async ({ input }) => {
+      const { userId, file } = input;
+      const user = await db.query.user.findFirst({
+        where: eq(schema.user.id, userId),
       });
-    }
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+      db.update(schema.user)
+        .set({ avatar: file })
+        .where(eq(schema.user.id, userId))
+        .run();
+      return { success: true };
+    }),
+  updateUser: publicProcedure
+    .input(
+      type({
+        id: "string",
+        name: "string",
+        role: "string",
+        email: "string",
+        "password?": "string",
+      })
+    )
+    .mutation(async ({ input }) => {
+      let update: Partial<schema.User> | null = null
+      if (input.password) {
+        const passwordHash = await hash(input.password, 10);
+        update = {
+          id: input.id,
+          name: input.name,
+          role: input.role,
+          email: input.email,
+          passwordHash,
+        };
+      } else {
+        update = {
+          id: input.id,
+          name: input.name,
+          role: input.role,
+          email: input.email
+        }
+      }
+      // TODO: Check the user ID of the person who is logged in
+      db.update(schema.user)
+        .set({ ...update })
+        .where(eq(schema.user.id, input.id))
+        .run();
 
-    // 1. Validate the base64 string (optional)
-    // You might want to add some validation here to ensure it's a valid image format
-
-    // 2. Update the user's avatar in the database
-    db.update(schema.user)
-      .set({ avatar: file })
-      .where(eq(schema.user.id, userId))
-      .run();
-
-    return { success: true, avatar: file };
-  }),
+      return await db.query.user.findFirst({
+        where: eq(schema.user.id, input.id),
+      });
+    }),
   /*
   userById: publicProcedure
     .input(type({ id: "string" }))
@@ -267,10 +296,9 @@ const appRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const { name, description, id } = input;
       db.update(schema.category)
         .set(input)
-        .where(eq(schema.category.id, id))
+        .where(eq(schema.category.id, input.id))
         .run();
 
       return db.query.category.findFirst({

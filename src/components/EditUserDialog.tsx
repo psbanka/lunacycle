@@ -31,7 +31,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
 }) => {
   const [editedUser, setEditedUser] = useState<User>({ ...user });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const { newAvatarTask } = useTask();
+  const { generateAvatarTask, uploadAvatarTask, updateUserTask } = useTask();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -39,7 +39,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   };
 
   const handleGenerateNewAvatar = async () => {
-    await newAvatarTask(editedUser.id);
+    await generateAvatarTask(editedUser.id);
     toast.success("New avatar generated!");
   };
 
@@ -48,17 +48,8 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
       toast.error("No file selected");
       return;
     }
-
     try {
-      // Convert the file to a Blob or ArrayBuffer
-      const fileBlob = new Blob([await selectedFile.arrayBuffer()], {
-        type: selectedFile.type,
-      });
-
-      // Update the user's avatar in the database (replace with your actual logic)
-      // await updateUserAvatar(userId, fileBlob);
-
-      // Update the UI (you might need to refetch the user data)
+      await uploadAvatarTask(editedUser.id, selectedFile);
       toast.success("Avatar updated successfully!");
     } catch (error) {
       console.error("Error uploading avatar:", error);
@@ -66,11 +57,11 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Logic to save the edited user data
     onUserUpdated(editedUser);
     onOpenChange(false);
-    toast.success("User updated successfully!");
+    await updateUserTask(editedUser);
   };
 
   return (
