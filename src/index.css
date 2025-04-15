@@ -131,3 +131,141 @@
     border: 1px solid #ddd;
   }
 }
+/* Default Theme (No specific class) */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 47.4% 11.2%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 47.4% 11.2%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --primary: 210 80% 40%;
+  --primary-foreground: 210 100% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 100% 50%;
+  --destructive-foreground: 210 100% 98%;
+  --ring: 215 20.2% 65.1%;
+  --radius: 0.5rem;
+}
+
+/* Dark Mode */
+.dark {
+  --background: 222.2 47.4% 11.2%;
+  --foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --popover: 222.2 47.4% 11.2%;
+  --popover-foreground: 210 40% 98%;
+  --card: 222.2 47.4% 11.2%;
+  --card-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --primary: 210 80% 40%;
+  --primary-foreground: 210 100% 98%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 212.7 26.8% 83.9%;
+}
+
+/* Nigredo Theme */
+.theme-nigredo {
+  --background: 240 10% 10%; /* Darker background */
+  --foreground: 240 5% 60%; /* Muted foreground */
+  --muted: 240 10% 15%; /* Darker muted */
+  --muted-foreground: 240 5% 40%; /* Darker muted foreground */
+  --popover: 240 10% 10%; /* Darker popover */
+  --popover-foreground: 240 5% 60%; /* Muted popover foreground */
+  --card: 240 10% 10%; /* Darker card */
+  --card-foreground: 240 5% 60%; /* Muted card foreground */
+  --border: 240 10% 15%; /* Darker border */
+  --input: 240 10% 15%; /* Darker input */
+  --primary: 240 5% 40%; /* Muted primary */
+  --primary-foreground: 240 5% 90%; /* Lighter primary foreground */
+  --secondary: 240 10% 15%; /* Darker secondary */
+  --secondary-foreground: 240 5% 60%; /* Muted secondary foreground */
+  --accent: 240 10% 15%; /* Darker accent */
+  --accent-foreground: 240 5% 60%; /* Muted accent foreground */
+  --destructive: 0 50% 40%; /* Muted destructive */
+  --destructive-foreground: 240 5% 90%; /* Lighter destructive foreground */
+  --ring: 240 5% 30%; /* Darker ring */
+}
+
+/* Albedo Theme */
+.theme-albedo {
+  --background: 220 20% 95%; /* Light, slightly blue background */
+  --foreground: 220 20% 20%; /* Dark, slightly blue foreground */
+  --muted: 220 20% 90%; /* Light, slightly blue muted */
+  --muted-foreground: 220 20% 40%; /* Dark, slightly blue muted foreground */
+  --popover: 220 20% 95%; /* Light, slightly blue popover */
+  --popover-foreground: 220 20% 20%; /* Dark, slightly blue popover foreground */
+  --card: 220 20% 95%; /* Light, slightly blue card */
+  --card-foreground: 220 20% 20%; /* Dark, slightly blue card foreground */
+  --border: 220 20% 85%; /* Light, slightly blue border */
+  --input: 220 20% 85%; /* Light, slightly blue input */
+  --primary: 220 50% 50%; /* Medium blue primary */
+  --primary-foreground: 220 100% 98%; /* Light primary foreground */
+  --secondary: 220 20% 90%; /* Light, slightly blue secondary */
+  --secondary-foreground: 220 20% 20%; /* Dark, slightly blue secondary foreground */
+  --accent: 220 20% 90%; /* Light, slightly blue accent */
+  --accent-foreground: 220 20% 20%; /* Dark, slightly blue accent foreground */
+  --destructive: 0 50% 50%; /* Standard destructive */
+  --destructive-foreground: 220 100% 98%; /* Light destructive foreground */
+  --ring: 220 20% 60%; /* Medium blue ring */
+}
+
+/* Citrinitas Theme */
+.theme-citrinitas {
+  --background: 45 20% 98%; /* Very light, warm background */
+  --foreground: 45 20% 15%; /* Dark, warm foreground */
+  --muted: 45 20% 90%; /* Light, warm muted */
+  --muted-foreground: 45 20% 40%; /* Dark, warm muted foreground */
+  --popover: 45 20% 98%; /* Very light, warm popover */
+  --popover-foreground: 45 20% 15%; /* Dark, warm popover foreground */
+  --card: 45 20% 98%; /* Very light, warm card */
+  --card-foreground: 45 20% 15%; /* Dark, warm card foreground */
+  --border: 45 20% 85%; /* Light, warm border */
+  --input: 45 20% 85%; /* Light, warm input */
+  --primary: 45 50% 50%; /* Medium gold primary */
+  --primary-foreground: 45 100% 98%; /* Light primary foreground */
+  --secondary: 45 20% 90%; /* Light, warm secondary */
+  --secondary-foreground: 45 20% 15%; /* Dark, warm secondary foreground */
+  --accent: 45 20% 90%; /* Light, warm accent */
+  --accent-foreground: 45 20% 15%; /* Dark, warm accent foreground */
+  --destructive: 0 50% 50%; /* Standard destructive */
+  --destructive-foreground: 45 100% 98%; /* Light destructive foreground */
+  --ring: 45 20% 60%; /* Medium gold ring */
+}
+
+/* Rubedo Theme */
+.theme-rubedo {
+  --background: 10 20% 98%; /* Very light, warm background */
+  --foreground: 10 20% 15%; /* Dark, warm foreground */
+  --muted: 10 20% 90%; /* Light, warm muted */
+  --muted-foreground: 10 20% 40%; /* Dark, warm muted foreground */
+  --popover: 10 20% 98%; /* Very light, warm popover */
+  --popover-foreground: 10 20% 15%; /* Dark, warm popover foreground */
+  --card: 10 20% 98%; /* Very light, warm card */
+  --card-foreground: 10 20% 15%; /* Dark, warm card foreground */
+  --border: 10 20% 85%; /* Light, warm border */
+  --input: 10 20% 85%; /* Light, warm input */
+  --primary: 10 50% 50%; /* Medium gold primary */
+  --primary-foreground: 10 100% 98%; /* Light primary foreground */
+  --secondary: 10 20% 90%; /* Light, warm secondary */
+  --secondary-foreground: 10 20% 15%; /* Dark, warm secondary foreground */
+  --accent: 10 20% 90%; /* Light, warm accent */
+  --accent-foreground: 10 20% 15%; /* Dark, warm accent foreground */
+  --destructive: 0 50% 50%; /* Standard destructive */
+  --destructive-foreground: 10 100% 98%; /* Light destructive foreground */
+  --ring: 10 20% 60%; /* Medium gold ring */
+}

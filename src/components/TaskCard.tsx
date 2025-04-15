@@ -46,19 +46,20 @@ export default function TaskCard({
   className,
 }: TaskCardProps) {
   const { completeTask, currentMonth } = useTask();
-  const { user } = useAuth();
-  const trpc = useTRPC();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const task = categoryTask?.task;
   if (!task) return null;
 
+  // FIXME
   // const isAssignedToUser = user && Boolean(task.assignedTo.find((u) => u.id === user.id));
   // const isAssignedToUser = Boolean(taskUsers?.find(tu => tu.userId === user?.id && tu.taskId === userTask.taskId));
   const isAssignedToUser = true;
   const isCompleted = task.targetCount === task.completedCount;
   const progress =
     task.targetCount > 0 ? (task.completedCount / task.targetCount) * 100 : 0;
+  
+  const isContinuingTask = task.targetCount > 1;
 
   // Fibonacci numbers for story points badge color
   const getStoryPointsColor = (points: number) => {
@@ -99,6 +100,7 @@ export default function TaskCard({
           isCompleted
             ? "bg-secondary/50 border border-secondary"
             : "glass-card hover:shadow-md",
+          isContinuingTask && !isCompleted && "border-6 border-secondary/50 bg-primary/5",
           compact ? "w-full max-w-[200px]" : "w-full",
           className
         )}
@@ -111,7 +113,9 @@ export default function TaskCard({
                 "font-medium transition-colors",
                 isCompleted
                   ? "text-muted-foreground line-through"
-                  : "text-foreground"
+                  : "text-foreground",
+                // Make the title bolder for continuing tasks
+                isContinuingTask && !isCompleted && "font-bold"
               )}>
               {task.title}
             </h3>
