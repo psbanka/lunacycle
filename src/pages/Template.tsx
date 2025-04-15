@@ -42,7 +42,7 @@ export default function Template() {
       {/* Template Header */}
       <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Monthly Template</h1>
+          <h1 className="text-left text-3xl font-bold">Monthly Template</h1>
           <p className="text-muted-foreground">
             Define recurring tasks and general categories for your lunar cycles
           </p>

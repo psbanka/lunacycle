@@ -113,7 +113,7 @@ export default function Home() {
     <div className="max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold">{currentMonth.name}</h1>
+          <h1 className="text-left text-3xl font-bold">{currentMonth.name}</h1>
           <p className="text-muted-foreground">
             {daysRemaining} days until the next full moon
           </p>

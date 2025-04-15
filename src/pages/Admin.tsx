@@ -150,9 +150,9 @@ export default function Admin() {
             <tbody>
               {users.map((user) => (
                 <tr key={user.id} className="border-b">
-                  <td className="p-2">{user.name}</td>
-                  <td className="p-2">{user.email}</td>
-                  <td className="p-2">
+                  <td className="text-left p-2">{user.name}</td>
+                  <td className="text-left p-2">{user.email}</td>
+                  <td className="text-left p-2">
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${
                         user.role === "admin"
