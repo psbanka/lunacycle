@@ -75,6 +75,10 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
     onSuccess: async () => clearCache(["month", "tasks"]),
   });
   const deleteTaskMutation = useMutation(deleteTaskOptions);
+  const deleteTemplateTaskOptions = trpc.deleteTemplateTask.mutationOptions({
+    onSuccess: async () => clearCache(["month", "tasks", "template"]),
+  });
+  const deleteTemplateTaskMutation = useMutation(deleteTemplateTaskOptions);
 
   const addTemplateCategoryOptions = trpc.addTemplateCategory.mutationOptions({
     onSuccess: async () => clearCache(["template"]),
@@ -212,6 +216,10 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
     await deleteTaskMutation.mutateAsync({ taskId });
     toast.success("Task deleted!");
   };
+  const deleteTemplateTask = async (templateTaskId: string) => {
+    await deleteTemplateTaskMutation.mutateAsync({ templateTaskId });
+    toast.success("Task deleted!");
+  };
 
   const addTemplateCategory = async (templateCategory: Omit<TemplateCategory, "id" | "tasks">) => {
     await addTemplateCategoryMutation.mutateAsync({ templateCategory });
@@ -251,6 +259,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
         updateTask,
         updateTemplateTask,
         deleteTask,
+        deleteTemplateTask,
         addTemplateCategory,
         updateCategory,
         deleteCategory,
@@ -297,6 +306,7 @@ type TaskContextType = {
     userIds: string[]
   ) => void;
   deleteTask: (taskId: string) => void;
+  deleteTemplateTask: (templateTask: string) => void;
   addTemplateCategory: (category: Omit<Category, "id" | "tasks">) => void;
   updateCategory: (
     categoryId: string,

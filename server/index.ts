@@ -383,6 +383,24 @@ const appRouter = router({
       db.delete(schema.task).where(eq(schema.task.id, input.taskId)).run();
       return { success: true };
     }),
+  deleteTemplateTask: publicProcedure
+    .input(type({ templateTaskId: "string" }))
+    .mutation(async ({ input }) => {
+      const task = await db.query.templateTask.findFirst({
+        where: eq(schema.task.id, input.templateTaskId),
+      });
+      if (!task) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Template Task not found" });
+      }
+      db.delete(schema.templateTaskUser)
+        .where(eq(schema.templateTaskUser.templateTaskId, input.templateTaskId))
+        .run();
+      db.delete(schema.templateCategoryTemplateTask)
+        .where(eq(schema.templateCategoryTemplateTask.templateTaskId, input.templateTaskId))
+        .run();
+      db.delete(schema.templateTask).where(eq(schema.templateTask.id, input.templateTaskId)).run();
+      return { success: true };
+    }),
   completeTask: publicProcedure
     .input(type({ taskId: "string" }))
     .mutation(async ({ input }) => {

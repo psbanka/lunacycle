@@ -8,7 +8,7 @@ import { LoadingScreen } from "./LoadingScreen";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTask } from "@/contexts/TaskContext";
-import { Check, UserCircle } from "lucide-react";
+import { Check, UserCircle, Trash } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 
 import {
@@ -56,11 +56,29 @@ interface AddTaskDialogProps {
   initialValues?: Partial<TaskFormValues>;
 }
 
-export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategoryId, initialValues }: AddTaskDialogProps) {
-  const { addTask, updateTask, updateTemplateTask, addTemplateTask, users } = useTask();
+export function AddTaskDialog({
+  open,
+  onOpenChange,
+  categoryId,
+  templateCategoryId,
+  initialValues,
+}: AddTaskDialogProps) {
+  const {
+    addTask,
+    updateTask,
+    updateTemplateTask,
+    addTemplateTask,
+    users,
+    deleteTask,
+    deleteTemplateTask,
+  } = useTask();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditingId = initialValues?.id;
   const isEditingTask = isEditingId && categoryId;
+  const isEditingTemplateTask = isEditingId && templateCategoryId;
+  const isTemplateTask = !!templateCategoryId;
+  const isContinuingTask =
+    initialValues?.targetCount && initialValues.targetCount > 1;
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -79,40 +97,58 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
 
   const onSubmit = async (values: TaskFormValues) => {
     setIsSubmitting(true);
-    const userIds = values.userIds
+    const userIds = values.userIds;
     try {
       if (isEditingId && categoryId) {
-        await updateTask(isEditingId, {
-          title: values.title,
-          description: values.description || null,
-          storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
-          targetCount: values.targetCount,
-          completedCount: values.completedCount || 0,
-        }, categoryId, values.userIds)
+        await updateTask(
+          isEditingId,
+          {
+            title: values.title,
+            description: values.description || null,
+            storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
+            targetCount: values.targetCount,
+            completedCount: values.completedCount || 0,
+          },
+          categoryId,
+          values.userIds
+        );
       } else if (isEditingId && templateCategoryId) {
-        await updateTemplateTask(isEditingId, {
-          title: values.title,
-          description: values.description || null,
-          storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
-          targetCount: values.targetCount,
-        }, templateCategoryId, values.userIds)
+        await updateTemplateTask(
+          isEditingId,
+          {
+            title: values.title,
+            description: values.description || null,
+            storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
+            targetCount: values.targetCount,
+          },
+          templateCategoryId,
+          values.userIds
+        );
       } else if (categoryId) {
-        await addTask({
-          title: values.title,
-          description: values.description || null,
-          storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
-          targetCount: values.targetCount,
-          completedCount: 0,
-        }, userIds, categoryId);
+        await addTask(
+          {
+            title: values.title,
+            description: values.description || null,
+            storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
+            targetCount: values.targetCount,
+            completedCount: 0,
+          },
+          userIds,
+          categoryId
+        );
       } else if (templateCategoryId) {
-        await addTemplateTask({
-          title: values.title,
-          description: values.description || null,
-          storyPoints: values.storyPoints as typeof FIBONACCI[number], // FIXME
-          targetCount: values.targetCount,
-        }, userIds, templateCategoryId);
+        await addTemplateTask(
+          {
+            title: values.title,
+            description: values.description || null,
+            storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
+            targetCount: values.targetCount,
+          },
+          userIds,
+          templateCategoryId
+        );
       }
-      
+
       // Reset form and close dialog
       form.reset();
       onOpenChange(false);
@@ -123,17 +159,37 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
     }
   };
 
+  const handleDelete = async () => {
+    if (!isEditingId) return;
+
+    setIsSubmitting(true);
+    try {
+      if (isEditingTemplateTask) {
+        await deleteTemplateTask(isEditingId);
+      } else if (isEditingTask) {
+        await deleteTask(isEditingId);
+      }
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!users) {
     return <LoadingScreen />;
   }
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditingId ? "Edit Task" : "Add New Task"}</DialogTitle>
+          <DialogTitle>
+            {isEditingId ? "Edit Task" : "Add New Task"}
+          </DialogTitle>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -149,7 +205,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="description"
@@ -157,17 +213,17 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
                 <FormItem>
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <Textarea
                       placeholder="Describe this task..."
-                      className="resize-none" 
-                      {...field} 
+                      className="resize-none"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="storyPoints"
@@ -181,8 +237,7 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
                         type="button"
                         variant={field.value === points ? "default" : "outline"}
                         size="sm"
-                        onClick={() => field.onChange(points)}
-                      >
+                        onClick={() => field.onChange(points)}>
                         {points}
                       </Button>
                     ))}
@@ -194,34 +249,34 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
                 </FormItem>
               )}
             />
-            
+
             {templateCategoryId && (
-            <FormField
-              control={form.control}
-              name="targetCount"
-              render={({ field: { value, onChange } }) => (
-                <FormItem>
-                  <FormLabel>Times per month: {value}</FormLabel>
-                  <FormControl>
-                    <Slider 
-                      min={1} 
-                      max={31} 
-                      step={1} 
-                      value={[value]} 
-                      onValueChange={(vals) => onChange(vals[0])}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {value === 1 
-                      ? "Do once per month" 
-                      : value === 31 
-                        ? "Do every day" 
+              <FormField
+                control={form.control}
+                name="targetCount"
+                render={({ field: { value, onChange } }) => (
+                  <FormItem>
+                    <FormLabel>Times per month: {value}</FormLabel>
+                    <FormControl>
+                      <Slider
+                        min={1}
+                        max={31}
+                        step={1}
+                        value={[value]}
+                        onValueChange={(vals) => onChange(vals[0])}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {value === 1
+                        ? "Do once per month"
+                        : value === 31
+                        ? "Do every day"
                         : `Do ${value} times per month`}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
             {isEditingTask && initialValues?.targetCount === 1 && (
@@ -249,31 +304,33 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
               />
             )}
 
-            {isEditingTask && initialValues?.targetCount && initialValues.targetCount > 1 && (
-              <FormField
-                control={form.control}
-                name="completedCount"
-                render={({ field: { value, onChange } }) => (
-                  <FormItem>
-                    <FormLabel>Completed Count: {value}</FormLabel>
-                    <FormControl>
-                      <Slider
-                        min={0}
-                        max={initialValues.targetCount}
-                        step={1}
-                        value={[value ?? 0]}
-                        onValueChange={(vals) => onChange(vals[0])}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Set the number of times this task has been completed.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-            
+            {isEditingTask &&
+              initialValues?.targetCount &&
+              initialValues.targetCount > 1 && (
+                <FormField
+                  control={form.control}
+                  name="completedCount"
+                  render={({ field: { value, onChange } }) => (
+                    <FormItem>
+                      <FormLabel>Completed Count: {value}</FormLabel>
+                      <FormControl>
+                        <Slider
+                          min={0}
+                          max={initialValues.targetCount}
+                          step={1}
+                          value={[value ?? 0]}
+                          onValueChange={(vals) => onChange(vals[0])}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Set the number of times this task has been completed.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
             <FormField
               control={form.control}
               name="userIds"
@@ -289,7 +346,9 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
                         render={({ field }) => {
                           const isSelected = field.value?.includes(user.id);
                           return (
-                            <FormItem key={user.id} className="flex items-center space-x-2 space-y-0">
+                            <FormItem
+                              key={user.id}
+                              className="flex items-center space-x-2 space-y-0">
                               <FormControl>
                                 <Checkbox
                                   checked={isSelected}
@@ -299,7 +358,11 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
                                     } else {
                                       // Don't allow unchecking the last user
                                       if (field.value.length > 1) {
-                                        field.onChange(field.value.filter((value) => value !== user.id));
+                                        field.onChange(
+                                          field.value.filter(
+                                            (value) => value !== user.id
+                                          )
+                                        );
                                       }
                                     }
                                   }}
@@ -329,19 +392,45 @@ export function AddTaskDialog({ open, onOpenChange, categoryId, templateCategory
                 </FormItem>
               )}
             />
-            
+
             <DialogFooter className="mt-6">
+              {isEditingId && (isTemplateTask || !isContinuingTask) && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isSubmitting}
+                  onClick={handleDelete}
+                  className="mr-auto">
+                  {isSubmitting ? (
+                    "Deleting..."
+                  ) : (
+                    <>
+                      <Trash className="h-4 w-4 mr-2" /> Delete Task
+                    </>
+                  )}
+                </Button>
+              )}
               <DialogClose asChild>
-                <Button type="button" variant="outline">Cancel</Button>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
               </DialogClose>
               {isEditingId ? (
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Updating..." : categoryId ? "Edit Task" : "Edit Template Task"}
+                  {isSubmitting
+                    ? "Updating..."
+                    : categoryId
+                    ? "Edit Task"
+                    : "Edit Template Task"}
                 </Button>
               ) : (
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : categoryId ? "Add Task" : "Add Template Task"}
-              </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting
+                    ? "Adding..."
+                    : categoryId
+                    ? "Add Task"
+                    : "Add Template Task"}
+                </Button>
               )}
             </DialogFooter>
           </form>
