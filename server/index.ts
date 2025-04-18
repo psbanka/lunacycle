@@ -43,7 +43,10 @@ const appRouter = router({
         .set({ avatar })
         .where(eq(schema.user.id, userId))
         .run();
-      return { success: true, avatar };
+      const updatedUser = db.query.user.findFirst({
+        where: eq(schema.user.id, userId),
+      });
+      return updatedUser;
     }),
   uploadAvatar: publicProcedure
     .input(type({ userId: "string", file: "string" }))

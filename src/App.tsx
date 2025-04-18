@@ -16,7 +16,7 @@ import Template from "./pages/Template";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { env } from "./env";
 import "./App.css";
 
@@ -125,7 +125,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false} />
+        {/*<ReactQueryDevtools initialIsOpen={false} /> */}
 
           <TooltipProvider>
             <ThemeProvider>

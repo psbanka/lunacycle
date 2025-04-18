@@ -35,7 +35,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   // Update the editedUser state when the user prop changes
   useEffect(() => {
     setEditedUser({ ...user });
-  }, [user]);
+  }, [user.avatar, user.email, user.id, user.name, user.passwordHash, user.role]); // eslint-disable-line
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -43,8 +43,9 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   };
 
   const handleGenerateNewAvatar = async () => {
-    await generateAvatarTask(editedUser.id);
-    onOpenChange(false);
+    const newUser = await generateAvatarTask(editedUser.id);
+    if (newUser) setEditedUser(newUser);
+    // onOpenChange(false);
     toast.success("New avatar generated!");
   };
 

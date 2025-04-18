@@ -157,8 +157,9 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const generateAvatarTask = async (userId: string) => {
     if (monthQuery.isError || monthQuery.isLoading) return;
-    await generateNewAvatarMutation.mutateAsync({ userId });
+    const newUser = await generateNewAvatarMutation.mutateAsync({ userId });
     toast.success("Progress updated!");
+    return newUser;
   };
 
   const completeTask = async (taskId: string) => {
@@ -314,7 +315,7 @@ type TaskContextType = {
   ) => void;
   deleteCategory: (categoryId: string) => void;
   updateUserTask: (userId: Omit<User, "passwordHash"> & { password?: string }) => void;
-  generateAvatarTask: (userId: string) => void;
+  generateAvatarTask: (userId: string) => Promise<User | undefined>;
   uploadAvatarTask: (userId: string, file: File) => void;
 };
 
