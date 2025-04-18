@@ -17,6 +17,7 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { env } from "./env";
 import "./App.css";
 
 function makeQueryClient() {
@@ -114,7 +115,8 @@ const App = () => {
     createTRPCClient<AppRouter>({
       links: [
         httpBatchLink({
-          url: "http://localhost:3000",
+          // TODO: remove duplicate stuff?
+          url: `http://${env.VITE_BACKEND_ORIGIN}`,
         }),
       ],
     })

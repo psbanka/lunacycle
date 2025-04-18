@@ -123,16 +123,20 @@ async function handleLogin({
   email: string;
   password: string;
 }) {
+  console.log(`email: ${email}, password: ${password}`);
   const user = await db.query.user.findFirst({
     where: eq(schema.user.email, email),
   });
-  if (user == null || user.passwordHash == null)
+  if (user == null || user.passwordHash == null) {
+    console.log('no user');
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Invalid credentials",
     });
+  }
   const validPassword = await compare(password, user.passwordHash);
 
+  console.log('bad password apparently')
   if (!validPassword) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
