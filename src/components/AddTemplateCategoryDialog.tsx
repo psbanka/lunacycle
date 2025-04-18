@@ -88,7 +88,7 @@ export function AddTemplateCategoryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] overflow-visible">
         <DialogHeader>
-          <DialogTitle>WE LIKE CHEESE</DialogTitle>
+          <DialogTitle>Add new Category</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
