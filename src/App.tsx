@@ -126,20 +126,19 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
         {/*<ReactQueryDevtools initialIsOpen={false} /> */}
-
-          <TooltipProvider>
-            <ThemeProvider>
-              <AuthProvider>
-        <TaskProvider>
-                <Toaster />
+        <TooltipProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <TaskProvider>
+              <Toaster />
                 <Sonner />
                 <BrowserRouter>
                   <AppCore />
                 </BrowserRouter>
-        </TaskProvider>
-              </AuthProvider>
-            </ThemeProvider>
-          </TooltipProvider>
+              </TaskProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </TooltipProvider>
       </TRPCProvider>
     </QueryClientProvider>
   );

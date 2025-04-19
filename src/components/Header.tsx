@@ -32,6 +32,7 @@ export default function Header() {
           )}
         </Button>
 
+      {/*
         <div className="">
           {ALCHEMICAL_THEMES.map((theme) => (
             <Button
@@ -44,6 +45,7 @@ export default function Header() {
             </Button>
           ))}
         </div>
+        */}
 
         {user ? (
           <div className="flex items-center gap-2">
