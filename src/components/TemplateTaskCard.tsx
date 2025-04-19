@@ -6,6 +6,7 @@ import {
 } from "../../server/schema";
 import { useState } from "react";
 import { AddTaskDialog } from "./AddTaskDialog";
+import { UserAvatar } from "./UserAvatar";
 
 type TemplateTaskCardProps = {
   templateCategoryTemplateTask: TemplateCategoryTemplateTask & {
@@ -51,14 +52,21 @@ export function TemplateTaskCard({
         <div className="mt-2 flex gap-1">
           {templateTask.templateTaskUsers.map((ttu) => {
             return (
-              <div
-                key={ttu.user?.id}
-                className="bg-accent text-xs px-2 py-0.5 rounded-full"
-              >
-                {ttu.user?.name}
-              </div>
+              <UserAvatar
+                key={ttu.userId}
+                user={ttu.user}
+                dimmed={true}
+              />
             );
           })}
+          {/*
+          <div
+            key={ttu.user?.id}
+            className="bg-accent text-xs px-2 py-0.5 rounded-full"
+          >
+            {ttu.user?.name}
+          </div>
+          */}
         </div>
       </div>
 

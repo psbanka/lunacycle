@@ -164,7 +164,7 @@ export default function Admin() {
                     </span>
                   </td>
                   <td className="p-2">
-                    <UserAvatar email={user.email} avatarData={user.avatar} />
+                    <UserAvatar user={user}/>
                   </td>
                   <td className="p-2">
                     <Button

@@ -157,9 +157,8 @@ export default function TaskCard({
                 {usersForTask(task.id, currentMonth).map((tu) => (
                   <UserAvatar
                     key={tu.userId}
-                    email={tu.user.email}
+                    user={tu.user}
                     dimmed={true}
-                    avatarData={tu.user.avatar}
                   />
                 ))}
               </div>

@@ -141,8 +141,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
           <div className="space-y-2">
             <Label>Avatar</Label>
             <UserAvatar
-              email={editedUser.email}
-              avatarData={editedUser.avatar}
+              user={editedUser}
               size="lg"
             />
             <div className="flex gap-2 mt-2">

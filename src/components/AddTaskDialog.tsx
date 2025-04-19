@@ -372,9 +372,8 @@ export function AddTaskDialog({
                                 <Avatar className="h-8 w-8">
                                   <UserAvatar
                                     key={user.id}
-                                    email={user.email}
+                                    user={user}
                                     dimmed={true}
-                                    avatarData={user.avatar}
                                   />
                                 </Avatar>
                                 <span>{user.name}</span>
