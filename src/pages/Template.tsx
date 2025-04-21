@@ -83,10 +83,11 @@ export default function Template() {
 
       <Separator className="my-8" />
 
+      {/* FIXME: Make this a bit bolder */}
       {templateCategories.map((tc) => (
         <div key={tc.templateCategoryId} className="mb-10">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-2xl font-semibold">
               {tc.templateCategory.emoji} {tc.templateCategory.name}
             </h2>
             <Button
@@ -104,16 +105,6 @@ export default function Template() {
               title="No tasks yet"
               description="This category doesn't have any tasks yet. Add your first task to get started."
               icon={<FolderPlus className="h-10 w-10 opacity-40" />}
-              action={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1 text-xs"
-                  onClick={() => handleAddTaskClick(tc.templateCategoryId)}>
-                  <Plus className="h-3.5 w-3.5" />
-                  Add First Task
-                </Button>
-              }
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
