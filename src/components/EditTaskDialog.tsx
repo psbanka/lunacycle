@@ -351,6 +351,7 @@ export function EditTaskDialog({
                               className="flex items-center space-x-2 space-y-0">
                               <FormControl>
                                 <Checkbox
+                                  id={`checkbox-${user.id}`}
                                   checked={isSelected}
                                   onCheckedChange={(checked) => {
                                     if (checked) {
@@ -368,7 +369,7 @@ export function EditTaskDialog({
                                   }}
                                 />
                               </FormControl>
-                              <div className="flex items-center gap-2">
+                              <label htmlFor={`checkbox-${user.id}`} className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
                                   <UserAvatar
                                     key={user.id}
@@ -377,7 +378,7 @@ export function EditTaskDialog({
                                   />
                                 </Avatar>
                                 <span>{user.name}</span>
-                              </div>
+                              </label>
                             </FormItem>
                           );
                         }}
