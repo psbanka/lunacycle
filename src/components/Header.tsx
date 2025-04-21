@@ -11,7 +11,7 @@ import { Logo } from "@/components/Logo";
 
 export default function Header() {
   const { user, logout } = useAuth();
-  const { isDarkMode, toggleTheme, alchemicalTheme, setAlchemicalTheme } =
+  const { isDarkMode, toggleDarkMode } =
     useTheme();
 
   return (
@@ -24,28 +24,13 @@ export default function Header() {
       </div>
 
       <div className="flex items-center space-x-2">
-        <Button variant="ghost" size="icon" onClick={toggleTheme}>
+        <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
           {isDarkMode ? (
             <Sun className="h-5 w-5" />
           ) : (
             <Moon className="h-5 w-5" />
           )}
         </Button>
-
-      {/*
-        <div className="">
-          {ALCHEMICAL_THEMES.map((theme) => (
-            <Button
-              key={theme}
-              variant={alchemicalTheme === theme ? "default" : "outline"}
-              size="icon"
-              className="h-8 w-8 p-0"
-              onClick={() => setAlchemicalTheme(theme)}>
-              <Paintbrush className="h-4 w-4" />
-            </Button>
-          ))}
-        </div>
-        */}
 
         {user ? (
           <div className="flex items-center gap-2">

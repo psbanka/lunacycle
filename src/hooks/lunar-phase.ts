@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-type MoonPhase = 
+export type MoonPhase = 
   | 'new-moon' 
   | 'waxing-crescent' 
   | 'first-quarter' 
@@ -8,7 +8,7 @@ type MoonPhase =
   | 'full-moon' 
   | 'waning-gibbous' 
   | 'last-quarter' 
-  | 'waning-crescent';
+  | 'waning-crescent'
 
 const DAYS_IN_LUNAR_CYCLE = 29.53;
 

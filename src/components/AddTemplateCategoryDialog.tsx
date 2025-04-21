@@ -153,7 +153,7 @@ export function AddTemplateCategoryDialog({
                       <div className="absolute inset-0 overflow-y-auto">
                         <Picker
                           data={data}
-                          theme={themeObject.theme}
+                          theme={themeObject.isDarkMode ? "dark" : "light"}
                           onEmojiSelect={handleEmojiSelect}
                           previewPosition="none"
                           style={{ width: "100%" }}

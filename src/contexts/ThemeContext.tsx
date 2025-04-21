@@ -5,8 +5,9 @@ import {
   useContext,
   ReactNode,
 } from "react";
+import useLunarPhase, { type MoonPhase } from "@/hooks/lunar-phase";
 
-type Theme = "system" | "light" | "dark";
+type LightDarkPreference = "system" | "light" | "dark";
 
 export const ALCHEMICAL_THEMES = [
   "default",
@@ -18,36 +19,53 @@ export const ALCHEMICAL_THEMES = [
 export type AlchemicalTheme = typeof ALCHEMICAL_THEMES[number];
 
 interface ThemeContextProps {
-  theme: Theme;
   isDarkMode: boolean;
-  toggleTheme: () => void;
+  toggleDarkMode: () => void;
   alchemicalTheme: AlchemicalTheme;
-  setAlchemicalTheme: (theme: AlchemicalTheme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextProps>({
-  theme: "system",
   isDarkMode: false,
-  toggleTheme: () => {},
+  toggleDarkMode: () => {},
   alchemicalTheme: "default",
-  setAlchemicalTheme: () => {},
 });
 
 interface ThemeProviderProps {
   children: ReactNode;
 }
 
+function currentTheme(phase: MoonPhase): AlchemicalTheme {
+  switch (phase) {
+    case "full-moon":
+      return "rubedo";
+    case "waning-gibbous":
+      return "rubedo"
+    case "last-quarter":
+      return "nigredo"
+    case "waning-crescent":
+      return "nigredo"
+    case "waxing-crescent":
+      return "albedo"
+    case "waxing-gibbous":
+      return "citrinitas"
+    case "first-quarter":
+      return "citrinitas";
+    case "new-moon":
+      return "rubedo";
+  }
+}
+
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>("system");
-  const [alchemicalTheme, setAlchemicalTheme] =
-    useState<AlchemicalTheme>("default");
+  const [theme, setTheme] = useState<LightDarkPreference>("system");
+  const { phase } = useLunarPhase();
+  const alchemicalTheme = currentTheme(phase);
 
   const isDarkMode =
     theme === "dark" ||
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-  const toggleTheme = () => {
+  const toggleDarkMode = () => {
     setTheme((prevTheme) => {
       if (prevTheme === "system") return "light";
       if (prevTheme === "light") return "dark";
@@ -58,29 +76,30 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     const root = window.document.documentElement;
 
-    // Remove existing theme classes
-    root.classList.remove("light", "dark");
     root.classList.remove(
-      "theme-default",
-      "theme-nigredo",
-      "theme-albedo",
-      "theme-citrinitas",
-      "theme-rubedo"
+      "theme-default-light",
+      "theme-default-dark",
+      "theme-nigredo-light",
+      "theme-nigredo-dark",
+      "theme-albedo-light",
+      "theme-albedo-dark",
+      "theme-citrinitas-light",
+      "theme-citrinitas-dark",
+      "theme-rubedo-light",
+      "theme-rubedo-dark"
     );
 
     // Add new theme classes
-    root.classList.add(isDarkMode ? "dark" : "light");
-    root.classList.add(`theme-${alchemicalTheme}`);
+    const modeIdentifier = isDarkMode ? "dark" : "light";
+    root.classList.add(`theme-${alchemicalTheme}-${modeIdentifier}`);
   }, [isDarkMode, alchemicalTheme]);
 
   return (
     <ThemeContext.Provider
       value={{
-        theme,
         isDarkMode,
-        toggleTheme,
+        toggleDarkMode,
         alchemicalTheme,
-        setAlchemicalTheme,
       }}
     >
       {children}

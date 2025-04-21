@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -131,6 +130,7 @@
     border: 1px solid #ddd;
   }
 }
+
 /* Default Theme (No specific class) */
 :root {
   --background: 0 0% 100%;
@@ -178,8 +178,8 @@
   --ring: 212.7 26.8% 83.9%;
 }
 
-/* Nigredo Theme */
-.theme-nigredo {
+/* Nigredo Theme - Dark (Existing) */
+.theme-nigredo-dark {
   --background: 240 10% 10%; /* Darker background */
   --foreground: 240 5% 60%; /* Muted foreground */
   --muted: 240 10% 15%; /* Darker muted */
@@ -201,8 +201,31 @@
   --ring: 240 5% 30%; /* Darker ring */
 }
 
-/* Albedo Theme */
-.theme-albedo {
+/* Nigredo Theme - Light */
+.theme-nigredo-light {
+  --background: 240 10% 95%; /* Light background */
+  --foreground: 240 5% 15%; /* Dark foreground */
+  --muted: 240 10% 90%; /* Light muted */
+  --muted-foreground: 240 5% 40%; /* Dark muted foreground */
+  --popover: 240 10% 95%; /* Light popover */
+  --popover-foreground: 240 5% 15%; /* Dark popover foreground */
+  --card: 240 10% 95%; /* Light card */
+  --card-foreground: 240 5% 15%; /* Dark card foreground */
+  --border: 240 10% 85%; /* Light border */
+  --input: 240 10% 85%; /* Light input */
+  --primary: 240 5% 40%; /* Muted primary */
+  --primary-foreground: 240 5% 90%; /* Lighter primary foreground */
+  --secondary: 240 10% 90%; /* Light secondary */
+  --secondary-foreground: 240 5% 15%; /* Dark secondary foreground */
+  --accent: 240 10% 90%; /* Light accent */
+  --accent-foreground: 240 5% 15%; /* Dark accent foreground */
+  --destructive: 0 50% 40%; /* Muted destructive */
+  --destructive-foreground: 240 5% 90%; /* Lighter destructive foreground */
+  --ring: 240 5% 60%; /* Light ring */
+}
+
+/* Albedo Theme - Light (Existing) */
+.theme-albedo-light {
   --background: 220 20% 95%; /* Light, slightly blue background */
   --foreground: 220 20% 20%; /* Dark, slightly blue foreground */
   --muted: 220 20% 90%; /* Light, slightly blue muted */
@@ -224,8 +247,31 @@
   --ring: 220 20% 60%; /* Medium blue ring */
 }
 
-/* Citrinitas Theme */
-.theme-citrinitas {
+/* Albedo Theme - Dark */
+.theme-albedo-dark {
+  --background: 220 20% 10%; /* Dark, slightly blue background */
+  --foreground: 220 20% 95%; /* Light, slightly blue foreground */
+  --muted: 220 20% 15%; /* Dark, slightly blue muted */
+  --muted-foreground: 220 20% 60%; /* Light, slightly blue muted foreground */
+  --popover: 220 20% 10%; /* Dark, slightly blue popover */
+  --popover-foreground: 220 20% 95%; /* Light, slightly blue popover foreground */
+  --card: 220 20% 10%; /* Dark, slightly blue card */
+  --card-foreground: 220 20% 95%; /* Light, slightly blue card foreground */
+  --border: 220 20% 25%; /* Dark, slightly blue border */
+  --input: 220 20% 25%; /* Dark, slightly blue input */
+  --primary: 220 50% 50%; /* Medium blue primary */
+  --primary-foreground: 220 100% 98%; /* Light primary foreground */
+  --secondary: 220 20% 15%; /* Dark, slightly blue secondary */
+  --secondary-foreground: 220 20% 95%; /* Light, slightly blue secondary foreground */
+  --accent: 220 20% 15%; /* Dark, slightly blue accent */
+  --accent-foreground: 220 20% 95%; /* Light, slightly blue accent foreground */
+  --destructive: 0 50% 50%; /* Standard destructive */
+  --destructive-foreground: 220 100% 98%; /* Light destructive foreground */
+  --ring: 220 20% 40%; /* Dark blue ring */
+}
+
+/* Citrinitas Theme - Light (Existing) */
+.theme-citrinitas-light {
   --background: 45 20% 98%; /* Very light, warm background */
   --foreground: 45 20% 15%; /* Dark, warm foreground */
   --muted: 45 20% 90%; /* Light, warm muted */
@@ -247,8 +293,31 @@
   --ring: 45 20% 60%; /* Medium gold ring */
 }
 
-/* Rubedo Theme */
-.theme-rubedo {
+/* Citrinitas Theme - Dark */
+.theme-citrinitas-dark {
+  --background: 45 20% 10%; /* Dark, warm background */
+  --foreground: 45 20% 95%; /* Light, warm foreground */
+  --muted: 45 20% 15%; /* Dark, warm muted */
+  --muted-foreground: 45 20% 60%; /* Light, warm muted foreground */
+  --popover: 45 20% 10%; /* Dark, warm popover */
+  --popover-foreground: 45 20% 95%; /* Light, warm popover foreground */
+  --card: 45 20% 10%; /* Dark, warm card */
+  --card-foreground: 45 20% 95%; /* Light, warm card foreground */
+  --border: 45 20% 25%; /* Dark, warm border */
+  --input: 45 20% 25%; /* Dark, warm input */
+  --primary: 45 50% 50%; /* Medium gold primary */
+  --primary-foreground: 45 100% 98%; /* Light primary foreground */
+  --secondary: 45 20% 15%; /* Dark, warm secondary */
+  --secondary-foreground: 45 20% 95%; /* Light, warm secondary foreground */
+  --accent: 45 20% 15%; /* Dark, warm accent */
+  --accent-foreground: 45 20% 95%; /* Light, warm accent foreground */
+  --destructive: 0 50% 50%; /* Standard destructive */
+  --destructive-foreground: 45 100% 98%; /* Light destructive foreground */
+  --ring: 45 20% 40%; /* Dark gold ring */
+}
+
+/* Rubedo Theme - Light (Existing) */
+.theme-rubedo-light {
   --background: 10 20% 98%; /* Very light, warm background */
   --foreground: 10 20% 15%; /* Dark, warm foreground */
   --muted: 10 20% 90%; /* Light, warm muted */
@@ -268,4 +337,27 @@
   --destructive: 0 50% 50%; /* Standard destructive */
   --destructive-foreground: 10 100% 98%; /* Light destructive foreground */
   --ring: 10 20% 60%; /* Medium gold ring */
+}
+
+/* Rubedo Theme - Dark */
+.theme-rubedo-dark {
+  --background: 10 20% 10%; /* Dark, warm background */
+  --foreground: 10 20% 95%; /* Light, warm foreground */
+  --muted: 10 20% 15%; /* Dark, warm muted */
+  --muted-foreground: 10 20% 60%; /* Light, warm muted foreground */
+  --popover: 10 20% 10%; /* Dark, warm popover */
+  --popover-foreground: 10 20% 95%; /* Light, warm popover foreground */
+  --card: 10 20% 10%; /* Dark, warm card */
+  --card-foreground: 10 20% 95%; /* Light, warm card foreground */
+  --border: 10 20% 25%; /* Dark, warm border */
+  --input: 10 20% 25%; /* Dark, warm input */
+  --primary: 10 50% 50%; /* Medium gold primary */
+  --primary-foreground: 10 100% 98%; /* Light primary foreground */
+  --secondary: 10 20% 15%; /* Dark, warm secondary */
+  --secondary-foreground: 10 20% 95%; /* Light, warm secondary foreground */
+  --accent: 10 20% 15%; /* Dark, warm accent */
+  --accent-foreground: 10 20% 95%; /* Light, warm accent foreground */
+  --destructive: 0 50% 50%; /* Standard destructive */
+  --destructive-foreground: 10 100% 98%; /* Light destructive foreground */
+  --ring: 10 20% 40%; /* Dark gold ring */
 }
