@@ -3,7 +3,7 @@ import TaskCard from "./TaskCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useTask } from "@/contexts/TaskContext";
-import { AddTaskDialog } from "@/components/AddTaskDialog";
+import { EditTaskDialog } from "@/components/EditTaskDialog";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -25,14 +25,14 @@ export default function CategorySection({ id }: CategorySectionProps) {
 
   return (
     <div className="mb-8">
-      <AddTaskDialog
+      <EditTaskDialog
         open={isAddTaskOpen}
         onOpenChange={setIsAddTaskOpen}
         categoryId={id}
       />
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-semibold">
-          {categoryMonth.category?.name}
+          {categoryMonth.category?.emoji} {categoryMonth.category?.name}
         </h2>
         <Button
           variant="outline"

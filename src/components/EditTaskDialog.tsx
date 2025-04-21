@@ -48,7 +48,7 @@ const taskSchema = z.object({
 
 type TaskFormValues = z.infer<typeof taskSchema>;
 
-interface AddTaskDialogProps {
+interface EditTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   categoryId?: string;
@@ -56,13 +56,13 @@ interface AddTaskDialogProps {
   initialValues?: Partial<TaskFormValues>;
 }
 
-export function AddTaskDialog({
+export function EditTaskDialog({
   open,
   onOpenChange,
   categoryId,
   templateCategoryId,
   initialValues,
-}: AddTaskDialogProps) {
+}: EditTaskDialogProps) {
   const {
     addTask,
     updateTask,

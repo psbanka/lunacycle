@@ -6,7 +6,7 @@ import { CheckCircle, CheckSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTRPC } from "@/lib/trpc";
 import { useState } from "react";
-import { AddTaskDialog } from "./AddTaskDialog";
+import { EditTaskDialog } from "./EditTaskDialog";
 import { UserAvatar } from "./UserAvatar";
 
 // FIXME: find this elsewhere
@@ -201,7 +201,7 @@ export default function TaskCard({
       </div>
 
       {/* Edit Dialog */}
-      <AddTaskDialog
+      <EditTaskDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         categoryId={categoryTask.categoryId}

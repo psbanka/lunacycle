@@ -5,7 +5,7 @@ import {
   User,
 } from "../../server/schema";
 import { useState } from "react";
-import { AddTaskDialog } from "./AddTaskDialog";
+import { EditTaskDialog } from "./EditTaskDialog";
 import { UserAvatar } from "./UserAvatar";
 
 type TemplateTaskCardProps = {
@@ -71,7 +71,7 @@ export function TemplateTaskCard({
       </div>
 
       {/* Edit Dialog */}
-      <AddTaskDialog
+      <EditTaskDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         templateCategoryId={templateCategoryId}

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Plus, FolderPlus } from "lucide-react";
 import { AddTemplateCategoryDialog } from "@/components/AddTemplateCategoryDialog";
-import { AddTaskDialog } from "@/components/AddTaskDialog";
+import { EditTaskDialog } from "@/components/EditTaskDialog";
 import { EmptyState } from "@/components/EmptyState";
 import { TemplateTaskCard } from "@/components/TemplateTaskCard";
 
@@ -18,7 +18,7 @@ export default function Template() {
   >(null);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
-  // Function to handle opening the AddTaskDialog
+  // Function to handle opening the EditTaskDialog
   const handleAddTaskClick = (templateCategoryId: string) => {
     setActiveTemplateCategory(templateCategoryId);
     setIsAddTaskOpen(true);
@@ -73,7 +73,7 @@ export default function Template() {
         />
 
         {activeTemplateCategory && (
-          <AddTaskDialog
+          <EditTaskDialog
             open={isAddTaskOpen}
             onOpenChange={setIsAddTaskOpen}
             templateCategoryId={activeTemplateCategory}
