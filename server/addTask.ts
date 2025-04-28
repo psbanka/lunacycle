@@ -7,13 +7,20 @@ import * as schema from "./schema";
 import { fakerEN } from "@faker-js/faker";
 import { FIBONACCI } from "../shared/types";
 
-type TaskCreationProps = Omit<schema.Task, "id" | "createdAt" | "completedCount"> & {
+type TaskCreationProps = Omit<
+  schema.Task,
+  "id" | "createdAt" | "completedCount"
+> & {
   userIds: string[];
   categoryId: string;
+  templateTaskId: string;
 };
 
-export async function createTaskWithCategoryAndAssignments(taskInfo: TaskCreationProps, taskId?: string) {
-  taskId = taskId ?? fakerEN.string.uuid()
+export async function createTaskWithCategoryAndAssignments(
+  taskInfo: TaskCreationProps,
+  taskId?: string
+) {
+  taskId = taskId ?? fakerEN.string.uuid();
   // 1. Create the task --------------------------------------------------
   db.insert(schema.task)
     .values({
@@ -23,6 +30,7 @@ export async function createTaskWithCategoryAndAssignments(taskInfo: TaskCreatio
       storyPoints: taskInfo.storyPoints,
       targetCount: taskInfo.targetCount,
       completedCount: 0,
+      templateTaskId: taskInfo.templateTaskId,
     })
     .run();
   const taskRecord = await db.query.task.findFirst({
@@ -55,12 +63,17 @@ export async function createTaskWithCategoryAndAssignments(taskInfo: TaskCreatio
   return taskRecord;
 }
 
-type TaskMofificationProps = Omit<schema.Task, "createdAt" | "completedCount"> & {
+type TaskModificationProps = Omit<
+  schema.Task,
+  "createdAt" | "completedCount" | "templateTaskId"
+> & {
   userIds: string[];
   categoryId: string;
 };
 
-export async function updateTaskWithCategoryAndAssignments(taskInfo: TaskMofificationProps) {
+export async function updateTaskWithCategoryAndAssignments(
+  taskInfo: TaskModificationProps
+) {
   // 0. Remove old task
   const currentTask = await db.query.task.findFirst({
     where: eq(schema.task.id, taskInfo.id),
@@ -71,30 +84,31 @@ export async function updateTaskWithCategoryAndAssignments(taskInfo: TaskMofific
       message: `Could not find task ${taskInfo.id}`,
     });
   }
-  db.delete(schema.task)
-    .where(eq(schema.task.id, taskInfo.id))
-    .run();
+  db.delete(schema.task).where(eq(schema.task.id, taskInfo.id)).run();
 
   // 1. Remove existing category assignments
   db.delete(schema.categoryTask)
     .where(eq(schema.categoryTask.taskId, taskInfo.id))
     .run();
-  
+
   // 2. Remove old user assignments
   db.delete(schema.taskUser)
     .where(eq(schema.taskUser.taskId, taskInfo.id))
     .run();
 
-  // 3. Call createTaskWithCategoryAndAssignments
-  return createTaskWithCategoryAndAssignments(taskInfo, taskInfo.id);
+  const newTaskInfo = { ...taskInfo, templateTaskId: currentTask.templateTaskId };
+
+  return createTaskWithCategoryAndAssignments(newTaskInfo, taskInfo.id);
 }
 
-type TemplateTaskMofificationProps = Omit<schema.TemplateTask, "createdAt"> & {
+type TemplateTaskModificationProps = Omit<schema.TemplateTask, "createdAt"> & {
   userIds: string[];
   templateCategoryId: string;
 };
 
-export async function updateTemplateTaskWithCategoryAndAssignments(templateTaskInfo: TemplateTaskMofificationProps) {
+export async function updateTemplateTaskWithCategoryAndAssignments(
+  templateTaskInfo: TemplateTaskModificationProps
+) {
   // 0. Verify that the thing we want exists and then get rid of it.
   const currentTemplateTask = await db.query.templateTask.findFirst({
     where: eq(schema.templateTask.id, templateTaskInfo.id),
@@ -111,25 +125,38 @@ export async function updateTemplateTaskWithCategoryAndAssignments(templateTaskI
 
   // 1. Remove old templateCategory assignments
   db.delete(schema.templateCategoryTemplateTask)
-    .where(eq(schema.templateCategoryTemplateTask.templateTaskId, templateTaskInfo.id))
+    .where(
+      eq(
+        schema.templateCategoryTemplateTask.templateTaskId,
+        templateTaskInfo.id
+      )
+    )
     .run();
-  
+
   // 2. Remove old user assignments
   db.delete(schema.templateTaskUser)
     .where(eq(schema.templateTaskUser.templateTaskId, templateTaskInfo.id))
     .run();
 
-  // 3. Call createTaskWithCategoryAndAssignments
-  return createTemplateTaskWithCategoryAndAssignments(templateTaskInfo, templateTaskInfo.id);
+  return createTemplateTaskWithCategoryAndAssignments(
+    templateTaskInfo,
+    templateTaskInfo.id
+  );
 }
 
-type TemplateTaskCreationProps = Omit<schema.TemplateTask, "id" | "createdAt"> & {
+type TemplateTaskCreationProps = Omit<
+  schema.TemplateTask,
+  "id" | "createdAt"
+> & {
   userIds: string[];
   templateCategoryId: string;
 };
 
-export async function createTemplateTaskWithCategoryAndAssignments(taskInfo: TemplateTaskCreationProps, templateTaskId?: string) {
-  templateTaskId = templateTaskId ?? fakerEN.string.uuid()
+export async function createTemplateTaskWithCategoryAndAssignments(
+  taskInfo: TemplateTaskCreationProps,
+  templateTaskId?: string
+) {
+  templateTaskId = templateTaskId ?? fakerEN.string.uuid();
   // 1. Create the task --------------------------------------------------
   db.insert(schema.templateTask)
     .values({
@@ -170,7 +197,6 @@ export async function createTemplateTaskWithCategoryAndAssignments(taskInfo: Tem
   return templateTaskRecord;
 }
 
-
 export const addTask = publicProcedure
   .input(
     type({
@@ -181,13 +207,14 @@ export const addTask = publicProcedure
         targetCount: "number",
         userIds: "string[]",
         categoryId: "string",
+        templateTaskId: "string",
       }),
     })
   )
   .mutation(async ({ input }) => {
     const { task: taskInput } = input;
     return await createTaskWithCategoryAndAssignments(taskInput);
-  })
+  });
 
 export const addTemplateTask = publicProcedure
   .input(
@@ -205,4 +232,4 @@ export const addTemplateTask = publicProcedure
   .mutation(async ({ input }) => {
     const { task: taskInput } = input;
     return await createTemplateTaskWithCategoryAndAssignments(taskInput);
-  })
+  });

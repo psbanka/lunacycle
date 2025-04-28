@@ -22,6 +22,13 @@
       "when": 1744526519852,
       "tag": "0002_yellow_whistler",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1745810612930,
+      "tag": "0003_slimy_rocket_racer",
+      "breakpoints": true
     }
   ]
 }

@@ -81,6 +81,9 @@ export const task = sqliteTable("task", {
   storyPoints: integer("story_points").notNull(),
   targetCount: integer("target_count").notNull(),
   completedCount: integer("completed_count").notNull(),
+  templateTaskId: text("template_task_id")
+    .references(() => templateTask.id)
+    .notNull(),
 });
 
 export type Task = typeof task.$inferSelect;
@@ -111,9 +114,12 @@ export const templateCategory = sqliteTable("template_category", {
 
 export type TemplateCategory = typeof templateCategory.$inferSelect;
 
-export const templateCategoryRelations = relations(templateCategory, ({ many }) => ({
-  templateCategoryTemplateTasks: many(templateCategoryTemplateTask),
-}));
+export const templateCategoryRelations = relations(
+  templateCategory,
+  ({ many }) => ({
+    templateCategoryTemplateTasks: many(templateCategoryTemplateTask),
+  })
+);
 
 // templateTask table
 export const templateTask = sqliteTable("template_task", {
@@ -145,17 +151,15 @@ export const monthCategory = sqliteTable(
       .notNull()
       .references(() => category.id),
   },
-  (table) =>[ 
+  (table) => [
     primaryKey({
       name: "month_category_pk",
-      columns: [ table.monthId, table.categoryId]
+      columns: [table.monthId, table.categoryId],
     }),
   ]
 );
 
-export const monthCategoryRelations = relations(monthCategory, ({
-  one,
-}) => ({
+export const monthCategoryRelations = relations(monthCategory, ({ one }) => ({
   month: one(month, {
     fields: [monthCategory.monthId],
     references: [month.id],
@@ -180,14 +184,12 @@ export const categoryTask = sqliteTable(
   (table) => [
     primaryKey({
       name: "category_task_pk",
-      columns: [ table.categoryId, table.taskId]
+      columns: [table.categoryId, table.taskId],
     }),
   ]
 );
 
-export const categoryTaskRelations = relations(categoryTask, ({
-  one,
-}) => ({
+export const categoryTaskRelations = relations(categoryTask, ({ one }) => ({
   category: one(category, {
     fields: [categoryTask.categoryId],
     references: [category.id],
@@ -212,14 +214,12 @@ export const taskUser = sqliteTable(
   (table) => [
     primaryKey({
       name: "task_user_pk",
-      columns: [ table.taskId, table.userId]
+      columns: [table.taskId, table.userId],
     }),
   ]
 );
 
-export const taskUserRelations = relations(taskUser, ({
-  one,
-}) => ({
+export const taskUserRelations = relations(taskUser, ({ one }) => ({
   task: one(task, {
     fields: [taskUser.taskId],
     references: [task.id],
@@ -244,23 +244,24 @@ export const templateTemplateCategory = sqliteTable(
   (table) => [
     primaryKey({
       name: "template_template_category_pk",
-      columns: [ table.templateId, table.templateCategoryId]
+      columns: [table.templateId, table.templateCategoryId],
     }),
   ]
 );
 
-export const templateTemplateCategoryRelations = relations(templateTemplateCategory, ({
-  one,
-}) => ({
-  template: one(template, {
-    fields: [templateTemplateCategory.templateId],
-    references: [template.id],
-  }),
-  templateCategory: one(templateCategory, {
-    fields: [templateTemplateCategory.templateCategoryId],
-    references: [templateCategory.id],
-  }),
-}));
+export const templateTemplateCategoryRelations = relations(
+  templateTemplateCategory,
+  ({ one }) => ({
+    template: one(template, {
+      fields: [templateTemplateCategory.templateId],
+      references: [template.id],
+    }),
+    templateCategory: one(templateCategory, {
+      fields: [templateTemplateCategory.templateCategoryId],
+      references: [templateCategory.id],
+    }),
+  })
+);
 
 // templateCategory <-> templateTask join table
 export const templateCategoryTemplateTask = sqliteTable(
@@ -276,25 +277,27 @@ export const templateCategoryTemplateTask = sqliteTable(
   (table) => [
     primaryKey({
       name: "template_category_template_task_pk",
-      columns: [ table.templateCategoryId, table.templateTaskId]
+      columns: [table.templateCategoryId, table.templateTaskId],
     }),
-  ] 
+  ]
 );
 
-export type TemplateCategoryTemplateTask = typeof templateCategoryTemplateTask.$inferSelect;
+export type TemplateCategoryTemplateTask =
+  typeof templateCategoryTemplateTask.$inferSelect;
 
-export const templateCategoryTemplateTaskRelations = relations(templateCategoryTemplateTask, ({
-  one,
-}) => ({
-  templateCategory: one(templateCategory, {
-    fields: [templateCategoryTemplateTask.templateCategoryId],
-    references: [templateCategory.id],
-  }),
-  templateTask: one(templateTask, {
-    fields: [templateCategoryTemplateTask.templateTaskId],
-    references: [templateTask.id],
-  }),
-}));
+export const templateCategoryTemplateTaskRelations = relations(
+  templateCategoryTemplateTask,
+  ({ one }) => ({
+    templateCategory: one(templateCategory, {
+      fields: [templateCategoryTemplateTask.templateCategoryId],
+      references: [templateCategory.id],
+    }),
+    templateTask: one(templateTask, {
+      fields: [templateCategoryTemplateTask.templateTaskId],
+      references: [templateTask.id],
+    }),
+  })
+);
 
 // templateTask <-> user (user) join table
 export const templateTaskUser = sqliteTable(
@@ -310,22 +313,23 @@ export const templateTaskUser = sqliteTable(
   (table) => [
     primaryKey({
       name: "template_task_user_pk",
-      columns: [ table.templateTaskId, table.userId]
+      columns: [table.templateTaskId, table.userId],
     }),
   ]
 );
 
 export type TemplateTaskUser = typeof templateTaskUser.$inferSelect;
 
-export const templateTaskUserRelations = relations(templateTaskUser, ({
-  one,
-}) => ({
-  templateTask: one(templateTask, {
-    fields: [templateTaskUser.templateTaskId],
-    references: [templateTask.id],
-  }),
-  user: one(user, {
-    fields: [templateTaskUser.userId],
-    references: [user.id],
-  }),
-}));
+export const templateTaskUserRelations = relations(
+  templateTaskUser,
+  ({ one }) => ({
+    templateTask: one(templateTask, {
+      fields: [templateTaskUser.templateTaskId],
+      references: [templateTask.id],
+    }),
+    user: one(user, {
+      fields: [templateTaskUser.userId],
+      references: [user.id],
+    }),
+  })
+);

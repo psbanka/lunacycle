@@ -1,0 +1,1 @@
+ALTER TABLE `task` ADD `template_task_id` text NOT NULL REFERENCES template_task(id);
