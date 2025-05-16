@@ -169,12 +169,12 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   };
 
   const addTask = async (
-    task: Omit<Task, "id" | "createdAt">,
+    task: Omit<Task, "id" | "createdAt" | "templateTaskId">,
     userIds: string[],
     categoryId: string,
   ) => {
     await addTaskMutation.mutateAsync({
-      task: { ...task, categoryId, userIds: userIds },
+      task: { ...task, categoryId, userIds: userIds, templateTaskId: null },
     });
   };
 
@@ -285,7 +285,7 @@ type TaskContextType = {
   createMonthFromTemplate: () => void;
   completeTask: (taskId: string) => void;
   addTask: (
-    task: Omit<Task, "id" | "createdAt">,
+    task: Omit<Task, "id" | "createdAt" | "templateTaskId">,
     userIds: string[],
     categoryId: string,
   ) => void;

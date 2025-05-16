@@ -82,8 +82,7 @@ export const task = sqliteTable("task", {
   targetCount: integer("target_count").notNull(),
   completedCount: integer("completed_count").notNull(),
   templateTaskId: text("template_task_id")
-    .references(() => templateTask.id)
-    .notNull(),
+    .references(() => templateTask.id),
 });
 
 export type Task = typeof task.$inferSelect;

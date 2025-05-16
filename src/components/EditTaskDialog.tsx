@@ -35,6 +35,7 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
 
+
 // Schema for task creation
 const taskSchema = z.object({
   id: z.string().optional(),
@@ -108,6 +109,7 @@ export function EditTaskDialog({
             storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
             targetCount: values.targetCount,
             completedCount: values.completedCount || 0,
+            templateTaskId: null,
           },
           categoryId,
           values.userIds

@@ -13,7 +13,7 @@ type TaskCreationProps = Omit<
 > & {
   userIds: string[];
   categoryId: string;
-  templateTaskId: string;
+  templateTaskId: string | null;
 };
 
 export async function createTaskWithCategoryAndAssignments(
@@ -149,7 +149,7 @@ type TemplateTaskCreationProps = Omit<
   "id" | "createdAt"
 > & {
   userIds: string[];
-  templateCategoryId: string;
+  templateCategoryId: string | null;
 };
 
 export async function createTemplateTaskWithCategoryAndAssignments(
@@ -177,13 +177,15 @@ export async function createTemplateTaskWithCategoryAndAssignments(
     });
   }
 
-  // 2. Associate the new task with the category -------------------------
-  db.insert(schema.templateCategoryTemplateTask)
-    .values({
-      templateCategoryId: taskInfo.templateCategoryId,
-      templateTaskId: templateTaskRecord.id,
-    })
-    .run();
+  if (taskInfo.templateCategoryId) {
+    // 2. Associate the new task with the category -------------------------
+    db.insert(schema.templateCategoryTemplateTask)
+      .values({
+        templateCategoryId: taskInfo.templateCategoryId,
+        templateTaskId: templateTaskRecord.id,
+      })
+      .run();
+  }
 
   // 3. Associate the task to the users ---------------------------------
   for (const userId of taskInfo.userIds) {
@@ -207,7 +209,7 @@ export const addTask = publicProcedure
         targetCount: "number",
         userIds: "string[]",
         categoryId: "string",
-        templateTaskId: "string",
+        templateTaskId: "string | null",
       }),
     })
   )
