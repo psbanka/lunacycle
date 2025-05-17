@@ -31,6 +31,7 @@ export async function createTaskWithCategoryAndAssignments(
       targetCount: taskInfo.targetCount,
       completedCount: 0,
       templateTaskId: taskInfo.templateTaskId,
+      isFocused: taskInfo.isFocused,
     })
     .run();
   const taskRecord = await db.query.task.findFirst({
@@ -205,11 +206,12 @@ export const addTask = publicProcedure
       task: type({
         title: "string",
         description: "string | null",
-        storyPoints: "number",
+        storyPoints: "1 | 2 | 3 | 5 | 8 | 13 | 21",
         targetCount: "number",
         userIds: "string[]",
         categoryId: "string",
         templateTaskId: "string | null",
+        isFocused: "1 | 0",
       }),
     })
   )
@@ -224,7 +226,7 @@ export const addTemplateTask = publicProcedure
       task: type({
         title: "string",
         description: "string | null",
-        storyPoints: "number",
+        storyPoints: "1 | 2 | 3 | 5 | 8 | 13 | 21",
         targetCount: "number",
         userIds: "string[]",
         templateCategoryId: "string",

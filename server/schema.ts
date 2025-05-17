@@ -5,6 +5,8 @@ import {
   primaryKey,
   blob,
 } from "drizzle-orm/sqlite-core";
+import type { StoryPointType } from "../shared/types";
+import { sql } from "drizzle-orm";
 
 import { relations } from "drizzle-orm";
 
@@ -78,11 +80,13 @@ export const task = sqliteTable("task", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  storyPoints: integer("story_points").notNull(),
+  storyPoints: integer("story_points")
+    .$type<StoryPointType>().notNull(),
   targetCount: integer("target_count").notNull(),
   completedCount: integer("completed_count").notNull(),
   templateTaskId: text("template_task_id")
     .references(() => templateTask.id),
+  isFocused: integer("is_focused").$type<0 | 1>().notNull().default(0),
 });
 
 export type Task = typeof task.$inferSelect;
@@ -125,7 +129,9 @@ export const templateTask = sqliteTable("template_task", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  storyPoints: integer("story_points").notNull(),
+  storyPoints: integer("story_points")
+    .$type<StoryPointType>()
+    .notNull(),
   targetCount: integer("target_count").notNull(),
 });
 

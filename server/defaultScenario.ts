@@ -4,6 +4,7 @@ import * as schema from "./schema";
 import { fakerEN } from "@faker-js/faker";
 import { createMonthFromActiveTemplate } from "./createMonth";
 import { fetchRandomAvatar } from "./avatarUtils.ts";
+import type { StoryPointType } from "../shared/types.ts";
 
 import { hash } from "@node-rs/bcrypt";
 
@@ -13,7 +14,7 @@ type CreateProps = {
   description: string;
   tasks: {
     title: string;
-    storyPoints: number;
+    storyPoints: StoryPointType;
     targetCount: number;
     users: { id: string }[];
   }[];

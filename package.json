@@ -20,7 +20,7 @@
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@faker-js/faker": "^9.6.0",
-    "@hookform/resolvers": "^3.9.0",
+    "@hookform/resolvers": "^5.0.1",
     "@mswjs/data": "^0.16.2",
     "@node-rs/bcrypt": "^1.10.7",
     "@radix-ui/react-accordion": "^1.2.0",

@@ -3,10 +3,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 // import type { User } from "@/types";
 // FIXME: Convert to arktype
+import { arktypeResolver } from "@hookform/resolvers/arktype"
 import { LoadingScreen } from "./LoadingScreen";
 
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { type } from "arktype";
 import { useTask } from "@/contexts/TaskContext";
 import { Check, UserCircle, Trash } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -37,17 +37,18 @@ import { Avatar } from "@/components/ui/avatar";
 
 
 // Schema for task creation
-const taskSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().min(1, "Task title is required"),
-  description: z.string().optional(),
-  storyPoints: z.number().min(1).max(13),
-  targetCount: z.number().min(1).max(31),
-  completedCount: z.number().optional(),
-  userIds: z.array(z.string()).min(1, "At least one person must be assigned"),
+const TaskSchema = type({
+  "id?": "string",
+  title: "string > 0",
+  description: "string",
+  storyPoints: "1 | 2 | 3 | 5 | 8 | 13 | 21",
+  targetCount: "1 <= number.integer <= 31",
+  "completedCount?": "number",
+  userIds: "string[] >= 1",
+  "isFocused?": "0 | 1",
 });
 
-type TaskFormValues = z.infer<typeof taskSchema>;
+type TaskFormValues = typeof TaskSchema.infer;
 
 interface EditTaskDialogProps {
   open: boolean;
@@ -82,13 +83,14 @@ export function EditTaskDialog({
     initialValues?.targetCount && initialValues.targetCount > 1;
 
   const form = useForm<TaskFormValues>({
-    resolver: zodResolver(taskSchema),
+    resolver: arktypeResolver(TaskSchema),
     defaultValues: {
       title: "",
       description: "",
       storyPoints: 1,
       targetCount: 1,
       completedCount: 0,
+      isFocused: 0,
       userIds: [],
       ...initialValues,
     },
@@ -109,6 +111,7 @@ export function EditTaskDialog({
             storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
             targetCount: values.targetCount,
             completedCount: values.completedCount || 0,
+            isFocused: values.isFocused || 0,
             templateTaskId: null,
           },
           categoryId,
@@ -133,6 +136,7 @@ export function EditTaskDialog({
             description: values.description || null,
             storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
             targetCount: values.targetCount,
+            isFocused: values.isFocused || 0,
             completedCount: 0,
           },
           userIds,

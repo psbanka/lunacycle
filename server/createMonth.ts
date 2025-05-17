@@ -135,6 +135,7 @@ async function createTasksFromTemplate(
         categoryId,
         userIds: [], // We'll add users later
         templateTaskId: templateTask.id,
+        isFocused: 0,
       });
     } else {
       console.log(`> Reusing existing task: ${templateTask.title}`);

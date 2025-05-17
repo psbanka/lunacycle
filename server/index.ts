@@ -338,10 +338,11 @@ const appRouter = router({
           id: "string",
           title: "string",
           description: "string | null",
-          storyPoints: "number",
+          storyPoints: "1 | 2 | 3 | 5 | 8 | 13 | 21",
           targetCount: "number",
           userIds: "string[]",
           categoryId: "string",
+          isFocused: "1 | 0",
         }),
       })
     )
@@ -356,7 +357,7 @@ const appRouter = router({
           id: "string",
           title: "string",
           description: "string | null",
-          storyPoints: "number",
+          storyPoints: "1 | 2 | 3 | 5 | 8 | 13 | 21",
           targetCount: "number",
           userIds: "string[]",
           templateCategoryId: "string",
