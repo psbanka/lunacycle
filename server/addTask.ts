@@ -75,31 +75,40 @@ type TaskModificationProps = Omit<
 export async function updateTaskWithCategoryAndAssignments(
   taskInfo: TaskModificationProps
 ) {
-  // 0. Remove old task
-  const currentTask = await db.query.task.findFirst({
-    where: eq(schema.task.id, taskInfo.id),
-  });
-  if (!currentTask) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: `Could not find task ${taskInfo.id}`,
-    });
-  }
-  db.delete(schema.task).where(eq(schema.task.id, taskInfo.id)).run();
+  // 1. Update the task details
+  await db
+    .update(schema.task)
+    .set({
+      title: taskInfo.title,
+      description: taskInfo.description,
+      storyPoints: taskInfo.storyPoints,
+      targetCount: taskInfo.targetCount,
+      isFocused: taskInfo.isFocused,
+    })
+    .where(eq(schema.task.id, taskInfo.id))
+    .run();
 
-  // 1. Remove existing category assignments
-  db.delete(schema.categoryTask)
+  // 2. Update the category association
+  await db
+    .delete(schema.categoryTask)
     .where(eq(schema.categoryTask.taskId, taskInfo.id))
     .run();
-
-  // 2. Remove old user assignments
-  db.delete(schema.taskUser)
-    .where(eq(schema.taskUser.taskId, taskInfo.id))
+  await db
+    .insert(schema.categoryTask)
+    .values({ categoryId: taskInfo.categoryId, taskId: taskInfo.id })
     .run();
 
-  const newTaskInfo = { ...taskInfo, templateTaskId: currentTask.templateTaskId };
+  // 3. Update user assignments
+  await db
+    .delete(schema.taskUser)
+    .where(eq(schema.taskUser.taskId, taskInfo.id))
+    .run();
+  await db
+    .insert(schema.taskUser)
+    .values(taskInfo.userIds.map((userId) => ({ taskId: taskInfo.id, userId })))
+    .run();
 
-  return createTaskWithCategoryAndAssignments(newTaskInfo, taskInfo.id);
+  return db.query.task.findFirst({ where: eq(schema.task.id, taskInfo.id) });
 }
 
 type TemplateTaskModificationProps = Omit<schema.TemplateTask, "createdAt"> & {
