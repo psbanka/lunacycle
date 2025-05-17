@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { type } from "arktype";
+import { arktypeResolver } from "@hookform/resolvers/arktype"
 import { useTask } from "@/contexts/TaskContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import Picker from "@emoji-mart/react";
@@ -28,13 +28,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 // Schema for template category creation
-const templateCategorySchema = z.object({
-  name: z.string().min(1, "Category name is required"),
-  description: z.string().optional(),
-  emoji: z.string().optional(),
+const templateCategorySchema = type({
+  name: "string > 0", //z.string().min(1, "Category name is required"),
+  "description?": "string",
+  "emoji?": "string",
 });
 
-type TemplateCategoryFormValues = z.infer<typeof templateCategorySchema>;
+type TemplateCategoryFormValues = typeof templateCategorySchema.infer;
 
 interface AddTemplateCategoryDialogProps {
   open: boolean;
@@ -51,7 +51,7 @@ export function AddTemplateCategoryDialog({
   const themeObject = useTheme();
 
   const form = useForm<TemplateCategoryFormValues>({
-    resolver: zodResolver(templateCategorySchema),
+    resolver: arktypeResolver(templateCategorySchema),
     defaultValues: {
       name: "",
       description: "",
@@ -79,6 +79,7 @@ export function AddTemplateCategoryDialog({
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleEmojiSelect = (emoji: any) => {
     form.setValue("emoji", emoji.native);
     setShowEmojiPicker(false);

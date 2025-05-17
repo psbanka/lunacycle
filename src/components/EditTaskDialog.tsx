@@ -1,14 +1,12 @@
 import { FIBONACCI } from "../../shared/types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-// import type { User } from "@/types";
-// FIXME: Convert to arktype
+import { type } from "arktype";
 import { arktypeResolver } from "@hookform/resolvers/arktype"
 import { LoadingScreen } from "./LoadingScreen";
 
-import { type } from "arktype";
 import { useTask } from "@/contexts/TaskContext";
-import { Check, UserCircle, Trash } from "lucide-react";
+import { Trash } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 
 import {
