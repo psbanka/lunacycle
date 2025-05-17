@@ -283,6 +283,26 @@ export function EditTaskDialog({
               />
             )}
 
+            <FormField
+              control={form.control}
+              name="isFocused"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel>Focus</FormLabel>
+                  </div>
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value === 1}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked ? 1 : 0);
+                      }}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             {isEditingTask && initialValues?.targetCount === 1 && (
               <FormField
                 control={form.control}
@@ -423,9 +443,8 @@ export function EditTaskDialog({
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting
                     ? "Updating..."
-                    : categoryId
-                    ? "Edit Task"
-                    : "Edit Template Task"}
+                    : "Save"
+                  }
                 </Button>
               ) : (
                 <Button type="submit" disabled={isSubmitting}>

@@ -44,6 +44,8 @@ export default function Home() {
     .flatMap((mc) => mc.category?.categoryTasks ?? []) // FIXME: shouldn't need to do this
     .filter((ct) => ct.task.targetCount > ct.task.completedCount);
 
+  const upNextTasks = pendingCategoryTasks.filter(ct => ct.task.isFocused === 1);
+
   // Filter tasks for "Recently Completed" section - completed tasks from user
   const completedCategoryTasks = currentMonth.monthCategories
     .flatMap((mc) => mc.category?.categoryTasks ?? []) // FIXME: shouldn't need to do this
@@ -77,22 +79,15 @@ export default function Home() {
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Up Next</h2>
 
-        {pendingCategoryTasks.length === 0 ? (
+        {upNextTasks.length === 0 ? (
           <div className="glass-card p-8 text-center rounded-lg">
             <p className="text-muted-foreground">
-              All caught up! No pending tasks.
+              All caught up! No focused tasks.
             </p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => setShowAddTask(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add a new task
-            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {pendingCategoryTasks.slice(0, 4).map((task) => (
+            {upNextTasks.map((task) => (
               <TaskCard key={task.taskId} categoryTask={task} />
             ))}
           </div>

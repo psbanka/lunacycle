@@ -36,6 +36,13 @@
       "when": 1745820198373,
       "tag": "0004_sad_alex_power",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1747463360395,
+      "tag": "0005_familiar_hercules",
+      "breakpoints": true
     }
   ]
 }
