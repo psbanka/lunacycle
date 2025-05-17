@@ -110,7 +110,7 @@ export default function TaskCard({
           <div className="flex justify-between items-start mb-2">
             <h3
               className={cn(
-                "font-medium transition-colors",
+                "font-medium transition-colors text-left",
                 isCompleted
                   ? "text-muted-foreground line-through"
                   : "text-foreground",
