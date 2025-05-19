@@ -307,7 +307,7 @@ export const addTask = publicProcedure
       task: type({
         title: "string",
         description: "string | null",
-        storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13 | 21",
+        storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13",
         targetCount: "number",
         userIds: "string[]",
         categoryId: "string",
@@ -327,7 +327,7 @@ export const addTemplateTask = publicProcedure
       task: type({
         title: "string",
         description: "string | null",
-        storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13 | 21",
+        storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13",
         targetCount: "number",
         userIds: "string[]",
         templateCategoryId: "string",
