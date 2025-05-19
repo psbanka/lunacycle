@@ -1,7 +1,5 @@
-import { useState, useEffect } from "react";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { useTask } from "@/contexts/TaskContext";
-import { useAuth } from "@/contexts/AuthContext";
 import LunarPhase from "@/components/Moon";
 import CategorySection from "@/components/CategorySection";
 import TaskCard from "@/components/TaskCard";
@@ -13,7 +11,6 @@ import CheckInSheet from "@/components/CheckInSheet";
 
 export default function Home() {
   const { currentMonth, loadingTasks, createMonthFromTemplate } = useTask();
-  const [showAddTask, setShowAddTask] = useState(false);
   if (loadingTasks) {
     return <LoadingScreen />;
   }
