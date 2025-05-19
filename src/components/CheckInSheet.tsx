@@ -14,7 +14,7 @@ import { Printer, Save } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import LunarPhase from "@/components/LunarPhase";
+import LunarPhase from "@/components/Moon";
 import { toast } from "sonner";
 
 type RatingInputProps = {

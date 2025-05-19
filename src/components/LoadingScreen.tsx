@@ -1,4 +1,4 @@
-import LunarPhase from "./LunarPhase";
+import LunarPhase from "./Moon";
 
 export function LoadingScreen() {
   return (

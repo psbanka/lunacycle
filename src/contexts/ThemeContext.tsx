@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useState,
@@ -5,7 +6,8 @@ import {
   useContext,
   ReactNode,
 } from "react";
-import useLunarPhase, { type MoonPhase } from "@/hooks/lunar-phase";
+import useLunarPhase from "@/hooks/useLunarPhase";
+import { type MoonPhase } from "../../shared/lunarPhase";
 
 type LightDarkPreference = "system" | "light" | "dark";
 

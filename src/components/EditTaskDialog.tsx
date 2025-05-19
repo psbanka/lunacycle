@@ -33,7 +33,6 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
 
-
 // Schema for task creation
 const TaskSchema = type({
   "id?": "string",

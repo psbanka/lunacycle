@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import LunarPhase from "@/components/LunarPhase";
+import LunarPhase from "@/components/Moon";
 
 const NotFound = () => {
   const location = useLocation();

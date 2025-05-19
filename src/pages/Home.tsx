@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { useTask } from "@/contexts/TaskContext";
 import { useAuth } from "@/contexts/AuthContext";
-import LunarPhase from "@/components/LunarPhase";
+import LunarPhase from "@/components/Moon";
 import CategorySection from "@/components/CategorySection";
 import TaskCard from "@/components/TaskCard";
 import { Button } from "@/components/ui/button";

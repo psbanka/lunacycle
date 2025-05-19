@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTask } from "@/contexts/TaskContext";
-import LunarPhase from "@/components/LunarPhase";
+import LunarPhase from "@/components/Moon";
 import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";

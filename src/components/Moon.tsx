@@ -1,4 +1,4 @@
-import useLunarPhase from "@/hooks/lunar-phase";
+import useLunarPhase from "@/hooks/useLunarPhase";
 import { cn } from '@/lib/utils';
 
 type LunarPhaseProps = {

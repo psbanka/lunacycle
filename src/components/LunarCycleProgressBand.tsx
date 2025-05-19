@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import useLunarPhase from "@/hooks/lunar-phase";
+import useLunarPhase from "@/hooks/useLunarPhase";
 
 type LunarCycleProgressBandProps = {
   currentDate?: Date;

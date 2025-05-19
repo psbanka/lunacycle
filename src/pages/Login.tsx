@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import LunarPhase from "@/components/LunarPhase";
+import LunarPhase from "@/components/Moon";
 
 export default function Login() {
   const [email, setEmail] = useState("");
