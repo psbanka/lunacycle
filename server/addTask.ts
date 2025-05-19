@@ -119,39 +119,79 @@ type TemplateTaskModificationProps = Omit<schema.TemplateTask, "createdAt"> & {
 export async function updateTemplateTaskWithCategoryAndAssignments(
   templateTaskInfo: TemplateTaskModificationProps
 ) {
-  // 0. Verify that the thing we want exists and then get rid of it.
-  const currentTemplateTask = await db.query.templateTask.findFirst({
+  // 0. Verify that the thing we want exists
+  const templateTaskRecord = await db.query.templateTask.findFirst({
     where: eq(schema.templateTask.id, templateTaskInfo.id),
   });
-  if (!currentTemplateTask) {
+  if (!templateTaskRecord) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: `Could not find templateTask ${templateTaskInfo.id}`,
     });
   }
-  db.delete(schema.templateTask)
+
+  // 1. Update the template task details
+  await db
+    .update(schema.templateTask)
+    .set({
+      title: templateTaskInfo.title,
+      description: templateTaskInfo.description,
+      storyPoints: templateTaskInfo.storyPoints,
+      targetCount: templateTaskInfo.targetCount,
+    })
     .where(eq(schema.templateTask.id, templateTaskInfo.id))
     .run();
 
-  // 1. Remove old templateCategory assignments
-  db.delete(schema.templateCategoryTemplateTask)
-    .where(
-      eq(
-        schema.templateCategoryTemplateTask.templateTaskId,
-        templateTaskInfo.id
-      )
-    )
-    .run();
-
-  // 2. Remove old user assignments
+  // 2. Update the user assignments
   db.delete(schema.templateTaskUser)
     .where(eq(schema.templateTaskUser.templateTaskId, templateTaskInfo.id))
     .run();
 
-  return createTemplateTaskWithCategoryAndAssignments(
-    templateTaskInfo,
-    templateTaskInfo.id
-  );
+  for (const userId of templateTaskInfo.userIds) {
+    db.insert(schema.templateTaskUser)
+      .values({
+        templateTaskId: templateTaskInfo.id,
+        userId,
+      })
+      .run();
+  }
+
+  // 4. If moon is gibbous waning, modify the monthly task
+  if (getLunarPhase().phase === "waning-gibbous") {
+    const templateCategory = await db.query.templateCategory.findFirst({
+      where: eq(schema.templateCategory.id, templateTaskInfo.templateCategoryId),
+    });
+    if (!templateCategory) {
+      throw new Error("Template category not found");
+    }
+
+    // FIXME: it would be preferable to use ids instead of names
+    // to find the category
+    const category = await db.query.category.findFirst({
+      where: eq(schema.category.name, templateCategory.name),
+    });
+    if (!category) {
+      throw new Error("Category not found");
+    }
+
+    const existingTask = await db.query.task.findFirst({
+      where: eq(schema.task.templateTaskId, templateTaskInfo.id),
+    });
+
+    if (existingTask) {
+      // 4a. Update existing task
+      await updateTaskWithCategoryAndAssignments({
+        id: existingTask.id,
+        title: templateTaskRecord.title,
+        description: templateTaskRecord.description,
+        storyPoints: templateTaskRecord.storyPoints,
+        targetCount: templateTaskRecord.targetCount,
+        categoryId: category.id,
+        userIds: templateTaskInfo.userIds,
+        isFocused: 0,
+      });
+    }
+  }
 }
 
 type TemplateTaskCreationProps = Omit<
@@ -209,7 +249,7 @@ export async function createTemplateTaskWithCategoryAndAssignments(
       .run();
   }
 
-  // 4. If moon is gibbous waning, add the template task to the month
+  // 4. If moon is gibbous waning, add OR MODIFY the monthly task
   if (getLunarPhase().phase === "waning-gibbous") {
     const templateCategory = await db.query.templateCategory.findFirst({
       where: eq(schema.templateCategory.id, taskInfo.templateCategoryId),
@@ -227,14 +267,35 @@ export async function createTemplateTaskWithCategoryAndAssignments(
       throw new Error("Category not found");
     }
 
-    // 4b. Create new task
-    await createTaskWithCategoryAndAssignments({
-      ...templateTaskRecord,
-      categoryId: category.id,
-      userIds: taskInfo.userIds,
-      templateTaskId: templateTaskId,
-      isFocused: 0,
+    const existingTask = await db.query.task.findFirst({
+      where: eq(schema.task.templateTaskId, templateTaskId),
     });
+
+    if (existingTask) {
+      // 4a. Update existing task
+      await updateTaskWithCategoryAndAssignments({
+        id: existingTask.id,
+        title: templateTaskRecord.title,
+        description: templateTaskRecord.description,
+        storyPoints: templateTaskRecord.storyPoints,
+        targetCount: templateTaskRecord.targetCount,
+        categoryId: category.id,
+        userIds: taskInfo.userIds,
+        isFocused: 0,
+      });
+    } else {
+      // 4b. Create new task
+      await createTaskWithCategoryAndAssignments({
+        title: templateTaskRecord.title,
+        description: templateTaskRecord.description,
+        storyPoints: templateTaskRecord.storyPoints,
+        targetCount: templateTaskRecord.targetCount,
+        categoryId: category.id,
+        userIds: taskInfo.userIds,
+        templateTaskId: templateTaskId,
+        isFocused: 0,
+      });
+    }
   }
 
   return templateTaskRecord;
