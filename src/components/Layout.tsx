@@ -1,35 +1,84 @@
-
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect, useRef } from "react";
 import Header from "./Header";
 import NavBar from "./NavBar";
+import CategoryNav from "./CategoryNav";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "react-router-dom";
+import { useTask } from "@/contexts/TaskContext";
 
 type LayoutProps = {
   children: ReactNode;
 };
 
 export default function Layout({ children }: LayoutProps) {
-  const { isAuthenticated } = useAuth();
-  
+  const { isAuthenticated, user } = useAuth();
+  const { currentMonth, template, loadingTasks } = useTask();
+  const location = useLocation();
+  const [navData, setNavData] = useState<any>(null); // FIXME: type this
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (loadingTasks) return;
+    if (location.pathname === "/" && currentMonth) {
+      setNavData(currentMonth.monthCategories);
+    } else if (location.pathname === "/template" && template) {
+      setNavData(template.templateTemplateCategories);
+    } else {
+      setNavData(null);
+    }
+  }, [location.pathname, currentMonth, template, loadingTasks]);
+
+  // Scroll Spy Logic
+  useEffect(() => {
+    if (!navData || !contentRef.current) return;
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const sections = Array.from(document.querySelectorAll("[id]")) as HTMLElement[];
+      let currentActive: string | null = null;
+
+      for (const section of sections) {
+        const sectionTop = section.offsetTop - 100; // Adjust for some offset
+        const sectionBottom = sectionTop + section.offsetHeight;
+
+        if (scrollY >= sectionTop && scrollY < sectionBottom) {
+          currentActive = section.id;
+        }
+      }
+      setActiveCategoryId(currentActive);
+    };
+
+    const contentElement = contentRef.current;
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Initial check
+
+    return () => contentElement.removeEventListener("scroll", handleScroll);
+  }, [navData]);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      
+
       <div className="flex flex-1">
-        {isAuthenticated && (
-          <div className="hidden md:block">
-            <NavBar />
-          </div>
-        )}
-        
-        <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto">
+        <div className="hidden md:block sticky top-0 h-screen">
+          <NavBar />
+        </div>
+        <div className="hidden md:block sticky top-0 h-screen">
+          <CategoryNav data={navData} activeCategoryId={activeCategoryId} />
+        </div>
+
+        <main
+          ref={contentRef}
+          className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto"
+        >
           {children}
         </main>
       </div>
-      
+
       {isAuthenticated && (
         <div className="md:hidden">
-          <NavBar />
+          <NavBar data={navData} activeCategoryId={activeCategoryId} />
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { LoadingScreen } from "../components/LoadingScreen";
+import { useRef } from "react";
 import { useTask } from "@/contexts/TaskContext";
 import LunarPhase from "@/components/Moon";
 import CategorySection from "@/components/CategorySection";
@@ -8,9 +8,15 @@ import { PlusCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import CheckInSheet from "@/components/CheckInSheet";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 export default function Home() {
-  const { currentMonth, loadingTasks, createMonthFromTemplate } = useTask();
+  const { currentMonth, loadingTasks, createMonthFromTemplate, users } = useTask();
+  const categoryRefs = useRef<(HTMLElement | null)[]>([]);
+
+  // Function to scroll to a category
+  // const scrollToCategory = (index: number) => {
+  //   categoryRefs.current[index]?.scrollIntoView({ behavior: "smooth" });
   if (loadingTasks) {
     return <LoadingScreen />;
   }
@@ -113,7 +119,13 @@ export default function Home() {
 
       <div>
         {currentMonth.monthCategories.map((mc) => (
-          <CategorySection key={mc?.categoryId} id={mc?.categoryId} />
+          <div
+            key={mc?.categoryId}
+            id={mc?.categoryId}
+          >
+            <CategorySection id={mc?.categoryId} />
+          </div>
+
         ))}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useTask } from "@/contexts/TaskContext";
 import LunarPhase from "@/components/Moon";
 import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
@@ -11,12 +11,15 @@ import { EmptyState } from "@/components/EmptyState";
 import { TemplateTaskCard } from "@/components/TemplateTaskCard";
 
 export default function Template() {
-  const { template, loadingTasks } = useTask();
+  const { template, loadingTasks, users } = useTask();
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [activeTemplateCategory, setActiveTemplateCategory] = useState<
     string | null
   >(null);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const categoryRefs = useRef<(HTMLElement | null)[]>([]);
+
+  // Function to scroll to a category
 
   // Function to handle opening the EditTaskDialog
   const handleAddTaskClick = (templateCategoryId: string) => {
