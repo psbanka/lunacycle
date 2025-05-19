@@ -38,7 +38,7 @@ const TaskSchema = type({
   "id?": "string",
   title: "string > 0",
   description: "string",
-  storyPoints: "1 | 2 | 3 | 5 | 8 | 13 | 21",
+  storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13 | 21",
   targetCount: "1 <= number.integer <= 31",
   "completedCount?": "number",
   userIds: "string[] >= 1",
