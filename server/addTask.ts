@@ -2,10 +2,10 @@ import { db } from "./db.ts";
 import { type } from "arktype";
 import { publicProcedure, router } from "./trpc.ts";
 import { TRPCError } from "@trpc/server";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import * as schema from "./schema";
 import { fakerEN } from "@faker-js/faker";
-import { FIBONACCI } from "../shared/types";
+import { getLunarPhase } from "../shared/lunarPhase.ts";
 
 type TaskCreationProps = Omit<
   schema.Task,
@@ -187,15 +187,17 @@ export async function createTemplateTaskWithCategoryAndAssignments(
     });
   }
 
-  if (taskInfo.templateCategoryId) {
-    // 2. Associate the new task with the category -------------------------
-    db.insert(schema.templateCategoryTemplateTask)
-      .values({
-        templateCategoryId: taskInfo.templateCategoryId,
-        templateTaskId: templateTaskRecord.id,
-      })
-      .run();
+  if (!taskInfo.templateCategoryId) {
+    throw new Error("template Category required");
   }
+
+  // 2. Associate the new task with the category -------------------------
+  db.insert(schema.templateCategoryTemplateTask)
+    .values({
+      templateCategoryId: taskInfo.templateCategoryId,
+      templateTaskId: templateTaskRecord.id,
+    })
+    .run();
 
   // 3. Associate the task to the users ---------------------------------
   for (const userId of taskInfo.userIds) {
@@ -206,6 +208,35 @@ export async function createTemplateTaskWithCategoryAndAssignments(
       })
       .run();
   }
+
+  // 4. If moon is gibbous waning, add the template task to the month
+  if (getLunarPhase().phase === "waning-gibbous") {
+    const templateCategory = await db.query.templateCategory.findFirst({
+      where: eq(schema.templateCategory.id, taskInfo.templateCategoryId),
+    });
+    if (!templateCategory) {
+      throw new Error("Template category not found");
+    }
+
+    // FIXME: it would be preferable to use ids instead of names
+    // to find the category
+    const category = await db.query.category.findFirst({
+      where: eq(schema.category.name, templateCategory.name),
+    });
+    if (!category) {
+      throw new Error("Category not found");
+    }
+
+    // 4b. Create new task
+    await createTaskWithCategoryAndAssignments({
+      ...templateTaskRecord,
+      categoryId: category.id,
+      userIds: taskInfo.userIds,
+      templateTaskId: templateTaskId,
+      isFocused: 0,
+    });
+  }
+
   return templateTaskRecord;
 }
 

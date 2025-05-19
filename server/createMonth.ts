@@ -197,6 +197,7 @@ async function createCategoryTasksAndAssignmentsFromTemplate({
 }) {
   console.log(`> Create ${emoji} ${name} category...`);
   // Check if the category already exists
+  // FIXME: we should not use the name as the way to find a category.
   let categoryRecord = await db.query.category.findFirst({
     where: eq(schema.category.name, name),
   });
