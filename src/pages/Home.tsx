@@ -60,7 +60,7 @@ export default function Home() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pl-16">
       <div className="flex flex-row justify-between mb-8 gap-4">
         <div>
           <h1 className="text-left text-3xl font-bold">{currentMonth.name}</h1>

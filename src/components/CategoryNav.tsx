@@ -63,17 +63,21 @@ export default function CategoryNav({ data, activeCategoryId }: NavBarProps) {
       };
 
       return (
-        <Button key={id} variant={variant} className="w-full justify-start gap-2" onClick={scroll}>
+        <Button
+          key={id}
+          variant={variant}
+          className="w-full justify-start gap-2"
+          onClick={scroll}>
           {emoji}
-          <span className="hidden md:inline">{name}</span>
+          <span className="hidden lg:inline">{name}</span>
         </Button>
       );
     });
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 md:static md:w-auto bg-background z-50 border-t md:border-t-0 border-r-0 md:border-r ">
-      <div className="flex md:flex-col items-center justify-around md:justify-start p-2 md:p-4 md:space-y-2">
+    <nav className="fixed top-16 left-0 w-16 h-full bg-background border-r z-50 md:static md:top-auto md:left-auto md:w-auto md:h-auto md:border-t md:border-r-0 md:border-b-0">
+      <div className="flex flex-col items-center justify-start space-y-2 p-2 md:items-center md:justify-around md:space-y-0  md:p-4">
         {renderCategoryLinks()}
       </div>
     </nav>

@@ -1,6 +1,5 @@
 import { ReactNode, useState, useEffect, useRef } from "react";
 import Header from "./Header";
-import NavBar from "./NavBar";
 import CategoryNav from "./CategoryNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "react-router-dom";
@@ -61,10 +60,7 @@ export default function Layout({ children }: LayoutProps) {
       <Header />
 
       <div className="flex flex-1">
-        <div className="hidden md:block sticky top-0 h-screen">
-          <NavBar />
-        </div>
-        <div className="hidden md:block sticky top-0 h-screen">
+        <div className="sticky top-0 h-screen">
           <CategoryNav data={navData} activeCategoryId={activeCategoryId} />
         </div>
 
@@ -75,12 +71,6 @@ export default function Layout({ children }: LayoutProps) {
           {children}
         </main>
       </div>
-
-      {isAuthenticated && (
-        <div className="md:hidden">
-          <NavBar data={navData} activeCategoryId={activeCategoryId} />
-        </div>
-      )}
     </div>
   );
 }

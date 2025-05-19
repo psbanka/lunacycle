@@ -6,6 +6,7 @@ import {
   type AlchemicalTheme,
 } from "@/contexts/ThemeContext";
 import { LogOut, Moon, Sun, User, Paintbrush, Palette } from "lucide-react";
+import NavBar from "./NavBar";
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 
@@ -15,12 +16,15 @@ export default function Header() {
     useTheme();
 
   return (
-    <header className="py-4 px-4 sm:px-6 flex items-center justify-between border-b">
+    <header className="ml-8 py-4 px-4 sm:px-6 flex items-center justify-between border-b">
       <div className="flex items-center gap-2">
         <Link to="/" className="flex items-center">
           <Logo />
-          <h1 className="ml-2 text-3xl text-foreground">luneria</h1>
+          <h1 className="hidden lg:inline px-6 ml-2 text-3xl text-foreground">luneria</h1>
         </Link>
+        <div className="md:block ">
+          <NavBar />
+        </div>
       </div>
 
       <div className="flex items-center space-x-2">

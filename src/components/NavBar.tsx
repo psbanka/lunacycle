@@ -21,8 +21,8 @@ export default function NavBar() {
   ];
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 md:static md:w-auto bg-background z-50 border-t md:border-t-0 border-r-0 md:border-r">
-      <div className="flex md:flex-col items-center justify-around md:justify-start p-2 md:p-4 md:space-y-2">
+    <nav className="w-auto bg-background z-50 border-t border-t-0 border-r-0 border-r">
+      <div className="flex flex-row items-center justify-around justify-start p-2 p-4">
         {links.map(({ href, label, icon }) => {
           const isActive = location.pathname === href;
           
@@ -40,7 +40,7 @@ export default function NavBar() {
                 )}
               >
                 {icon}
-                <span className="hidden md:inline">{label}</span>
+                <span className="hidden lg:inline">{label}</span>
               </Button>
             </Link>
           );

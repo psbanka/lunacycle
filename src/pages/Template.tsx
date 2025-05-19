@@ -41,7 +41,7 @@ export default function Template() {
   const templateCategories = template?.templateTemplateCategories ?? [];
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pl-16">
       {/* Template Header */}
       <div className="flex flex-row  justify-between mb-8 gap-4">
         <div className="text-left">
