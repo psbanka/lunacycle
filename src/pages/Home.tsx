@@ -118,15 +118,16 @@ export default function Home() {
       <h2 className="text-2xl font-semibold mb-6">Categories</h2>
 
       <div>
-        {currentMonth.monthCategories.map((mc) => (
-          <div
-            key={mc?.categoryId}
-            id={mc?.categoryId}
-          >
-            <CategorySection id={mc?.categoryId} />
-          </div>
-
-        ))}
+        {currentMonth.monthCategories
+          .sort((a, b) => a.category.name.localeCompare(b.category.name))
+          .map((mc) => (
+            <div
+              key={mc?.categoryId}
+              id={mc?.categoryId}
+            >
+              <CategorySection id={mc?.categoryId} />
+            </div>
+          ))}
       </div>
     </div>
   );
