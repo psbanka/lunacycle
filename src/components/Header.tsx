@@ -16,9 +16,9 @@ export default function Header() {
     useTheme();
 
   return (
-    <header className="ml-8 py-4 px-4 sm:px-6 flex items-center justify-between border-b">
+    <header className="ml-8 flex items-center justify-between border-b">
       <div className="flex items-center gap-2">
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex items-center hidden sm:inline">
           <Logo />
           <h1 className="hidden lg:inline px-6 ml-2 text-3xl text-foreground">luneria</h1>
         </Link>
@@ -44,7 +44,7 @@ export default function Header() {
               <Link to="/admin">
                 <Button variant="outline" size="sm" className="gap-1 text-xs">
                   <User className="h-3.5 w-3.5" />
-                  Admin
+                  <span className="hidden sm:inline">Admin</span>
                 </Button>
               </Link>
             )}

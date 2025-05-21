@@ -22,7 +22,7 @@ export default function NavBar() {
   
   return (
     <nav className="w-auto bg-background z-50 border-t border-t-0 border-r-0 border-r">
-      <div className="flex flex-row items-center justify-around justify-start p-2 p-4">
+      <div className="flex flex-row items-center justify-around justify-start py-3">
         {links.map(({ href, label, icon }) => {
           const isActive = location.pathname === href;
           
