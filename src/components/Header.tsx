@@ -16,7 +16,7 @@ export default function Header() {
     useTheme();
 
   return (
-    <header className="ml-8 flex items-center justify-between border-b">
+    <header className="sticky top-0 z-50 bg-background ml-8 flex items-center justify-between border-b">
       <div className="flex items-center gap-2">
         <Link to="/" className="flex items-center hidden sm:inline">
           <Logo />
