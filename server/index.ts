@@ -16,6 +16,7 @@ import {
   updateTemplateTaskWithCategoryAndAssignments,
   updateTaskWithCategoryAndAssignments,
 } from "./updateTasks.ts";
+import { UserUpdate, generateNewAvatar, updateAvatar, updateUser } from "./updateUsers.ts"
 import { fetchRandomAvatar } from "./avatarUtils.ts";
 
 const appRouter = router({
@@ -27,84 +28,17 @@ const appRouter = router({
   generateNewAvatar: publicProcedure
     .input(type({ userId: "string" }))
     .mutation(async ({ input }) => {
-      const { userId } = input;
-      const user = await db.query.user.findFirst({
-        where: eq(schema.user.id, userId),
-      });
-      if (!user) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found",
-        });
-      }
-      // TODO: Make this boy/girl relevant
-      const avatar = await fetchRandomAvatar(user.email);
-      db.update(schema.user)
-        .set({ avatar })
-        .where(eq(schema.user.id, userId))
-        .run();
-      const updatedUser = db.query.user.findFirst({
-        where: eq(schema.user.id, userId),
-      });
-      return updatedUser;
+      return await generateNewAvatar(input.userId)
     }),
   uploadAvatar: publicProcedure
     .input(type({ userId: "string", file: "string" }))
     .mutation(async ({ input }) => {
-      const { userId, file } = input;
-      const user = await db.query.user.findFirst({
-        where: eq(schema.user.id, userId),
-      });
-      if (!user) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found",
-        });
-      }
-      db.update(schema.user)
-        .set({ avatar: file })
-        .where(eq(schema.user.id, userId))
-        .run();
-      return { success: true };
+      return await updateAvatar(input);
     }),
   updateUser: publicProcedure
-    .input(
-      type({
-        id: "string",
-        name: "string",
-        role: "string",
-        email: "string",
-        "password?": "string",
-      })
-    )
+    .input(type(UserUpdate))
     .mutation(async ({ input }) => {
-      let update: Partial<schema.User> | null = null
-      if (input.password) {
-        const passwordHash = await hash(input.password, 10);
-        update = {
-          id: input.id,
-          name: input.name,
-          role: input.role,
-          email: input.email,
-          passwordHash,
-        };
-      } else {
-        update = {
-          id: input.id,
-          name: input.name,
-          role: input.role,
-          email: input.email
-        }
-      }
-      // TODO: Check the user ID of the person who is logged in
-      db.update(schema.user)
-        .set({ ...update })
-        .where(eq(schema.user.id, input.id))
-        .run();
-
-      return await db.query.user.findFirst({
-        where: eq(schema.user.id, input.id),
-      });
+      return await updateUser(input);
     }),
   /*
   userById: publicProcedure
