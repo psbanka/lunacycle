@@ -11,6 +11,7 @@ const basePath = "/";
 
 export default defineConfig(({ mode }) => ({
   server: {
+    allowedHosts: ['sparq.local'],
     cors: false,
     headers: {
       "Access-Control-Allow-Origin": "*", // Allow CORS
