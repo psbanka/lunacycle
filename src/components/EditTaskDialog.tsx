@@ -45,7 +45,6 @@ const TaskSchema = type({
   userIds: "string[] >= 1",
   monthId: "string | null",
   categoryId: "string",
-  templateTaskId: "string | null",
   "isFocused?": "0 | 1",
 });
 
@@ -56,7 +55,7 @@ interface EditTaskDialogProps {
   onOpenChange: (open: boolean) => void;
   categoryId?: string;
   monthId: string | null;
-  templateCategoryId?: string;
+  isTemplateTask: boolean;
   initialValues?: Partial<TaskFormValues>;
 }
 
@@ -65,7 +64,7 @@ export function EditTaskDialog({
   onOpenChange,
   categoryId,
   monthId,
-  templateCategoryId,
+  isTemplateTask,
   initialValues,
 }: EditTaskDialogProps) {
   const {
@@ -81,8 +80,7 @@ export function EditTaskDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditingId = initialValues?.id;
   const isEditingTask = isEditingId && categoryId;
-  const isEditingTemplateTask = isEditingId && templateCategoryId;
-  const isTemplateTask = !!templateCategoryId;
+  const isEditingTemplateTask = isEditingId && isTemplateTask;
   const isContinuingTask =
     initialValues?.targetCount && initialValues.targetCount > 1;
 
@@ -99,12 +97,11 @@ export function EditTaskDialog({
       userIds: [],
       monthId,
       categoryId,
-      templateTaskId: templateCategoryId ?? null,
       ...initialValues,
     },
   });
 
-  if (!categoryId && !templateCategoryId) return null;
+  if (!categoryId) return null;
 
   const onSubmit = async (values: TaskFormValues) => {
     setIsSubmitting(true);
@@ -126,7 +123,7 @@ export function EditTaskDialog({
           },
           values.userIds
         );
-      } else if (isEditingId && templateCategoryId) {
+      } else if (isEditingId && isTemplateTask) {
         await updateTemplateTask(
           isEditingId,
           {
@@ -134,8 +131,8 @@ export function EditTaskDialog({
             description: values.description || null,
             storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
             targetCount: values.targetCount,
+            categoryId: values.categoryId,
           },
-          templateCategoryId,
           values.userIds
         );
       } else if (categoryId) {
@@ -152,16 +149,16 @@ export function EditTaskDialog({
           },
           userIds
         );
-      } else if (templateCategoryId) {
+      } else if (isTemplateTask) {
         await addTemplateTask(
           {
             title: values.title,
             description: values.description || null,
             storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
             targetCount: values.targetCount,
+            categoryId: values.categoryId,
           },
           userIds,
-          templateCategoryId
         );
       }
 
@@ -201,7 +198,8 @@ export function EditTaskDialog({
     return <LoadingScreen />;
   }
 
-  console.log(form.formState.errors);
+  // console.log(form.formState.errors);
+  const errorMessages = Object.values(form.formState.errors).map((error) => error.message);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -274,7 +272,7 @@ export function EditTaskDialog({
               )}
             />
 
-            {templateCategoryId && (
+            {isTemplateTask && (
               <FormField
                 control={form.control}
                 name="targetCount"
@@ -397,6 +395,11 @@ export function EditTaskDialog({
             />
 
             <DialogFooter className="mt-6">
+              {errorMessages.length > 0 && (
+                <div className="w-full text-left text-sm text-destructive space-y-1">
+                  {errorMessages.map((message, index) => <p key={`error-${index}`}>{message}</p>)}
+                </div>
+              )}
               {isEditingId && (isTemplateTask || !isContinuingTask) && (
                 <Button
                   type="button"

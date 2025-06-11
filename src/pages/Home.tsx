@@ -11,7 +11,7 @@ import CheckInSheet from "@/components/CheckInSheet";
 import { LoadingScreen } from "@/components/LoadingScreen";
 
 export default function Home() {
-  const { currentMonth, loadingTasks, createMonthFromTemplate, users } = useTask();
+  const { currentMonth, currentTasks, categories, loadingTasks, createMonthFromTemplate, users } = useTask();
   const categoryRefs = useRef<(HTMLElement | null)[]>([]);
 
   // Function to scroll to a category
@@ -21,7 +21,7 @@ export default function Home() {
     return <LoadingScreen />;
   }
 
-  if (!currentMonth) {
+  if (!currentMonth || !currentTasks || !categories) {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
@@ -43,15 +43,13 @@ export default function Home() {
   }
 
   // Filter tasks for "Up Next" section - pending tasks from user
-  const pendingTasks = currentMonth.monthCategories
-    .flatMap((mc) => mc.category?.tasks ?? []) // FIXME: shouldn't need to do this
+  const pendingTasks = currentTasks
     .filter((task) => task.targetCount > task.completedCount);
 
   const upNextTasks = pendingTasks.filter(task => task.isFocused === 1);
 
   // Filter tasks for "Recently Completed" section - completed tasks from user
-  const completedTasks = currentMonth.monthCategories
-    .flatMap((mc) => mc.category?.tasks ?? []) // FIXME: shouldn't need to do this
+  const completedTasks = currentTasks
     .filter((task) => task.targetCount === task.completedCount)
     .slice(0, 5);
 
@@ -87,7 +85,7 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {upNextTasks.map((task) => (
-              <TaskCard key={task.id} task={task} />
+              <TaskCard key={task.id} taskId={task.id} />
             ))}
           </div>
         )}
@@ -100,7 +98,7 @@ export default function Home() {
             {completedTasks.map((task) => (
               <TaskCard
                 key={task.id}
-                task={task}
+                taskId={task.id}
                 compact
                 className="w-56"
               />
@@ -114,14 +112,14 @@ export default function Home() {
       <h2 className="text-2xl font-semibold mb-6">Categories</h2>
 
       <div>
-        {currentMonth.monthCategories
-          .sort((a, b) => a.category.name.localeCompare(b.category.name))
-          .map((mc) => (
+        {categories
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((category) => (
             <div
-              key={mc?.categoryId}
-              id={mc?.categoryId}
+              key={category?.id}
+              id={category?.id}
             >
-              <CategorySection id={mc?.categoryId} />
+              <CategorySection id={category.id} isTemplate={false} />
             </div>
           ))}
       </div>

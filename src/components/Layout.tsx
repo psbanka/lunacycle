@@ -1,7 +1,7 @@
 import { ReactNode, useState, useEffect, useRef } from "react";
 import Header from "./Header";
 import CategoryNav from "./CategoryNav";
-import { useAuth } from "@/contexts/AuthContext";
+// import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "react-router-dom";
 import { useTask } from "@/contexts/TaskContext";
 
@@ -10,8 +10,8 @@ type LayoutProps = {
 };
 
 export default function Layout({ children }: LayoutProps) {
-  const { isAuthenticated, user } = useAuth();
-  const { currentMonth, template, loadingTasks } = useTask();
+  // const { isAuthenticated, user } = useAuth();
+  const { categories, currentMonth, template, loadingTasks } = useTask();
   const location = useLocation();
   const [navData, setNavData] = useState<any>(null); // FIXME: type this
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
@@ -20,13 +20,13 @@ export default function Layout({ children }: LayoutProps) {
   useEffect(() => {
     if (loadingTasks) return;
     if (location.pathname === "/" && currentMonth) {
-      setNavData(currentMonth.monthCategories);
+      setNavData(categories);
     } else if (location.pathname === "/template" && template) {
-      setNavData(template.templateTemplateCategories);
+      setNavData(categories);
     } else {
       setNavData(null);
     }
-  }, [location.pathname, currentMonth, template, loadingTasks]);
+  }, [location.pathname, currentMonth, template, loadingTasks, categories]);
 
   // Scroll Spy Logic
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function Layout({ children }: LayoutProps) {
 
       <div className="flex flex-1">
         <div className="sticky top-0 h-screen">
-          <CategoryNav data={navData} activeCategoryId={activeCategoryId} />
+          <CategoryNav categories={navData} activeCategoryId={activeCategoryId} />
         </div>
 
         <main

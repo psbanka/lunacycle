@@ -6,10 +6,9 @@ import { createMonthFromActiveTemplate } from "./createMonth.ts";
 import { TRPCError } from "@trpc/server";
 import { login } from "./login.ts";
 import { eq, isNull } from "drizzle-orm";
+import { fakerEN } from "@faker-js/faker";
 import cors from "cors";
 import * as schema from "./schema";
-import { fakerEN } from "@faker-js/faker";
-import { hash } from "@node-rs/bcrypt";
 import {
   addTask,
   addTemplateTask,
@@ -63,29 +62,6 @@ const appRouter = router({
   getTemplate: publicProcedure.query(async () => {
     const template = await await db.query.template.findFirst({
       where: eq(schema.template.isActive, 1),
-      with: {
-        templateTemplateCategories: {
-          with: {
-            templateCategory: {
-              with: {
-                templateCategoryTemplateTasks: {
-                  with: {
-                    templateTask: {
-                      with: {
-                        templateTaskUsers: {
-                          with: {
-                            user: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
     });
     return template;
   }),
@@ -95,30 +71,34 @@ const appRouter = router({
   getActiveMonth: publicProcedure.query(async () => {
     const currentMonth = await db.query.month.findFirst({
       where: eq(schema.month.isActive, 1),
-      with: {
-        monthCategories: {
-          with: {
-            category: {
-              with: {
-                tasks: {
-                  with: {
-                    taskUsers: {
-                      with: {
-                        user: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
     });
     if (!currentMonth) {
       throw new TRPCError({ code: "NOT_FOUND", message: "No active month" });
     }
     return currentMonth;
+  }),
+  getCurrentMonthTasks: publicProcedure.query(async () => {
+    const currentMonth = await db.query.month.findFirst({
+      where: eq(schema.month.isActive, 1),
+    });
+    if (!currentMonth) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "No active month" });
+    }
+    const output = await db.query.task.findMany({
+      where: eq(schema.task.monthId, currentMonth.id),
+      with: {
+        taskUsers: { with: { user: true } },
+      },
+    });
+    return output;
+  }),
+  getTemplateTasks: publicProcedure.query(async () => {
+    const output = await db.query.templateTask.findMany({
+      with: {
+        templateTaskUsers: { with: { user: true } },
+      },
+    });
+    return output;
   }),
   getBacklogTasks: publicProcedure.query(async () => {
     const backlogTasksRaw = await db.query.task.findMany({
@@ -144,29 +124,11 @@ const appRouter = router({
 
     return Object.values(backlogCategorized).sort((a, b) => a.category.name.localeCompare(b.category.name));
   }),
-  getCategoriesByMonthId: publicProcedure
-    .input(type({ monthId: "string" }))
-    .query(async ({ input }) => {
-      const month = await db.query.month.findFirst({
-        where: eq(schema.month.id, input.monthId),
-        with: {
-          monthCategories: {
-            with: {
-              // category: { columns: { id: true } },
-              category: true,
-            },
-          },
-        },
-      });
-      if (!month) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Month not found" });
-      }
-      const categories = month.monthCategories.map((monthCategory) => {
-        return monthCategory.category;
-      });
-      return categories;
+  getCategories: publicProcedure
+    .query(async () => {
+      return await db.query.category.findMany({});
     }),
-  // TODO: Filter by user
+  // FIXME: WHO USES THIS?
   getTasksByCategoryId: publicProcedure
     .input(type({ categoryId: "string" }))
     .query(async ({ input }) => {
@@ -188,7 +150,6 @@ const appRouter = router({
     .input(type({ userId: "string" }))
     .query(async ({ input }) => {
       const tasks = await db.query.task.findMany({
-        // where: eq(schema.user.id, input.userId),
         with: {
           taskUsers: {
             with: {
@@ -199,49 +160,34 @@ const appRouter = router({
       });
       return tasks;
     }),
-  addTemplateCategory: publicProcedure
+  addCategory: publicProcedure
     .input(
       type({
-        templateCategory: type({
+        category: type({
           name: "string",
           description: "string | null",
         }),
       })
     )
     .mutation(async ({ input }) => {
-      const { templateCategory } = input;
-      const templateCategoryId = fakerEN.string.uuid();
-      const template = await db.query.template.findFirst({
-        where: eq(schema.template.isActive, 1),
-      });
-      if (!template) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "No active template",
-        });
-      }
+      const { category } = input;
+      const categoryId = fakerEN.string.uuid();
 
       const result = db
-        .insert(schema.templateCategory)
-        .values({ ...templateCategory, id: templateCategoryId })
+        .insert(schema.category)
+        .values({ ...category, id: categoryId })
         .run();
-      const newTemplateCategory = db.query.templateCategory.findFirst({
-        where: eq(schema.templateCategory.id, templateCategoryId),
+      const newCategory = db.query.category.findFirst({
+        where: eq(schema.category.id, categoryId),
       });
-      if (!newTemplateCategory) {
+      if (!newCategory) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Unable to create category",
         });
       }
-      db.insert(schema.templateTemplateCategory)
-        .values({
-          templateId: template.id,
-          templateCategoryId,
-        })
-        .run();
 
-      return newTemplateCategory;
+      return newCategory;
     }),
   updateCategory: publicProcedure
     .input(
@@ -276,10 +222,14 @@ const appRouter = router({
           message: "Category not found",
         });
       }
-      if (category.tasks.length > 0) {
+      // TODO: Go through all tasks with categoryID and error if there are any
+      const tasksOfThisCategory = await db.query.task.findMany({
+        where: eq(schema.category.id, category.id)
+      });
+      if (tasksOfThisCategory.length > 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Category has tasks assigned to it",
+          message: `Category has ${tasksOfThisCategory.length} tasks assigned to it`,
         });
       }
       db.delete(schema.category).where(eq(schema.category.id, input.id)).run();
@@ -315,7 +265,7 @@ const appRouter = router({
           storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13",
           targetCount: "number",
           userIds: "string[]",
-          templateCategoryId: "string",
+          categoryId: "string",
         }),
       })
     )
@@ -350,9 +300,6 @@ const appRouter = router({
       }
       db.delete(schema.templateTaskUser)
         .where(eq(schema.templateTaskUser.templateTaskId, input.templateTaskId))
-        .run();
-      db.delete(schema.templateCategoryTemplateTask)
-        .where(eq(schema.templateCategoryTemplateTask.templateTaskId, input.templateTaskId))
         .run();
       db.delete(schema.templateTask).where(eq(schema.templateTask.id, input.templateTaskId)).run();
       return { success: true };

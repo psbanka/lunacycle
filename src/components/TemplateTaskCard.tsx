@@ -1,5 +1,4 @@
 import {
-  type TemplateCategoryTemplateTask,
   TemplateTask,
   TemplateTaskUser,
   User,
@@ -9,18 +8,14 @@ import { EditTaskDialog } from "./EditTaskDialog";
 import { UserAvatar } from "./UserAvatar";
 
 type TemplateTaskCardProps = {
-  templateCategoryTemplateTask: TemplateCategoryTemplateTask & {
-    templateTask: TemplateTask & {
-      templateTaskUsers: Array<TemplateTaskUser & { user: User }>;
-    };
+  templateTask: TemplateTask & {
+    templateTaskUsers: Array<TemplateTaskUser & { user: User }>;
   };
-  className?: string;
+  className?: string; // FIXME: USED?
 };
 
-export function TemplateTaskCard({
-  templateCategoryTemplateTask,
-}: TemplateTaskCardProps) {
-  const { templateTask, templateTaskId, templateCategoryId } = templateCategoryTemplateTask;
+export function TemplateTaskCard( props : TemplateTaskCardProps) {
+  const { templateTask } = props;
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleEditClick = () => {
@@ -30,7 +25,7 @@ export function TemplateTaskCard({
   return (
     <>
       <div
-        key={templateTaskId}
+        key={templateTask.id}
         className="glass-card p-4 rounded-lg cursor-pointer"
         onClick={handleEditClick}
       >
@@ -59,14 +54,6 @@ export function TemplateTaskCard({
               />
             );
           })}
-          {/*
-          <div
-            key={ttu.user?.id}
-            className="bg-accent text-xs px-2 py-0.5 rounded-full"
-          >
-            {ttu.user?.name}
-          </div>
-          */}
         </div>
       </div>
 
@@ -75,13 +62,14 @@ export function TemplateTaskCard({
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         monthId={null}
-        templateCategoryId={templateCategoryId}
+        isTemplateTask={true}
         initialValues={{
-          id: templateTaskId,
+          id: templateTask.id,
           title: templateTask.title,
           description: templateTask.description || "",
           storyPoints: templateTask.storyPoints,
           targetCount: templateTask.targetCount,
+          categoryId: templateTask.categoryId,
           userIds: templateTask.templateTaskUsers.map((ttu) => ttu.userId),
         }}
       />

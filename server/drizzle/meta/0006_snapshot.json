@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "cd7cc4ba-7f15-4c71-82b2-a262a1561f38",
-  "prevId": "5c2b1042-9b7e-486c-a75d-bcafd04f730d",
+  "id": "347d109e-e97f-4fb2-aeff-d3571a93b460",
+  "prevId": "cd7cc4ba-7f15-4c71-82b2-a262a1561f38",
   "tables": {
     "category": {
       "name": "category",
@@ -59,12 +59,13 @@
           "notNull": true,
           "autoincrement": false
         },
-        "start_date": {
-          "name": "start_date",
+        "startDate": {
+          "name": "startDate",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "(current_timestamp)"
         },
         "end_date": {
           "name": "end_date",
@@ -98,65 +99,6 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "month_category": {
-      "name": "month_category",
-      "columns": {
-        "month_id": {
-          "name": "month_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "category_id": {
-          "name": "category_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "month_category_month_id_month_id_fk": {
-          "name": "month_category_month_id_month_id_fk",
-          "tableFrom": "month_category",
-          "tableTo": "month",
-          "columnsFrom": [
-            "month_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "month_category_category_id_category_id_fk": {
-          "name": "month_category_category_id_category_id_fk",
-          "tableFrom": "month_category",
-          "tableTo": "category",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "month_category_pk": {
-          "columns": [
-            "month_id",
-            "category_id"
-          ],
-          "name": "month_category_pk"
-        }
-      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
@@ -433,53 +375,15 @@
     "template_category": {
       "name": "template_category",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
+        "template_id": {
+          "name": "template_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "emoji": {
-          "name": "emoji",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "template_category_template_task": {
-      "name": "template_category_template_task",
-      "columns": {
-        "template_category_id": {
-          "name": "template_category_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "template_task_id": {
-          "name": "template_task_id",
+        "category_id": {
+          "name": "category_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -488,12 +392,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "template_category_template_task_template_category_id_template_category_id_fk": {
-          "name": "template_category_template_task_template_category_id_template_category_id_fk",
-          "tableFrom": "template_category_template_task",
-          "tableTo": "template_category",
+        "template_category_template_id_template_id_fk": {
+          "name": "template_category_template_id_template_id_fk",
+          "tableFrom": "template_category",
+          "tableTo": "template",
           "columnsFrom": [
-            "template_category_id"
+            "template_id"
           ],
           "columnsTo": [
             "id"
@@ -501,12 +405,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "template_category_template_task_template_task_id_template_task_id_fk": {
-          "name": "template_category_template_task_template_task_id_template_task_id_fk",
-          "tableFrom": "template_category_template_task",
-          "tableTo": "template_task",
+        "template_category_category_id_category_id_fk": {
+          "name": "template_category_category_id_category_id_fk",
+          "tableFrom": "template_category",
+          "tableTo": "category",
           "columnsFrom": [
-            "template_task_id"
+            "category_id"
           ],
           "columnsTo": [
             "id"
@@ -516,12 +420,12 @@
         }
       },
       "compositePrimaryKeys": {
-        "template_category_template_task_pk": {
+        "template_category_pk": {
           "columns": [
-            "template_category_id",
-            "template_task_id"
+            "template_id",
+            "category_id"
           ],
-          "name": "template_category_template_task_pk"
+          "name": "template_category_pk"
         }
       },
       "uniqueConstraints": {},
@@ -551,6 +455,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "category_id": {
+          "name": "category_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "story_points": {
           "name": "story_points",
           "type": "integer",
@@ -567,7 +478,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "template_task_category_id_category_id_fk": {
+          "name": "template_task_category_id_category_id_fk",
+          "tableFrom": "template_task",
+          "tableTo": "category",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
@@ -631,65 +556,6 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "template_template_category": {
-      "name": "template_template_category",
-      "columns": {
-        "template_id": {
-          "name": "template_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "template_category_id": {
-          "name": "template_category_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "template_template_category_template_id_template_id_fk": {
-          "name": "template_template_category_template_id_template_id_fk",
-          "tableFrom": "template_template_category",
-          "tableTo": "template",
-          "columnsFrom": [
-            "template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "template_template_category_template_category_id_template_category_id_fk": {
-          "name": "template_template_category_template_category_id_template_category_id_fk",
-          "tableFrom": "template_template_category",
-          "tableTo": "template_category",
-          "columnsFrom": [
-            "template_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "template_template_category_pk": {
-          "columns": [
-            "template_id",
-            "template_category_id"
-          ],
-          "name": "template_template_category_pk"
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
     "user": {
       "name": "user",
       "columns": {
@@ -748,7 +614,9 @@
   "_meta": {
     "schemas": {},
     "tables": {},
-    "columns": {}
+    "columns": {
+      "\"month\".\"start_date\"": "\"month\".\"startDate\""
+    }
   },
   "internal": {
     "indexes": {}

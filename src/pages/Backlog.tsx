@@ -66,7 +66,7 @@ export default function Backlog() {
               key={mc?.category.id}
               id={mc?.category.id}
             >
-              <CategorySection id={mc?.category.id} />
+              <CategorySection id={mc?.category.id} isTemplate={false} />
             </div>
           ))}
       </div>

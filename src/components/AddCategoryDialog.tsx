@@ -28,30 +28,30 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 // Schema for template category creation
-const templateCategorySchema = type({
+const categorySchema = type({
   name: "string > 0", //z.string().min(1, "Category name is required"),
   "description?": "string",
   "emoji?": "string",
 });
 
-type TemplateCategoryFormValues = typeof templateCategorySchema.infer;
+type CategoryFormValues = typeof categorySchema.infer;
 
-interface AddTemplateCategoryDialogProps {
+interface AddCategoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function AddTemplateCategoryDialog({
+export function AddCategoryDialog({
   open,
   onOpenChange,
-}: AddTemplateCategoryDialogProps) {
-  const { addTemplateCategory } = useTask();
+}: AddCategoryDialogProps) {
+  const { addCategory } = useTask();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const themeObject = useTheme();
 
-  const form = useForm<TemplateCategoryFormValues>({
-    resolver: arktypeResolver(templateCategorySchema),
+  const form = useForm<CategoryFormValues>({
+    resolver: arktypeResolver(categorySchema),
     defaultValues: {
       name: "",
       description: "",
@@ -59,11 +59,11 @@ export function AddTemplateCategoryDialog({
     },
   });
 
-  const onSubmit = async (values: TemplateCategoryFormValues) => {
+  const onSubmit = async (values: CategoryFormValues) => {
     setIsSubmitting(true);
 
     try {
-      addTemplateCategory({
+      addCategory({
         emoji: values.emoji || null,
         name: values.name,
         description: values.description || null,

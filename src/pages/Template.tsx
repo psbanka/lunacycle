@@ -5,15 +5,18 @@ import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Plus, FolderPlus } from "lucide-react";
-import { AddTemplateCategoryDialog } from "@/components/AddTemplateCategoryDialog";
+import { AddCategoryDialog } from "@/components/AddCategoryDialog";
 import { EditTaskDialog } from "@/components/EditTaskDialog";
 import { EmptyState } from "@/components/EmptyState";
 import { TemplateTaskCard } from "@/components/TemplateTaskCard";
+import type { Category, TemplateTask } from "../../server/schema";
+
+
 
 export default function Template() {
-  const { template, loadingTasks, currentMonth } = useTask();
+  const { templateTasks, loadingTasks, currentMonth, categories } = useTask();
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
-  const [activeTemplateCategory, setActiveTemplateCategory] = useState<
+  const [activeCategory, setActiveCategory] = useState<
     string | null
   >(null);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
@@ -22,8 +25,8 @@ export default function Template() {
   // Function to scroll to a category
 
   // Function to handle opening the EditTaskDialog
-  const handleAddTaskClick = (templateCategoryId: string) => {
-    setActiveTemplateCategory(templateCategoryId);
+  const handleAddTaskClick = (categoryId: string) => {
+    setActiveCategory(categoryId);
     setIsAddTaskOpen(true);
   };
 
@@ -38,7 +41,9 @@ export default function Template() {
     );
   }
 
-  const templateCategories = template?.templateTemplateCategories ?? [];
+  if (!templateTasks || !categories) {
+    return null;
+  }
 
   return (
     <div className="max-w-6xl mx-auto pl-16">
@@ -70,17 +75,18 @@ export default function Template() {
           Add Category
         </Button>
 
-        <AddTemplateCategoryDialog
+        <AddCategoryDialog
           open={isAddCategoryOpen}
           onOpenChange={setIsAddCategoryOpen}
         />
 
-        {activeTemplateCategory && (
+        {activeCategory && (
           <EditTaskDialog
             monthId={currentMonth?.id || null}
+            isTemplateTask={true}
             open={isAddTaskOpen}
             onOpenChange={setIsAddTaskOpen}
-            templateCategoryId={activeTemplateCategory}
+            categoryId={activeCategory}
           />
         )}
       </div>
@@ -88,23 +94,28 @@ export default function Template() {
       <Separator className="my-8" />
 
       {/* FIXME: Make this a bit bolder */}
-      {templateCategories.map((tc) => (
-        <div key={tc.templateCategoryId} className="mb-10">
+      {categories.map((category) => {
+        const categoryTasks = templateTasks.filter(
+          (task) => task.categoryId === category.id,
+        );
+
+        return (
+        <div key={category.id} className="mb-10">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold">
-              {tc.templateCategory.emoji} {tc.templateCategory.name}
+              {category.emoji} {category.name}
             </h2>
             <Button
               variant="outline"
               size="sm"
               className="gap-1 text-xs"
-              onClick={() => handleAddTaskClick(tc.templateCategory.id)}>
+              onClick={() => handleAddTaskClick(category.id)}>
               <Plus className="h-3.5 w-3.5" />
               Add Task
             </Button>
           </div>
 
-          {tc.templateCategory.templateCategoryTemplateTasks.length === 0 ? (
+          {categoryTasks.length === 0 ? (
             <EmptyState
               title="No tasks yet"
               description="This category doesn't have any tasks yet. Add your first task to get started."
@@ -112,18 +123,19 @@ export default function Template() {
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tc.templateCategory.templateCategoryTemplateTasks.map((tctc) => (
+              {categoryTasks.map((templateTask) => (
                 <TemplateTaskCard
-                  key={tctc.templateTaskId}
-                  templateCategoryTemplateTask={tctc}
+                  key={templateTask.id}
+                  templateTask={templateTask}
                 />
               ))}
             </div>
           )}
         </div>
-      ))}
+        )
+      })}
 
-      {templateCategories.length === 0 && (
+      {categories.length === 0 && (
         <EmptyState
           title="No categories defined yet"
           description="Create your first category to start organizing your monthly tasks."

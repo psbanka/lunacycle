@@ -1,4 +1,4 @@
-import type { Task } from "../../server/schema";
+import type { Task, User } from "../../server/schema";
 import { useTask, type CurrentMonthType } from "@/contexts/TaskContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -9,37 +9,20 @@ import { EditTaskDialog } from "./EditTaskDialog";
 import { UserAvatar } from "./UserAvatar";
 
 type TaskCardProps = {
-  task: Task;
+  taskId: string;
   compact?: boolean;
   className?: string;
 };
 
-function userIdsForTask(
-  taskId: string,
-  currentMonth: CurrentMonthType | undefined
-) {
-  return usersForTask(taskId, currentMonth).map((tu) => tu.userId);
-}
-
-function usersForTask(
-  taskId: string,
-  currentMonth: CurrentMonthType | undefined
-) {
-  if (!currentMonth || !taskId) return [];
-  return currentMonth.monthCategories
-    .flatMap((mc) => mc.category?.tasks ?? [])
-    .filter((task) => task.id === taskId)
-    .flatMap((task) => task.taskUsers);
-}
-
 export default function TaskCard({
-  task,
+  taskId,
   compact = false,
   className,
 }: TaskCardProps) {
-  const { completeTask, currentMonth } = useTask();
+  const { completeTask, currentMonth, currentTasks } = useTask();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
+  const task = currentTasks?.find((task) => task.id === taskId);
   if (!task) return null;
 
   // FIXME
@@ -145,7 +128,7 @@ export default function TaskCard({
           {isAssignedToUser && !compact && !isCompleted && (
             <div className="mt-4 flex justify-between items-center">
               <div className="flex -space-x-2 avatar-container">
-                {usersForTask(task.id, currentMonth).map((tu) => (
+                {(task.taskUsers).map((tu) => (
                   <UserAvatar
                     key={tu.userId}
                     user={tu.user}
@@ -197,6 +180,7 @@ export default function TaskCard({
         onOpenChange={setIsEditDialogOpen}
         categoryId={task.categoryId}
         monthId={currentMonth?.id || null}
+        isTemplateTask={false}
         initialValues={{
           id: task.id,
           title: task.title,
@@ -206,7 +190,7 @@ export default function TaskCard({
           isFocused: task.isFocused,
           completedCount: task.completedCount,
           monthId: task.monthId,
-          userIds: userIdsForTask(task.id, currentMonth),
+          userIds: task.taskUsers.map((tu) => tu.userId),
         }}
       />
     </>

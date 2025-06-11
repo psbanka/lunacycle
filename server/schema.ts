@@ -44,7 +44,7 @@ export const savedAccessToken = sqliteTable("saved_access_token", {
   encodedAccessToken: text("encoded_access_token").notNull(),
 });
 
-type ISO18601 = string & { __brand__: 'ISO18601' };
+export type ISO18601 = string & { __brand__: 'ISO18601' };
 
 const SQL_NOW = sql`(current_timestamp)`
 function timestamp() {
@@ -64,10 +64,6 @@ export const month = sqliteTable("month", {
 
 export type Month = typeof month.$inferSelect;
 
-export const monthRelations = relations(month, ({ many }) => ({
-  monthCategories: many(monthCategory),
-}));
-
 // category table
 export const category = sqliteTable("category", {
   id: text("id").primaryKey(),
@@ -77,11 +73,6 @@ export const category = sqliteTable("category", {
 });
 
 export type Category = typeof category.$inferSelect;
-
-export const categoryRelations = relations(category, ({ many }) => ({
-  tasks: many(task), // Tasks directly belonging to this category
-  monthCategories: many(monthCategory), // For the months this category is part of
-}));
 
 // task table
 export const task = sqliteTable("task", {
@@ -121,32 +112,12 @@ export const template = sqliteTable("template", {
 
 export type Template = typeof template.$inferSelect;
 
-export const templateRelations = relations(template, ({ many }) => ({
-  templateTemplateCategories: many(templateTemplateCategory),
-}));
-
-// templateCategory table
-export const templateCategory = sqliteTable("template_category", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  emoji: text("emoji"),
-});
-
-export type TemplateCategory = typeof templateCategory.$inferSelect;
-
-export const templateCategoryRelations = relations(
-  templateCategory,
-  ({ many }) => ({
-    templateCategoryTemplateTasks: many(templateCategoryTemplateTask),
-  })
-);
-
 // templateTask table
 export const templateTask = sqliteTable("template_task", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
+  categoryId: text("category_id").notNull().references(() => category.id),
   storyPoints: integer("story_points")
     .$type<StoryPointType>()
     .notNull(),
@@ -155,43 +126,17 @@ export const templateTask = sqliteTable("template_task", {
 
 export type TemplateTask = typeof templateTask.$inferSelect;
 
-export const templateTaskRelations = relations(templateTask, ({ many }) => ({
+export const templateTaskRelations = relations(templateTask, ({ many, one }) => ({
   templateTaskUsers: many(templateTaskUser),
+  category: one(category, {
+    fields: [templateTask.categoryId],
+    references: [category.id],
+  }),
 }));
 
 // ====================================================================
 // Join Tables for Many-to-Many Relationships
 // ====================================================================
-
-// month <-> category join table
-export const monthCategory = sqliteTable(
-  "month_category",
-  {
-    monthId: text("month_id")
-      .notNull()
-      .references(() => month.id),
-    categoryId: text("category_id")
-      .notNull()
-      .references(() => category.id),
-  },
-  (table) => [
-    primaryKey({
-      name: "month_category_pk",
-      columns: [table.monthId, table.categoryId],
-    }),
-  ]
-);
-
-export const monthCategoryRelations = relations(monthCategory, ({ one }) => ({
-  month: one(month, {
-    fields: [monthCategory.monthId],
-    references: [month.id],
-  }),
-  category: one(category, {
-    fields: [monthCategory.categoryId],
-    references: [category.id],
-  }),
-}));
 
 // task <-> user (user) join table
 export const taskUser = sqliteTable(
@@ -224,70 +169,34 @@ export const taskUserRelations = relations(taskUser, ({ one }) => ({
 }));
 
 // template <-> templateCategory join table
-export const templateTemplateCategory = sqliteTable(
-  "template_template_category",
+export const templateCategory = sqliteTable(
+  "template_category",
   {
     templateId: text("template_id")
       .notNull()
       .references(() => template.id),
-    templateCategoryId: text("template_category_id")
+    categoryId: text("category_id")
       .notNull()
-      .references(() => templateCategory.id),
+      .references(() => category.id),
   },
   (table) => [
     primaryKey({
-      name: "template_template_category_pk",
-      columns: [table.templateId, table.templateCategoryId],
+      name: "template_category_pk",
+      columns: [table.templateId, table.categoryId],
     }),
   ]
 );
 
-export const templateTemplateCategoryRelations = relations(
-  templateTemplateCategory,
+export const templateCategoryRelations = relations(
+  templateCategory,
   ({ one }) => ({
     template: one(template, {
-      fields: [templateTemplateCategory.templateId],
+      fields: [templateCategory.templateId],
       references: [template.id],
     }),
-    templateCategory: one(templateCategory, {
-      fields: [templateTemplateCategory.templateCategoryId],
-      references: [templateCategory.id],
-    }),
-  })
-);
-
-// templateCategory <-> templateTask join table
-export const templateCategoryTemplateTask = sqliteTable(
-  "template_category_template_task",
-  {
-    templateCategoryId: text("template_category_id")
-      .notNull()
-      .references(() => templateCategory.id),
-    templateTaskId: text("template_task_id")
-      .notNull()
-      .references(() => templateTask.id),
-  },
-  (table) => [
-    primaryKey({
-      name: "template_category_template_task_pk",
-      columns: [table.templateCategoryId, table.templateTaskId],
-    }),
-  ]
-);
-
-export type TemplateCategoryTemplateTask =
-  typeof templateCategoryTemplateTask.$inferSelect;
-
-export const templateCategoryTemplateTaskRelations = relations(
-  templateCategoryTemplateTask,
-  ({ one }) => ({
-    templateCategory: one(templateCategory, {
-      fields: [templateCategoryTemplateTask.templateCategoryId],
-      references: [templateCategory.id],
-    }),
-    templateTask: one(templateTask, {
-      fields: [templateCategoryTemplateTask.templateTaskId],
-      references: [templateTask.id],
+    category: one(category, {
+      fields: [templateCategory.categoryId],
+      references: [category.id],
     }),
   })
 );

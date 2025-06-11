@@ -29,22 +29,6 @@ export async function createMonthFromActiveTemplate() {
   console.log("🕍 Create month...");
   const month = await createNewMonth();
 
-  // 2. Create the categories
-  console.log("📝 Create categories...");
-  const templateCategories = await db.query.templateCategory.findMany();
-  for (const templateCategory of templateCategories) {
-    const category = await createCategoryTasksAndAssignmentsFromTemplate(
-      templateCategory, month.id
-    );
-
-    // 2c. Add new category to month
-    db.insert(schema.monthCategory)
-      .values({
-        monthId: month.id,
-        categoryId: category.id,
-      })
-      .run();
-  }
   return month;
 }
 
@@ -71,6 +55,7 @@ function moonName() {
 
 async function createNewMonth() {
   const today = new Date();
+  const todayString = today.toISOString() as schema.ISO18601
   const thirtyDaysFromNow = new Date(
     today.getTime() + 30 * 24 * 60 * 60 * 1000
   );
@@ -83,7 +68,7 @@ async function createNewMonth() {
     .values({
       id: monthId,
       name: monthName,
-      startDate: today.toISOString(),
+      startDate: todayString,
       endDate: thirtyDaysFromNow.toISOString(),
       newMoonDate: "TODO",
       fullMoonDate: "TODO",
@@ -104,7 +89,7 @@ async function createNewMonth() {
 
 async function createTasksFromTemplate(
   templateTaskRelations: {
-    templateCategoryId: string;
+    categoryId: string;
     templateTaskId: string;
   }[],
   monthId: string | null,
@@ -163,43 +148,6 @@ async function createTasksFromTemplate(
   return tasks;
 }
 
-async function createCategoryTasksAndAssignmentsFromTemplate(templateCategory: schema.TemplateCategory, monthId: string | null) {
-  const { id, name, description, emoji } = templateCategory;
-  console.log(`> Create ${emoji} ${name} category...`);
-  // Check if the category already exists
-  // FIXME: we should not use the name as the way to find a category.
-  let categoryRecord = await db.query.category.findFirst({
-    where: eq(schema.category.name, name),
-  });
-
-  if (!categoryRecord) {
-    // Create the category if it doesn't exist
-    db.insert(schema.category)
-      .values({
-        id: fakerEN.string.uuid(),
-        name,
-        description,
-        emoji,
-      })
-      .run();
-    categoryRecord = await db.query.category.findFirst({
-      where: eq(schema.category.name, name),
-    });
-    if (!categoryRecord) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: `Could not create category ${name}`,
-      });
-    }
-  } else {
-    console.log(`> Reusing existing category: ${categoryRecord.name}`);
-  }
-
-  // 2. tasks with user assignments and categoryRecords
-  const templateTaskRelations =
-    await db.query.templateCategoryTemplateTask.findMany({
-      where: eq(schema.templateCategoryTemplateTask.templateCategoryId, id),
-    });
-  await createTasksFromTemplate(templateTaskRelations, monthId, categoryRecord.id);
-  return categoryRecord;
+async function createCategoryTasksAndAssignmentsFromTemplate() {
+  // TODO
 }

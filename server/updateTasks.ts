@@ -100,7 +100,7 @@ export async function updateTaskWithCategoryAndAssignments(
 
 type TemplateTaskModificationProps = Omit<schema.TemplateTask, "createdAt"> & {
   userIds: string[];
-  templateCategoryId: string;
+  categoryId: string;
 };
 
 export async function updateTemplateTaskWithCategoryAndAssignments(
@@ -145,17 +145,8 @@ export async function updateTemplateTaskWithCategoryAndAssignments(
 
   // 4. If moon is gibbous waning, modify the monthly task
   if (getLunarPhase().phase === "waning-gibbous" || getLunarPhase().phase === "last-quarter") {
-    const templateCategory = await db.query.templateCategory.findFirst({
-      where: eq(schema.templateCategory.id, templateTaskInfo.templateCategoryId),
-    });
-    if (!templateCategory) {
-      throw new Error("Template category not found");
-    }
-
-    // FIXME: it would be preferable to use ids instead of names
-    // to find the category
     const category = await db.query.category.findFirst({
-      where: eq(schema.category.name, templateCategory.name),
+      where: eq(schema.category.id, templateTaskInfo.categoryId),
     });
     if (!category) {
       throw new Error("Category not found");
@@ -187,7 +178,7 @@ type TemplateTaskCreationProps = Omit<
   "id" | "createdAt"
 > & {
   userIds: string[];
-  templateCategoryId: string | null;
+  categoryId: string | null;
 };
 
 export async function createTemplateTaskWithCategoryAndAssignments(
@@ -203,6 +194,7 @@ export async function createTemplateTaskWithCategoryAndAssignments(
       description: taskInfo.description,
       storyPoints: taskInfo.storyPoints,
       targetCount: taskInfo.targetCount,
+      categoryId: taskInfo.categoryId,
     })
     .run();
   const templateTaskRecord = await db.query.templateTask.findFirst({
@@ -215,19 +207,11 @@ export async function createTemplateTaskWithCategoryAndAssignments(
     });
   }
 
-  if (!taskInfo.templateCategoryId) {
-    throw new Error("template Category required");
+  if (!taskInfo.categoryId) {
+    throw new Error("Category required");
   }
 
-  // 2. Associate the new task with the category -------------------------
-  db.insert(schema.templateCategoryTemplateTask)
-    .values({
-      templateCategoryId: taskInfo.templateCategoryId,
-      templateTaskId: templateTaskRecord.id,
-    })
-    .run();
-
-  // 3. Associate the task to the users ---------------------------------
+  // 2. Associate the task to the users ---------------------------------
   for (const userId of taskInfo.userIds) {
     db.insert(schema.templateTaskUser)
       .values({
@@ -239,17 +223,8 @@ export async function createTemplateTaskWithCategoryAndAssignments(
 
   // 4. If moon is gibbous waning, add OR MODIFY the monthly task
   if (getLunarPhase().phase === "waning-gibbous" || getLunarPhase().phase === "last-quarter") {
-    const templateCategory = await db.query.templateCategory.findFirst({
-      where: eq(schema.templateCategory.id, taskInfo.templateCategoryId),
-    });
-    if (!templateCategory) {
-      throw new Error("Template category not found");
-    }
-
-    // FIXME: it would be preferable to use ids instead of names
-    // to find the category
     const category = await db.query.category.findFirst({
-      where: eq(schema.category.name, templateCategory.name),
+      where: eq(schema.category.id, taskInfo.categoryId),
     });
     if (!category) {
       throw new Error("Category not found");
@@ -325,7 +300,7 @@ export const addTemplateTask = publicProcedure
         storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13",
         targetCount: "number",
         userIds: "string[]",
-        templateCategoryId: "string",
+        categoryId: "string",
       }),
     })
   )

@@ -1,27 +1,24 @@
-import { useAuth } from "@/contexts/AuthContext";
 import TaskCard from "./TaskCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useTask } from "@/contexts/TaskContext";
 import { EditTaskDialog } from "@/components/EditTaskDialog";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import type { Task } from "../../server/schema";
 
 type CategorySectionProps = {
   id: string;
+  isTemplate: boolean;
 };
 
-export default function CategorySection({ id }: CategorySectionProps) {
-  const { addTask, currentMonth } = useTask();
+export default function CategorySection({ id, isTemplate }: CategorySectionProps) {
+  const { addTask, categories, currentTasks, currentMonth } = useTask();
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
   if (!currentMonth) return null;
 
-  const categoryMonth = currentMonth.monthCategories.find(
-    (mc) => mc.category?.id === id
-  );
-  if (!categoryMonth) return null;
-  const tasks = categoryMonth.category.tasks;
+  const category = categories?.find((category) => category.id === id);
+  const tasks = currentTasks?.filter((task) => task.categoryId === id);
 
   return (
     <div className="mb-8">
@@ -29,11 +26,12 @@ export default function CategorySection({ id }: CategorySectionProps) {
         open={isAddTaskOpen}
         onOpenChange={setIsAddTaskOpen}
         monthId={currentMonth.id}
+        isTemplateTask={isTemplate}
         categoryId={id}
       />
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-semibold">
-          {categoryMonth.category?.emoji} {categoryMonth.category?.name}
+          {category?.emoji} {category?.name}
         </h2>
         <Button
           variant="outline"
@@ -47,7 +45,7 @@ export default function CategorySection({ id }: CategorySectionProps) {
       </div>
 
       <div className="md:glass-card md:bg-secondary/30 p-4 rounded-lg">
-        {tasks.length === 0 ? (
+        {!tasks || tasks?.length === 0 ? (
           <p className="text-muted-foreground text-sm">
             No tasks in this category yet.
           </p>
@@ -56,7 +54,7 @@ export default function CategorySection({ id }: CategorySectionProps) {
             {tasks
               .sort((a, b) => a.title.localeCompare(b.title))
               .map((task) => (
-              <TaskCard key={task.id} task={task} />
+              <TaskCard key={task.id} taskId={task.id} />
             ))}
           </div>
         )}

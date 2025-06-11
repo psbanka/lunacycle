@@ -8,7 +8,7 @@ import {
 import { inferProcedureOutput } from "@trpc/server";
 import type { AppRouter } from "../../server/index";
 
-import type { User, Task, TemplateTask, TemplateCategory, Category } from "../../server/schema";
+import type { User, Task, TemplateTask, Category } from "../../server/schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/lib/trpc";
 import { useAuth } from "./AuthContext";
@@ -24,19 +24,35 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   
-  // Data fetching -------------------------------------------------
+  // Data fetching
+  // -----------------------------------------------------------------
+  // ACTIVE MONTH -------------------------------------------------- 0
   const monthQueryOptions = trpc.getActiveMonth.queryOptions();
   const monthQuery = useQuery(monthQueryOptions);
+
+  // BACKLOG ------------------------------------------------------- 1
   const backlogQueryOptions = trpc.getBacklogTasks.queryOptions();
   const backlogQuery = useQuery(backlogQueryOptions);
+
+  // TEMPLATE ------------------------------------------------------ 2
   const templateQueryOptions = trpc.getTemplate.queryOptions();
   const templateQuery = useQuery(templateQueryOptions);
+
+  // TEMPLATE TASKS ------------------------------------------------ 3
+  const templateTasksQueryOptions = trpc.getTemplateTasks.queryOptions();
+  const templateTasksQuery = useQuery(templateTasksQueryOptions);
+
+  // USERS --------------------------------------------------------- 4
   const userQueryOptions = trpc.getUsers.queryOptions();
   const userQuery = useQuery(userQueryOptions);
-  const getCategoriesByMonthId = trpc.getCategoriesByMonthId.queryOptions({ monthId: monthQuery.data?.id || ''});
-  const getCategoriesByMonthIdQuery = useQuery(getCategoriesByMonthId);
-  const getTasksByUserQueryOptions = trpc.getTasksByUserId.queryOptions({ userId: user?.id || ''});
-  const getTasksByUserQuery = useQuery(getTasksByUserQueryOptions);
+
+  // CATEGORIES ---------------------------------------------------- 5
+  const getCategories = trpc.getCategories.queryOptions();
+  const getCategoriesQuery = useQuery(getCategories);
+
+  // TASKS --------------------------------------------------------- 6
+  const getTasksByMonth = trpc.getCurrentMonthTasks.queryOptions();
+  const getTasksByMonthQuery = useQuery(getTasksByMonth);
 
   // Clearing the cache --------------------------------------------
   type CacheCategory = "month" | "tasks" | "template" | "users" | "categories";
@@ -48,17 +64,20 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
           await queryClient.invalidateQueries({ queryKey: trpc.getActiveMonth.queryKey() });
           break;
         case "tasks":
-          await queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
+          await queryClient.invalidateQueries({ queryKey: trpc.getCurrentMonthTasks.queryKey() });
+          await queryClient.invalidateQueries({ queryKey: trpc.getTemplateTasks.queryKey() });
+          await queryClient.invalidateQueries({ queryKey: trpc.getBacklogTasks.queryKey() });
           // await queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
           break;
         case "template":
           await queryClient.invalidateQueries({ queryKey: trpc.getTemplate.queryKey() });
+          await queryClient.invalidateQueries({ queryKey: trpc.getTemplateTasks.queryKey() });
           break;
         case "users":
           await queryClient.invalidateQueries({ queryKey: trpc.getUsers.queryKey() });
           break;
         case "categories":
-          await queryClient.invalidateQueries({ queryKey: trpc.getCategoriesByMonthId.queryKey() });
+          await queryClient.invalidateQueries({ queryKey: trpc.getCategories.queryKey() });
           break;
         default:
           break;
@@ -84,10 +103,10 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   });
   const deleteTemplateTaskMutation = useMutation(deleteTemplateTaskOptions);
 
-  const addTemplateCategoryOptions = trpc.addTemplateCategory.mutationOptions({
+  const addCategoryOptions = trpc.addCategory.mutationOptions({
     onSuccess: async () => clearCache(["template"]),
   });
-  const addTemplateCategoryMutation = useMutation(addTemplateCategoryOptions);
+  const addCategoryMutation = useMutation(addCategoryOptions);
 
   const updateTaskOptions = trpc.updateTask.mutationOptions({
     onSuccess: async () => clearCache(["month", "tasks"]),
@@ -184,10 +203,9 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const addTemplateTask = async (
     templateTask: Omit<TemplateTask, "id" | "createdAt">,
     userIds: string[],
-    templateCategoryId: string,
   ) => {
     await addTemplateTaskMutation.mutateAsync({
-      task: { ...templateTask, templateCategoryId, userIds: userIds },
+      task: { ...templateTask, userIds: userIds },
     });
     toast.success("Task added successfully!");
   };
@@ -206,11 +224,10 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const updateTemplateTask = async (
     templateTaskId: string,
     updates: Omit<TemplateTask, "id">,
-    templateCategoryId: string,
     userIds: string[]
   ) => {
     await updateTemplateTaskMutation.mutateAsync({
-      task: { ...updates, id: templateTaskId, userIds, templateCategoryId },
+      task: { ...updates, id: templateTaskId, userIds },
     });
     toast.success("Template task updated!");
   };
@@ -224,8 +241,8 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
     toast.success("Task deleted!");
   };
 
-  const addTemplateCategory = async (templateCategory: Omit<TemplateCategory, "id" | "tasks">) => {
-    await addTemplateCategoryMutation.mutateAsync({ templateCategory });
+  const addCategory = async (category: Omit<Category, "id" | "tasks">) => {
+    await addCategoryMutation.mutateAsync({ category });
     toast.success("Category added!");
   };
 
@@ -251,9 +268,10 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
       value={{
         currentMonth: monthQuery.data,
         users: userQuery.data,
-        categories: getCategoriesByMonthIdQuery.data,
-        tasksByUser: getTasksByUserQuery.data,
+        categories: getCategoriesQuery.data,
+        currentTasks: getTasksByMonthQuery.data,
         template: templateQuery.data,
+        templateTasks: templateTasksQuery.data,
         loadingTasks: monthQuery.isLoading,
         backlogTasks: backlogQuery.data,
         createMonthFromTemplate: createMonthFromTemplateMutation.mutate,
@@ -264,7 +282,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
         updateTemplateTask,
         deleteTask,
         deleteTemplateTask,
-        addTemplateCategory,
+        addCategory,
         updateCategory,
         deleteCategory,
         updateUserTask,
@@ -280,8 +298,9 @@ type TaskContextType = {
   currentMonth: CurrentMonthType | undefined;
   users: User[] | undefined;
   categories: Category[] | undefined;
-  tasksByUser: Task[] | undefined;
+  currentTasks: inferProcedureOutput<AppRouter["getCurrentMonthTasks"]> | undefined;
   template: TemplateType | undefined;
+  templateTasks: inferProcedureOutput<AppRouter["getTemplateTasks"]> | undefined;
   backlogTasks: inferProcedureOutput<AppRouter["getBacklogTasks"]> | undefined;
 
   // FIXME: Rename to 'loadingData'
@@ -295,7 +314,6 @@ type TaskContextType = {
   addTemplateTask: (
     templateTask: Omit<TemplateTask, "id" | "createdAt">,
     userIds: string[],
-    categoryId: string,
   ) => void;
   updateTask: (
     taskId: string,
@@ -305,12 +323,11 @@ type TaskContextType = {
   updateTemplateTask: (
     templateTaskId: string,
     updates: Omit<TemplateTask, "id">,
-    templateCategoryId: string,
     userIds: string[]
   ) => void;
   deleteTask: (taskId: string) => void;
   deleteTemplateTask: (templateTask: string) => void;
-  addTemplateCategory: (category: Omit<Category, "id" | "tasks">) => void;
+  addCategory: (category: Omit<Category, "id" | "tasks">) => void;
   updateCategory: (
     categoryId: string,
     updates: Omit<Category, "tasks">

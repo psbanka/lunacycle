@@ -31,7 +31,7 @@ async function createCategoryTasksAndAssignments({
   console.log(`${emoji} Creating ${name} category and tasks...`);
 
   // 1. category
-  db.insert(schema.templateCategory)
+  db.insert(schema.category)
     .values({
       id: fakerEN.string.uuid(),
       name,
@@ -39,10 +39,10 @@ async function createCategoryTasksAndAssignments({
       emoji,
     })
     .run();
-  const categoryRecord = await db.query.templateCategory.findFirst({
-    where: eq(schema.templateCategory.name, name),
+  const category = await db.query.category.findFirst({
+    where: eq(schema.category.name, name),
   });
-  if (!categoryRecord) {
+  if (!category) {
     throw new Error(`Could not create category ${name}`);
   }
 
@@ -55,6 +55,7 @@ async function createCategoryTasksAndAssignments({
         title: task.title,
         storyPoints: task.storyPoints,
         targetCount: task.targetCount,
+        categoryId: category.id,
       })
       .run();
     const taskRecord = await db.query.templateTask.findFirst({
@@ -63,13 +64,6 @@ async function createCategoryTasksAndAssignments({
     if (!taskRecord) {
       throw new Error(`${task.title} could not be created`);
     }
-    // 2b. Associate the task to the category
-    db.insert(schema.templateCategoryTemplateTask)
-      .values({
-        templateCategoryId: categoryRecord.id,
-        templateTaskId: taskRecord.id,
-      })
-      .run();
 
     // 2c. Associate the task to the user
     for (const user of task.users) {
@@ -81,13 +75,7 @@ async function createCategoryTasksAndAssignments({
         .run();
     }
   }
-  db.insert(schema.templateTemplateCategory)
-    .values({
-      templateId: templateId,
-      templateCategoryId: categoryRecord.id,
-    })
-    .run();
-  return categoryRecord;
+  return category;
 }
 
 async function createUser(name: string, email: string, role: string) {
