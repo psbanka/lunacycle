@@ -21,13 +21,14 @@ export default function CategorySection({ id }: CategorySectionProps) {
     (mc) => mc.category?.id === id
   );
   if (!categoryMonth) return null;
-  const categoryTasks = categoryMonth.category.categoryTasks;
+  const tasks = categoryMonth.category.tasks;
 
   return (
     <div className="mb-8">
       <EditTaskDialog
         open={isAddTaskOpen}
         onOpenChange={setIsAddTaskOpen}
+        monthId={currentMonth.id}
         categoryId={id}
       />
       <div className="mb-4 flex justify-between items-center">
@@ -46,16 +47,16 @@ export default function CategorySection({ id }: CategorySectionProps) {
       </div>
 
       <div className="md:glass-card md:bg-secondary/30 p-4 rounded-lg">
-        {categoryTasks.length === 0 ? (
+        {tasks.length === 0 ? (
           <p className="text-muted-foreground text-sm">
             No tasks in this category yet.
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categoryTasks
-              .sort((a, b) => a.task.title.localeCompare(b.task.title))
-              .map((ct) => (
-              <TaskCard key={ct.taskId} categoryTask={ct} />
+            {tasks
+              .sort((a, b) => a.title.localeCompare(b.title))
+              .map((task) => (
+              <TaskCard key={task.id} task={task} />
             ))}
           </div>
         )}

@@ -2,16 +2,17 @@ import { FIBONACCI } from "../../shared/types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { type } from "arktype";
-import { arktypeResolver } from "@hookform/resolvers/arktype"
+import { arktypeResolver } from "@hookform/resolvers/arktype";
 import { LoadingScreen } from "./LoadingScreen";
 
 import { useTask } from "@/contexts/TaskContext";
-import { Trash } from "lucide-react";
+import { Trash, Layers, Eye, EyeOff } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -42,6 +43,9 @@ const TaskSchema = type({
   targetCount: "1 <= number.integer <= 31",
   "completedCount?": "number",
   userIds: "string[] >= 1",
+  monthId: "string | null",
+  categoryId: "string",
+  templateTaskId: "string | null",
   "isFocused?": "0 | 1",
 });
 
@@ -51,6 +55,7 @@ interface EditTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   categoryId?: string;
+  monthId: string | null;
   templateCategoryId?: string;
   initialValues?: Partial<TaskFormValues>;
 }
@@ -59,10 +64,12 @@ export function EditTaskDialog({
   open,
   onOpenChange,
   categoryId,
+  monthId,
   templateCategoryId,
   initialValues,
 }: EditTaskDialogProps) {
   const {
+    currentMonth,
     addTask,
     updateTask,
     updateTemplateTask,
@@ -79,6 +86,7 @@ export function EditTaskDialog({
   const isContinuingTask =
     initialValues?.targetCount && initialValues.targetCount > 1;
 
+  const currentMonthId = currentMonth?.id;
   const form = useForm<TaskFormValues>({
     resolver: arktypeResolver(TaskSchema),
     defaultValues: {
@@ -89,6 +97,9 @@ export function EditTaskDialog({
       completedCount: 0,
       isFocused: 0,
       userIds: [],
+      monthId,
+      categoryId,
+      templateTaskId: templateCategoryId ?? null,
       ...initialValues,
     },
   });
@@ -109,9 +120,10 @@ export function EditTaskDialog({
             targetCount: values.targetCount,
             completedCount: values.completedCount || 0,
             isFocused: values.isFocused || 0,
+            monthId: values.monthId,
             templateTaskId: null,
+            categoryId: values.categoryId,
           },
-          categoryId,
           values.userIds
         );
       } else if (isEditingId && templateCategoryId) {
@@ -133,11 +145,12 @@ export function EditTaskDialog({
             description: values.description || null,
             storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
             targetCount: values.targetCount,
+            categoryId: categoryId,
+            monthId: monthId,
             isFocused: values.isFocused || 0,
             completedCount: 0,
           },
-          userIds,
-          categoryId
+          userIds
         );
       } else if (templateCategoryId) {
         await addTemplateTask(
@@ -180,16 +193,24 @@ export function EditTaskDialog({
     }
   };
 
+  const handleToggleBacklog = async () => {
+
+  }
+
   if (!users) {
     return <LoadingScreen />;
   }
+
+  console.log(form.formState.errors);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {isEditingId ? "Edit Task" : "Add New Task"}
+            <DialogDescription>
+              {isEditingId ? "Edit Task" : "Add New Task"}
+            </DialogDescription>
           </DialogTitle>
         </DialogHeader>
 
@@ -281,52 +302,6 @@ export function EditTaskDialog({
                 )}
               />
             )}
-
-            <FormField
-              control={form.control}
-              name="isFocused"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel>Focus</FormLabel>
-                  </div>
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value === 1}
-                      onCheckedChange={(checked) => {
-                        field.onChange(checked ? 1 : 0);
-                      }}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            {isEditingTask && initialValues?.targetCount === 1 && (
-              <FormField
-                control={form.control}
-                name="completedCount"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel>Completed</FormLabel>
-                      <FormDescription>
-                        Mark this task as complete
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value === 1}
-                        onCheckedChange={(checked) => {
-                          field.onChange(checked ? 1 : 0);
-                        }}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            )}
-
             {isEditingTask &&
               initialValues?.targetCount &&
               initialValues.targetCount > 1 && (
@@ -374,6 +349,7 @@ export function EditTaskDialog({
                               className="flex items-center space-x-2 space-y-0">
                               <FormControl>
                                 <Checkbox
+                                  style={{ marginTop: 0 }}
                                   id={`checkbox-${user.id}`}
                                   checked={isSelected}
                                   onCheckedChange={(checked) => {
@@ -392,7 +368,9 @@ export function EditTaskDialog({
                                   }}
                                 />
                               </FormControl>
-                              <label htmlFor={`checkbox-${user.id}`} className="flex items-center gap-2">
+                              <label
+                                htmlFor={`checkbox-${user.id}`}
+                                className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
                                   <UserAvatar
                                     key={user.id}
@@ -400,7 +378,9 @@ export function EditTaskDialog({
                                     dimmed={true}
                                   />
                                 </Avatar>
-                                <span className="hidden sm:inline">{user.name}</span>
+                                <span className="hidden sm:inline">
+                                  {user.name}
+                                </span>
                               </label>
                             </FormItem>
                           );
@@ -424,15 +404,42 @@ export function EditTaskDialog({
                   disabled={isSubmitting}
                   onClick={handleDelete}
                   className="mr-auto">
-                  {isSubmitting ? (
-                    "Deleting..."
-                  ) : (
-                    <>
-                      <Trash className="h-4 w-4 mr-2" /> Delete Task
-                    </>
-                  )}
+                  {isSubmitting ? "..." : <Trash className="h-4 w-4" />}
                 </Button>
               )}
+
+              <FormField
+                control={form.control}
+                name="isFocused"
+                render={({ field }) => {
+                  return(
+                  <Button
+                    size="sm"
+                    variant={field.value === 1 ? "default" : "outline"}
+                    type="button"
+                    onClick={() => field.onChange(field.value === 1 ? 0 : 1)}>
+                    {field.value === 1 ? (
+                      <Eye className="w-4 h-4" />
+                    ) : (
+                      <EyeOff className="w-4 h-4" />
+                    )}
+                  </Button>
+                )}}
+              />
+              <FormField
+                control={form.control}
+                name="monthId"
+                render={({ field }) => {
+                  return(
+                  <Button
+                    size="sm"
+                    variant={field.value === null ? "default" : "outline"}
+                    type="button"
+                    onClick={() => field.onChange(field.value === null ? currentMonth : null)}>
+                      <Layers className="w-4 h-4" />
+                  </Button>
+                )}}
+              />
               <DialogClose asChild>
                 <Button type="button" variant="outline">
                   Cancel
@@ -440,10 +447,7 @@ export function EditTaskDialog({
               </DialogClose>
               {isEditingId ? (
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting
-                    ? "Updating..."
-                    : "Save"
-                  }
+                  {isSubmitting ? "Updating..." : "Save"}
                 </Button>
               ) : (
                 <Button type="submit" disabled={isSubmitting}>

@@ -74,6 +74,7 @@ export function TemplateTaskCard({
       <EditTaskDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
+        monthId={null}
         templateCategoryId={templateCategoryId}
         initialValues={{
           id: templateTaskId,

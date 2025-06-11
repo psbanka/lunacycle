@@ -3,7 +3,7 @@ import { eq, and } from "drizzle-orm";
 import * as schema from "./schema";
 import { TRPCError } from "@trpc/server";
 import { fakerEN } from "@faker-js/faker";
-import { createTaskWithCategoryAndAssignments } from "./addTask";
+import { createTaskWithCategoryAndAssignments } from "./updateTasks.ts";
 
 export async function createMonthFromActiveTemplate() {
   const template = await db.query.template.findFirst({
@@ -34,7 +34,7 @@ export async function createMonthFromActiveTemplate() {
   const templateCategories = await db.query.templateCategory.findMany();
   for (const templateCategory of templateCategories) {
     const category = await createCategoryTasksAndAssignmentsFromTemplate(
-      templateCategory
+      templateCategory, month.id
     );
 
     // 2c. Add new category to month
@@ -107,6 +107,7 @@ async function createTasksFromTemplate(
     templateCategoryId: string;
     templateTaskId: string;
   }[],
+  monthId: string | null,
   categoryId: string
 ) {
   const tasks: schema.Task[] = [];
@@ -133,6 +134,7 @@ async function createTasksFromTemplate(
       existingTask = await createTaskWithCategoryAndAssignments({
         ...templateTask,
         categoryId,
+        monthId,
         userIds: [], // We'll add users later
         templateTaskId: templateTask.id,
         isFocused: 0,
@@ -141,29 +143,7 @@ async function createTasksFromTemplate(
       console.log(`> Reusing existing task: ${templateTask.title}`);
     }
 
-    // 4. Check if the categoryTask already exists
-    const existingCategoryTask = await db.query.categoryTask.findFirst({
-      where: and(
-        eq(schema.categoryTask.categoryId, categoryId),
-        eq(schema.categoryTask.taskId, existingTask.id)
-      ),
-    });
-
-    if (!existingCategoryTask) {
-      // 4a. Associate the task with the category
-      db.insert(schema.categoryTask)
-        .values({
-          categoryId,
-          taskId: existingTask.id,
-        })
-        .run();
-    } else {
-      console.log(
-        `> Reusing existing categoryTask: ${categoryId} - ${existingTask.id}`
-      );
-    }
-
-    // 5. Associate the task with the users
+    // 4. Associate the task with the users
     const userIds: string[] = [];
     for (const templateTaskUser of await db.query.templateTaskUser.findMany({
       where: eq(schema.templateTaskUser.templateTaskId, templateTask.id),
@@ -183,18 +163,8 @@ async function createTasksFromTemplate(
   return tasks;
 }
 
-
-async function createCategoryTasksAndAssignmentsFromTemplate({
-  id,
-  name,
-  description,
-  emoji,
-}: {
-  id: string;
-  name: string;
-  description: string | null;
-  emoji: string | null;
-}) {
+async function createCategoryTasksAndAssignmentsFromTemplate(templateCategory: schema.TemplateCategory, monthId: string | null) {
+  const { id, name, description, emoji } = templateCategory;
   console.log(`> Create ${emoji} ${name} category...`);
   // Check if the category already exists
   // FIXME: we should not use the name as the way to find a category.
@@ -230,6 +200,6 @@ async function createCategoryTasksAndAssignmentsFromTemplate({
     await db.query.templateCategoryTemplateTask.findMany({
       where: eq(schema.templateCategoryTemplateTask.templateCategoryId, id),
     });
-  await createTasksFromTemplate(templateTaskRelations, categoryRecord.id);
+  await createTasksFromTemplate(templateTaskRelations, monthId, categoryRecord.id);
   return categoryRecord;
 }

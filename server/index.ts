@@ -5,7 +5,7 @@ import { createHTTPServer } from "@trpc/server/adapters/standalone";
 import { createMonthFromActiveTemplate } from "./createMonth.ts";
 import { TRPCError } from "@trpc/server";
 import { login } from "./login.ts";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import cors from "cors";
 import * as schema from "./schema";
 import { fakerEN } from "@faker-js/faker";
@@ -13,9 +13,9 @@ import { hash } from "@node-rs/bcrypt";
 import {
   addTask,
   addTemplateTask,
-  updateTaskWithCategoryAndAssignments,
   updateTemplateTaskWithCategoryAndAssignments,
-} from "./addTask.ts";
+  updateTaskWithCategoryAndAssignments,
+} from "./updateTasks.ts";
 import { fetchRandomAvatar } from "./avatarUtils.ts";
 
 const appRouter = router({
@@ -159,7 +159,6 @@ const appRouter = router({
     createMonthFromActiveTemplate
   ),
   getActiveMonth: publicProcedure.query(async () => {
-    // const userId = "x";
     const currentMonth = await db.query.month.findFirst({
       where: eq(schema.month.isActive, 1),
       with: {
@@ -167,15 +166,11 @@ const appRouter = router({
           with: {
             category: {
               with: {
-                categoryTasks: {
+                tasks: {
                   with: {
-                    task: {
+                    taskUsers: {
                       with: {
-                        taskUsers: {
-                          with: {
-                            user: true,
-                          },
-                        },
+                        user: true,
                       },
                     },
                   },
@@ -190,6 +185,30 @@ const appRouter = router({
       throw new TRPCError({ code: "NOT_FOUND", message: "No active month" });
     }
     return currentMonth;
+  }),
+  getBacklogTasks: publicProcedure.query(async () => {
+    const backlogTasksRaw = await db.query.task.findMany({
+      where: isNull(schema.task.monthId),
+      with: {
+        category: true,
+        taskUsers: { with: { user: true } },
+        // other relations as needed
+      },
+      orderBy: (tasks, { asc }) => [asc(tasks.title)], // Example ordering
+    });
+
+    // Group tasks by category
+    const backlogCategorized = backlogTasksRaw.reduce((acc, task) => {
+      if (!task.category) return acc;
+      const categoryId = task.category.id;
+      if (!acc[categoryId]) {
+        acc[categoryId] = { category: task.category, tasks: [] };
+      }
+      acc[categoryId].tasks.push(task);
+      return acc;
+    }, {} as Record<string, { category: schema.Category; tasks: Array<typeof backlogTasksRaw[0]> }>);
+
+    return Object.values(backlogCategorized).sort((a, b) => a.category.name.localeCompare(b.category.name));
   }),
   getCategoriesByMonthId: publicProcedure
     .input(type({ monthId: "string" }))
@@ -220,7 +239,7 @@ const appRouter = router({
       const category = await db.query.category.findFirst({
         where: eq(schema.category.id, input.categoryId),
         with: {
-          categoryTasks: true,
+          tasks: true,
         },
       });
       if (!category) {
@@ -229,7 +248,7 @@ const appRouter = router({
           message: "Category not found",
         });
       }
-      return category.categoryTasks;
+      return category.tasks;
     }),
   getTasksByUserId: publicProcedure
     .input(type({ userId: "string" }))
@@ -314,7 +333,7 @@ const appRouter = router({
       const category = await db.query.category.findFirst({
         where: eq(schema.category.id, input.id),
         with: {
-          categoryTasks: true,
+          tasks: true,
         },
       });
       if (!category) {
@@ -323,7 +342,7 @@ const appRouter = router({
           message: "Category not found",
         });
       }
-      if (category.categoryTasks.length > 0) {
+      if (category.tasks.length > 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Category has tasks assigned to it",
@@ -341,14 +360,16 @@ const appRouter = router({
           storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13",
           targetCount: "number",
           userIds: "string[]",
+          monthId: "string | null",
           categoryId: "string",
           isFocused: "1 | 0",
         }),
       })
     )
     .mutation(
-      async ({ input }) =>
+      async ({ input }) => {
         await updateTaskWithCategoryAndAssignments(input.task)
+      }
     ),
   updateTemplateTask: publicProcedure
     .input(
@@ -380,9 +401,6 @@ const appRouter = router({
       }
       db.delete(schema.taskUser)
         .where(eq(schema.taskUser.taskId, input.taskId))
-        .run();
-      db.delete(schema.categoryTask)
-        .where(eq(schema.categoryTask.taskId, input.taskId))
         .run();
       db.delete(schema.task).where(eq(schema.task.id, input.taskId)).run();
       return { success: true };

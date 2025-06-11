@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { TemplateTaskCard } from "@/components/TemplateTaskCard";
 
 export default function Template() {
-  const { template, loadingTasks, users } = useTask();
+  const { template, loadingTasks, currentMonth } = useTask();
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [activeTemplateCategory, setActiveTemplateCategory] = useState<
     string | null
@@ -77,6 +77,7 @@ export default function Template() {
 
         {activeTemplateCategory && (
           <EditTaskDialog
+            monthId={currentMonth?.id || null}
             open={isAddTaskOpen}
             onOpenChange={setIsAddTaskOpen}
             templateCategoryId={activeTemplateCategory}

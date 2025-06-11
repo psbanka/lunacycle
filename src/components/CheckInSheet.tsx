@@ -103,7 +103,7 @@ export default function CheckInSheet() {
 
     if (!category) return null;
 
-    const tasks = category.categoryTasks;
+    const tasks = category.tasks;
     const totalTasks = tasks.length;
     
     if (totalTasks === 0) return null;

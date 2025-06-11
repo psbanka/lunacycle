@@ -43,21 +43,17 @@ export default function Home() {
   }
 
   // Filter tasks for "Up Next" section - pending tasks from user
-  const pendingCategoryTasks = currentMonth.monthCategories
-    .flatMap((mc) => mc.category?.categoryTasks ?? []) // FIXME: shouldn't need to do this
-    .filter((ct) => ct.task.targetCount > ct.task.completedCount);
+  const pendingTasks = currentMonth.monthCategories
+    .flatMap((mc) => mc.category?.tasks ?? []) // FIXME: shouldn't need to do this
+    .filter((task) => task.targetCount > task.completedCount);
 
-  const upNextTasks = pendingCategoryTasks.filter(ct => ct.task.isFocused === 1);
+  const upNextTasks = pendingTasks.filter(task => task.isFocused === 1);
 
   // Filter tasks for "Recently Completed" section - completed tasks from user
-  const completedCategoryTasks = currentMonth.monthCategories
-    .flatMap((mc) => mc.category?.categoryTasks ?? []) // FIXME: shouldn't need to do this
-    .filter((ct) => ct.task.targetCount === ct.task.completedCount)
+  const completedTasks = currentMonth.monthCategories
+    .flatMap((mc) => mc.category?.tasks ?? []) // FIXME: shouldn't need to do this
+    .filter((task) => task.targetCount === task.completedCount)
     .slice(0, 5);
-
-  if (loadingTasks) {
-    return <LoadingScreen />;
-  }
 
   return (
     <div className="max-w-6xl mx-auto pl-8">
@@ -91,20 +87,20 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {upNextTasks.map((task) => (
-              <TaskCard key={task.taskId} categoryTask={task} />
+              <TaskCard key={task.id} task={task} />
             ))}
           </div>
         )}
       </div>
 
-      {completedCategoryTasks.length > 0 && (
+      {completedTasks.length > 0 && (
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Recently Completed</h2>
           <div className="flex space-x-4 overflow-x-auto pb-4">
-            {completedCategoryTasks.map((ct) => (
+            {completedTasks.map((task) => (
               <TaskCard
-                key={ct.taskId}
-                categoryTask={ct}
+                key={task.id}
+                task={task}
                 compact
                 className="w-56"
               />

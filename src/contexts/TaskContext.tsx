@@ -27,6 +27,8 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   // Data fetching -------------------------------------------------
   const monthQueryOptions = trpc.getActiveMonth.queryOptions();
   const monthQuery = useQuery(monthQueryOptions);
+  const backlogQueryOptions = trpc.getBacklogTasks.queryOptions();
+  const backlogQuery = useQuery(backlogQueryOptions);
   const templateQueryOptions = trpc.getTemplate.queryOptions();
   const templateQuery = useQuery(templateQueryOptions);
   const userQueryOptions = trpc.getUsers.queryOptions();
@@ -47,6 +49,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
           break;
         case "tasks":
           await queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
+          // await queryClient.invalidateQueries({ queryKey: trpc.getTasksByUserId.queryKey() });
           break;
         case "template":
           await queryClient.invalidateQueries({ queryKey: trpc.getTemplate.queryKey() });
@@ -172,10 +175,9 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const addTask = async (
     task: Omit<Task, "id" | "createdAt" | "templateTaskId">,
     userIds: string[],
-    categoryId: string,
   ) => {
     await addTaskMutation.mutateAsync({
-      task: { ...task, categoryId, userIds: userIds, templateTaskId: null },
+      task: { ...task, userIds: userIds, templateTaskId: null },
     });
   };
 
@@ -193,11 +195,10 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const updateTask = async (
     taskId: string,
     updates: Omit<Task, "id">,
-    categoryId: string,
     userIds: string[]
   ) => {
     await updateTaskMutation.mutateAsync({
-      task: { ...updates, id: taskId, userIds, categoryId },
+      task: { ...updates, id: taskId, userIds },
     });
     toast.success("Task updated!");
   };
@@ -254,6 +255,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
         tasksByUser: getTasksByUserQuery.data,
         template: templateQuery.data,
         loadingTasks: monthQuery.isLoading,
+        backlogTasks: backlogQuery.data,
         createMonthFromTemplate: createMonthFromTemplateMutation.mutate,
         completeTask,
         addTask,
@@ -280,6 +282,7 @@ type TaskContextType = {
   categories: Category[] | undefined;
   tasksByUser: Task[] | undefined;
   template: TemplateType | undefined;
+  backlogTasks: inferProcedureOutput<AppRouter["getBacklogTasks"]> | undefined;
 
   // FIXME: Rename to 'loadingData'
   loadingTasks: boolean;
@@ -288,7 +291,6 @@ type TaskContextType = {
   addTask: (
     task: Omit<Task, "id" | "createdAt" | "templateTaskId">,
     userIds: string[],
-    categoryId: string,
   ) => void;
   addTemplateTask: (
     templateTask: Omit<TemplateTask, "id" | "createdAt">,
@@ -298,7 +300,6 @@ type TaskContextType = {
   updateTask: (
     taskId: string,
     updates: Omit<Task, "id">,
-    categoryId: string,
     userIds: string[]
   ) => void;
   updateTemplateTask: (

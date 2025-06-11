@@ -44,11 +44,18 @@ export const savedAccessToken = sqliteTable("saved_access_token", {
   encodedAccessToken: text("encoded_access_token").notNull(),
 });
 
+type ISO18601 = string & { __brand__: 'ISO18601' };
+
+const SQL_NOW = sql`(current_timestamp)`
+function timestamp() {
+  return text().$type<ISO18601>()
+}
+
 // month table
 export const month = sqliteTable("month", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  startDate: text("start_date").notNull(), // Store ISO date string
+  startDate: timestamp().default(SQL_NOW).notNull(), // Store ISO date string
   endDate: text("end_date").notNull(),
   newMoonDate: text("new_moon_date").notNull(),
   fullMoonDate: text("full_moon_date").notNull(),
@@ -72,7 +79,8 @@ export const category = sqliteTable("category", {
 export type Category = typeof category.$inferSelect;
 
 export const categoryRelations = relations(category, ({ many }) => ({
-  categoryTasks: many(categoryTask),
+  tasks: many(task), // Tasks directly belonging to this category
+  monthCategories: many(monthCategory), // For the months this category is part of
 }));
 
 // task table
@@ -87,12 +95,22 @@ export const task = sqliteTable("task", {
   templateTaskId: text("template_task_id")
     .references(() => templateTask.id),
   isFocused: integer("is_focused").$type<0 | 1>().notNull().default(0),
+  categoryId: text("category_id").notNull().references(() => category.id),
+  monthId: text("month_id").references(() => month.id), // Nullable: if NULL, task is in backlog
 });
 
 export type Task = typeof task.$inferSelect;
 
-export const taskRelations = relations(task, ({ many }) => ({
+export const taskRelations = relations(task, ({ many, one }) => ({
   taskUsers: many(taskUser),
+  category: one(category, {
+    fields: [task.categoryId],
+    references: [category.id],
+  }),
+  month: one(month, { // The month this task is assigned to (if not in backlog)
+    fields: [task.monthId],
+    references: [month.id],
+  }),
 }));
 
 // template table (singleton)
@@ -172,36 +190,6 @@ export const monthCategoryRelations = relations(monthCategory, ({ one }) => ({
   category: one(category, {
     fields: [monthCategory.categoryId],
     references: [category.id],
-  }),
-}));
-
-// category <-> task join table
-export const categoryTask = sqliteTable(
-  "category_task",
-  {
-    categoryId: text("category_id")
-      .notNull()
-      .references(() => category.id),
-    taskId: text("task_id")
-      .notNull()
-      .references(() => task.id),
-  },
-  (table) => [
-    primaryKey({
-      name: "category_task_pk",
-      columns: [table.categoryId, table.taskId],
-    }),
-  ]
-);
-
-export const categoryTaskRelations = relations(categoryTask, ({ one }) => ({
-  category: one(category, {
-    fields: [categoryTask.categoryId],
-    references: [category.id],
-  }),
-  task: one(task, {
-    fields: [categoryTask.taskId],
-    references: [task.id],
   }),
 }));
 

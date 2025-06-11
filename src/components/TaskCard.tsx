@@ -4,20 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { CheckCircle, CheckSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTRPC } from "@/lib/trpc";
 import { useState } from "react";
 import { EditTaskDialog } from "./EditTaskDialog";
 import { UserAvatar } from "./UserAvatar";
 
-// FIXME: find this elsewhere
-type CategoryTask = {
-  categoryId: string;
-  taskId: string;
-  task: Task;
-};
-
 type TaskCardProps = {
-  categoryTask: CategoryTask;
+  task: Task;
   compact?: boolean;
   className?: string;
 };
@@ -35,20 +27,19 @@ function usersForTask(
 ) {
   if (!currentMonth || !taskId) return [];
   return currentMonth.monthCategories
-    .flatMap((mc) => mc.category?.categoryTasks ?? [])
-    .filter((ct) => ct.task.id === taskId)
-    .flatMap((ct) => ct.task.taskUsers);
+    .flatMap((mc) => mc.category?.tasks ?? [])
+    .filter((task) => task.id === taskId)
+    .flatMap((task) => task.taskUsers);
 }
 
 export default function TaskCard({
-  categoryTask,
+  task,
   compact = false,
   className,
 }: TaskCardProps) {
   const { completeTask, currentMonth } = useTask();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const task = categoryTask?.task;
   if (!task) return null;
 
   // FIXME
@@ -204,14 +195,17 @@ export default function TaskCard({
       <EditTaskDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        categoryId={categoryTask.categoryId}
+        categoryId={task.categoryId}
+        monthId={currentMonth?.id || null}
         initialValues={{
           id: task.id,
           title: task.title,
           description: task.description || "",
           storyPoints: task.storyPoints,
           targetCount: task.targetCount,
+          isFocused: task.isFocused,
           completedCount: task.completedCount,
+          monthId: task.monthId,
           userIds: userIdsForTask(task.id, currentMonth),
         }}
       />

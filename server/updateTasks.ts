@@ -3,17 +3,18 @@ import { type } from "arktype";
 import { publicProcedure, router } from "./trpc.ts";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
-import * as schema from "./schema";
+import * as schema from "./schema.ts";
 import { fakerEN } from "@faker-js/faker";
 import { getLunarPhase } from "../shared/lunarPhase.ts";
 
 type TaskCreationProps = Omit<
   schema.Task,
-  "id" | "createdAt" | "completedCount"
+  "id" | "createdAt" | "completedCount" | "monthId"
 > & {
   userIds: string[];
   categoryId: string;
   templateTaskId: string | null;
+  monthId: string | null;
 };
 
 export async function createTaskWithCategoryAndAssignments(
@@ -30,7 +31,9 @@ export async function createTaskWithCategoryAndAssignments(
       storyPoints: taskInfo.storyPoints,
       targetCount: taskInfo.targetCount,
       completedCount: 0,
+      categoryId: taskInfo.categoryId,
       templateTaskId: taskInfo.templateTaskId,
+      monthId: taskInfo.monthId,
       isFocused: taskInfo.isFocused,
     })
     .run();
@@ -43,14 +46,6 @@ export async function createTaskWithCategoryAndAssignments(
       message: `Could not create task ${taskInfo.title}`,
     });
   }
-
-  // 2. Associate the new task with the category -------------------------
-  db.insert(schema.categoryTask)
-    .values({
-      categoryId: taskInfo.categoryId,
-      taskId: taskRecord.id,
-    })
-    .run();
 
   // 3. Associate the task to the users ---------------------------------
   for (const userId of taskInfo.userIds) {
@@ -83,19 +78,11 @@ export async function updateTaskWithCategoryAndAssignments(
       description: taskInfo.description,
       storyPoints: taskInfo.storyPoints,
       targetCount: taskInfo.targetCount,
+      categoryId: taskInfo.categoryId,
+      monthId: taskInfo.monthId,
       isFocused: taskInfo.isFocused,
     })
     .where(eq(schema.task.id, taskInfo.id))
-    .run();
-
-  // 2. Update the category association
-  await db
-    .delete(schema.categoryTask)
-    .where(eq(schema.categoryTask.taskId, taskInfo.id))
-    .run();
-  await db
-    .insert(schema.categoryTask)
-    .values({ categoryId: taskInfo.categoryId, taskId: taskInfo.id })
     .run();
 
   // 3. Update user assignments
@@ -157,7 +144,7 @@ export async function updateTemplateTaskWithCategoryAndAssignments(
   }
 
   // 4. If moon is gibbous waning, modify the monthly task
-  if (getLunarPhase().phase === "waning-gibbous") {
+  if (getLunarPhase().phase === "waning-gibbous" || getLunarPhase().phase === "last-quarter") {
     const templateCategory = await db.query.templateCategory.findFirst({
       where: eq(schema.templateCategory.id, templateTaskInfo.templateCategoryId),
     });
@@ -187,6 +174,7 @@ export async function updateTemplateTaskWithCategoryAndAssignments(
         storyPoints: templateTaskRecord.storyPoints,
         targetCount: templateTaskRecord.targetCount,
         categoryId: category.id,
+        monthId: existingTask.monthId,
         userIds: templateTaskInfo.userIds,
         isFocused: 0,
       });
@@ -250,7 +238,7 @@ export async function createTemplateTaskWithCategoryAndAssignments(
   }
 
   // 4. If moon is gibbous waning, add OR MODIFY the monthly task
-  if (getLunarPhase().phase === "waning-gibbous") {
+  if (getLunarPhase().phase === "waning-gibbous" || getLunarPhase().phase === "last-quarter") {
     const templateCategory = await db.query.templateCategory.findFirst({
       where: eq(schema.templateCategory.id, taskInfo.templateCategoryId),
     });
@@ -280,10 +268,15 @@ export async function createTemplateTaskWithCategoryAndAssignments(
         storyPoints: templateTaskRecord.storyPoints,
         targetCount: templateTaskRecord.targetCount,
         categoryId: category.id,
+        monthId: existingTask.monthId, // FIXME?
         userIds: taskInfo.userIds,
         isFocused: 0,
       });
     } else {
+      const activeMonth = await db.query.month.findFirst({
+        where: eq(schema.month.isActive, 1),
+      });
+
       // 4b. Create new task
       await createTaskWithCategoryAndAssignments({
         title: templateTaskRecord.title,
@@ -292,6 +285,7 @@ export async function createTemplateTaskWithCategoryAndAssignments(
         targetCount: templateTaskRecord.targetCount,
         categoryId: category.id,
         userIds: taskInfo.userIds,
+        monthId: activeMonth?.id ?? null,
         templateTaskId: templateTaskId,
         isFocused: 0,
       });
@@ -312,6 +306,7 @@ export const addTask = publicProcedure
         userIds: "string[]",
         categoryId: "string",
         templateTaskId: "string | null",
+        monthId: "string | null",
         isFocused: "1 | 0",
       }),
     })

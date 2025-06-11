@@ -13,6 +13,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Template from "./pages/Template";
+import Backlog from "./pages/Backlog";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -87,6 +88,17 @@ const AppCore = () => {
           <ProtectedRoute>
             <Layout>
               <Template />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/backlog"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Backlog />
             </Layout>
           </ProtectedRoute>
         }
