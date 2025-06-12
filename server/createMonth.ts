@@ -1,5 +1,5 @@
 import { db } from "./db.ts";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import * as schema from "./schema";
 import { TRPCError } from "@trpc/server";
 import { fakerEN } from "@faker-js/faker";
@@ -10,8 +10,6 @@ export async function createMonthFromActiveTemplate() {
     where: eq(schema.template.isActive, 1),
   });
 
-  // TODO: if there is already an active month, find all the incomplete singleton
-  // tasks and move them.
   if (!template) {
     throw new TRPCError({
       code: "NOT_FOUND",
@@ -19,15 +17,59 @@ export async function createMonthFromActiveTemplate() {
     });
   }
 
-  // 0. Any currently-active month, set to archive
+  const oldMonth = await db.query.month.findFirst({
+    where: eq(schema.month.isActive, 1),
+  });
+
+  // Move all non-template tasks to the backlog
+  if (oldMonth?.id) {
+    console.log(`🚚 Move all the incomplete non-template tasks from ${oldMonth.name} to the backlog...`);
+    const tasksToMove = await db.query.task.findMany({
+      where: (tasks, { eq, and, isNull }) => eq(schema.task.monthId, oldMonth.id)
+    });
+    console.log(`>>>> ${tasksToMove.length}`);
+    tasksToMove.forEach((task) => {
+      if (task.templateTaskId == null && task.templateTaskId == null) {
+        console.log(`...${task.title}`);
+        db.update(schema.task)
+          .set({ monthId: null })
+          .where(eq(schema.task.id, task.id))
+          .run();
+      }
+    });
+  }
+
+  // Any currently-active month, set to archive
   db.update(schema.month)
     .set({ isActive: 0 })
     .where(eq(schema.month.isActive, 1))
     .run();
 
-  // 1. Create month
+  // Create new month
   console.log("🕍 Create month...");
   const month = await createNewMonth();
+
+  console.log("🖨 Copying template tasks...");
+  // Now copy all the template tasks to the new month
+  const templateTasks = await db.query.templateTask.findMany({
+    with: { templateTaskUsers: true }
+  })
+  for (const templateTask of templateTasks) {
+    const userIds = templateTask.templateTaskUsers.map((ttu) => ttu.userId);
+    console.log(`...${templateTask.title}`);
+    await createTaskWithCategoryAndAssignments({
+      title: templateTask.title,
+      description: templateTask.description,
+      storyPoints: templateTask.storyPoints,
+      targetCount: templateTask.targetCount,
+      categoryId: templateTask.categoryId,
+      userIds,
+      monthId: month?.id ?? null,
+      templateTaskId: templateTask.id,
+      isFocused: 0,
+    });
+
+  }
 
   return month;
 }
@@ -55,7 +97,7 @@ function moonName() {
 
 async function createNewMonth() {
   const today = new Date();
-  const todayString = today.toISOString() as schema.ISO18601
+  const todayString = today.toISOString() as schema.ISO18601;
   const thirtyDaysFromNow = new Date(
     today.getTime() + 30 * 24 * 60 * 60 * 1000
   );

@@ -47,15 +47,15 @@ export const savedAccessToken = sqliteTable("saved_access_token", {
 export type ISO18601 = string & { __brand__: 'ISO18601' };
 
 const SQL_NOW = sql`(current_timestamp)`
-function timestamp() {
-  return text().$type<ISO18601>()
+function timestamp(fieldName: string) {
+  return text(fieldName).$type<ISO18601>()
 }
 
 // month table
 export const month = sqliteTable("month", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  startDate: timestamp().default(SQL_NOW).notNull(), // Store ISO date string
+  startDate: timestamp('start_date').default(SQL_NOW).notNull(), // Store ISO date string
   endDate: text("end_date").notNull(),
   newMoonDate: text("new_moon_date").notNull(),
   fullMoonDate: text("full_moon_date").notNull(),

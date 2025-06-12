@@ -2,10 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   useTheme,
-  ALCHEMICAL_THEMES,
-  type AlchemicalTheme,
 } from "@/contexts/ThemeContext";
-import { LogOut, Moon, Sun, User, Paintbrush, Palette } from "lucide-react";
+import { LogOut, Moon, Sun, User } from "lucide-react";
 import NavBar from "./NavBar";
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
@@ -16,11 +14,10 @@ export default function Header() {
     useTheme();
 
   return (
-    <header className="sticky top-0 z-50 bg-background ml-8 flex items-center justify-between border-b">
+    <header className="sticky top-0 z-50 bg-background flex items-center justify-between border-b">
       <div className="flex items-center gap-2">
         <Link to="/" className="flex items-center hidden sm:inline">
           <Logo />
-          <h1 className="hidden lg:inline px-6 ml-2 text-3xl text-foreground">luneria</h1>
         </Link>
         <div className="md:block ">
           <NavBar />

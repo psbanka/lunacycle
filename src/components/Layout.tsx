@@ -1,7 +1,6 @@
 import { ReactNode, useState, useEffect, useRef } from "react";
 import Header from "./Header";
 import CategoryNav from "./CategoryNav";
-// import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "react-router-dom";
 import { useTask } from "@/contexts/TaskContext";
 
@@ -10,7 +9,6 @@ type LayoutProps = {
 };
 
 export default function Layout({ children }: LayoutProps) {
-  // const { isAuthenticated, user } = useAuth();
   const { categories, currentMonth, template, loadingTasks } = useTask();
   const location = useLocation();
   const [navData, setNavData] = useState<any>(null); // FIXME: type this
@@ -60,7 +58,11 @@ export default function Layout({ children }: LayoutProps) {
       <Header />
 
       <div className="flex flex-1">
-        <div className="sticky top-0 h-screen">
+        <div className="sticky top-16 h-screen">
+          {/* This div now correctly positions CategoryNav below the header and fixes its height */}
+          {/* On mobile (default), w-16 matches CategoryNav's fixed width, ensuring main content is offset */}
+          {/* On md screens and up, it takes w-64 (adjust as needed) */}
+          {/* overflow-y-auto allows categories to scroll if they exceed the available height */}
           <CategoryNav categories={navData} activeCategoryId={activeCategoryId} />
         </div>
 
