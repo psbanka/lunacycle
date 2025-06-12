@@ -60,10 +60,10 @@ export default function CategoryNav({ categories, activeCategoryId }: NavBarProp
   };
 
   return (
-    <nav className="fixed top-16 left-0 w-16 h-full bg-background border-r z-50 md:static md:top-auto md:left-auto md:w-auto md:h-auto md:border-t md:border-r-0 md:border-b-0">
-      <div className="flex flex-col items-center justify-start space-y-2 p-2 md:items-center md:justify-around md:space-y-0  md:p-4">
-        {renderCategoryLinks()}
-      </div>
-    </nav>
+  <nav className="w-full h-full bg-background">
+    <div className="flex flex-col items-center justify-start space-y-2 p-2 md:items-center md:justify-around md:space-y-0  md:p-4">
+      {renderCategoryLinks()}
+    </div>
+  </nav>
   );
 }

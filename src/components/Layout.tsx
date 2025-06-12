@@ -46,11 +46,10 @@ export default function Layout({ children }: LayoutProps) {
       setActiveCategoryId(currentActive);
     };
 
-    const contentElement = contentRef.current;
     window.addEventListener("scroll", handleScroll);
     handleScroll(); // Initial check
 
-    return () => contentElement.removeEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [navData]);
 
   return (

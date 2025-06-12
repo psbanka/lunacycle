@@ -12,7 +12,6 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 
 export default function Home() {
   const { currentMonth, currentTasks, categories, loadingTasks, createMonthFromTemplate, users } = useTask();
-  const categoryRefs = useRef<(HTMLElement | null)[]>([]);
 
   // Function to scroll to a category
   // const scrollToCategory = (index: number) => {
@@ -54,7 +53,7 @@ export default function Home() {
     .slice(0, 5);
 
   return (
-    <div className="max-w-6xl mx-auto pl-8">
+    <div className="max-w-6xl mx-auto">
       <div className="flex flex-row justify-between mb-8 gap-4">
         <div>
           <h1 className="text-left text-3xl font-bold">{currentMonth.name}</h1>

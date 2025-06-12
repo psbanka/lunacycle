@@ -46,7 +46,7 @@ export default function Template() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto pl-16">
+    <div className="max-w-6xl mx-auto">
       {/* Template Header */}
       <div className="flex flex-row  justify-between mb-8 gap-4">
         <div className="text-left">

@@ -16,9 +16,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-background flex items-center justify-between border-b">
       <div className="flex items-center gap-2">
-        <Link to="/" className="flex items-center hidden sm:inline">
+        <div className="">
           <Logo />
-        </Link>
+        </div>
         <div className="md:block ">
           <NavBar />
         </div>

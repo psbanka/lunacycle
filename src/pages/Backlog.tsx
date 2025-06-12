@@ -52,7 +52,7 @@ export default function Backlog() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto pl-8">
+    <div className="max-w-6xl mx-auto">
       <div className="flex flex-row justify-between mb-8 gap-4">
         <div>
           <h1 className="text-left text-3xl font-bold">Backlog tasks</h1>
