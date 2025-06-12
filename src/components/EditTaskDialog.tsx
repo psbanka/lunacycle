@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form";
 import { type } from "arktype";
 import { arktypeResolver } from "@hookform/resolvers/arktype";
 import { LoadingScreen } from "./LoadingScreen";
+import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 import { useTask } from "@/contexts/TaskContext";
 import { Trash, Layers, Eye, EyeOff } from "lucide-react";
@@ -76,6 +78,7 @@ export function EditTaskDialog({
     deleteTask,
     deleteTemplateTask,
   } = useTask();
+  const isMobile = useMediaQuery("(max-width: 640px)"); // Tailwind's 'sm' breakpoint
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditingId = initialValues?.id;
   const isEditingTask = isEditingId && categoryId;
@@ -83,7 +86,6 @@ export function EditTaskDialog({
   const isContinuingTask =
     initialValues?.targetCount && initialValues.targetCount > 1;
 
-  const currentMonthId = currentMonth?.id;
   const form = useForm<TaskFormValues>({
     resolver: arktypeResolver(TaskSchema),
     defaultValues: {
@@ -189,20 +191,26 @@ export function EditTaskDialog({
     }
   };
 
-  const handleToggleBacklog = async () => {};
-
   if (!users) {
     return <LoadingScreen />;
   }
 
-  // console.log(form.formState.errors);
   const errorMessages = Object.values(form.formState.errors).map(
     (error) => error.message
   );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        className={cn(
+          "overflow-y-auto", // Ensure content can scroll
+          isMobile
+            ? "h-screen w-screen max-w-full fixed top-0 left-0 m-0 p-4 rounded-none border-none translate-x-0 translate-y-0 data-[state=open]:animate-none data-[state=closed]:animate-none"
+            : "sm:max-w-[425px]"
+        )}
+      >
+        {/* On mobile, the DialogPrimitive.Close 'X' button (if part of base DialogContent) will be at top-right. */}
+        {/* The form content will scroll within this full-screen container. */}
         <DialogHeader>
           <DialogTitle>
             <DialogDescription>

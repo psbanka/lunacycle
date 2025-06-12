@@ -30,7 +30,7 @@ export default function Login() {
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <div className="flex flex-col items-center mb-8">
         <LunarPhase size="lg" className="mb-4" />
-        <h1 className="text-3xl font-bold tracking-tight">Luneria</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Lunacycle</h1>
         <p className="text-muted-foreground mt-2">Complete your tasks with the rhythm of the moon</p>
       </div>
       

@@ -63,6 +63,7 @@ export function TemplateTaskCard( props : TemplateTaskCardProps) {
         onOpenChange={setIsEditDialogOpen}
         monthId={null}
         isTemplateTask={true}
+        categoryId={templateTask.categoryId}
         initialValues={{
           id: templateTask.id,
           title: templateTask.title,

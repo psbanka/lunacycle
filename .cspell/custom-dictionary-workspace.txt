@@ -1,4 +1,5 @@
 # Custom Dictionary Words
-nigredo
 citrinitas
+lunacycle
+nigredo
 rubedo
