@@ -60,12 +60,6 @@ export default function Backlog() {
         <LoadIndicator />
       </div>
 
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Up Next</h2>
-      </div>
-
-      <Separator className="my-8" />
-
       <h2 className="text-2xl font-semibold mb-6">Categories</h2>
 
       <div>
