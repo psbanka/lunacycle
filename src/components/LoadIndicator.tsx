@@ -4,7 +4,7 @@ import { useTask } from '@/contexts/TaskContext';
 
 export function LoadIndicator() {
   const [storyPoints, setStoryPoints] = useState(0);
-  const { phaseName } = useLunarPhase();
+  const { inModificationWindow } = useLunarPhase();
   const { currentTasks, statistics, currentMonth } = useTask();
   const [ averageCompletedStoryPoints, setAverageCompletedStoryPoints ] = useState(0);
   const [ averageCommittedStoryPoints, setAverageCommittedStoryPoints ] = useState(0);
@@ -34,7 +34,7 @@ export function LoadIndicator() {
     setStoryPoints(totalStoryPoints);
   }, [currentTasks]);
 
-  if (["Waning Gibbous", "Last Quarter"].includes(phaseName) === false) return null;
+  if (!inModificationWindow) return null;
 
   // Calculate fullness for color (relative to MAX_STORY_POINTS)
   const fullnessPercent = (storyPoints / averageCompletedStoryPoints) * 100;

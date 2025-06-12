@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { useTask } from "@/contexts/TaskContext";
 import LunarPhase from "@/components/Moon";
 import CategorySection from "@/components/CategorySection";
@@ -7,11 +6,20 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
+import { LoadIndicator } from "@/components/LoadIndicator";
 import CheckInSheet from "@/components/CheckInSheet";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import useLunarPhase from "@/hooks/useLunarPhase";
 
 export default function Home() {
-  const { currentMonth, currentTasks, categories, loadingTasks, createMonthFromTemplate, users } = useTask();
+  const {
+    currentMonth,
+    currentTasks,
+    categories,
+    loadingTasks,
+    createMonthFromTemplate,
+  } = useTask();
+  const { inModificationWindow } = useLunarPhase();
 
   // Function to scroll to a category
   // const scrollToCategory = (index: number) => {
@@ -42,10 +50,11 @@ export default function Home() {
   }
 
   // Filter tasks for "Up Next" section - pending tasks from user
-  const pendingTasks = currentTasks
-    .filter((task) => task.targetCount > task.completedCount);
+  const pendingTasks = currentTasks.filter(
+    (task) => task.targetCount > task.completedCount
+  );
 
-  const upNextTasks = pendingTasks.filter(task => task.isFocused === 1);
+  const upNextTasks = pendingTasks.filter((task) => task.isFocused === 1);
 
   // Filter tasks for "Recently Completed" section - completed tasks from user
   const completedTasks = currentTasks
@@ -65,7 +74,11 @@ export default function Home() {
       </div>
 
       <div className="mb-8">
-        <LunarCycleProgressBand className="shadow-md" />
+        {inModificationWindow ? (
+          <LoadIndicator />
+        ) : (
+          <LunarCycleProgressBand className="shadow-md" />
+        )}
       </div>
 
       <div className="mb-8 flex flex-wrap gap-3">
@@ -114,10 +127,7 @@ export default function Home() {
         {categories
           .sort((a, b) => a.name.localeCompare(b.name))
           .map((category) => (
-            <div
-              key={category?.id}
-              id={category?.id}
-            >
+            <div key={category?.id} id={category?.id}>
               <CategorySection id={category.id} isTemplate={false} />
             </div>
           ))}

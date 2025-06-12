@@ -12,7 +12,7 @@ const DAYS_IN_LUNAR_CYCLE = 29.53;
 
 export const getLunarPhase = (
   date?: Date
-): { phase: MoonPhase; name: string } => {
+): { phase: MoonPhase; name: string, inWindow: boolean } => {
   date = date ?? new Date();
 
   // Known new moon date for reference
@@ -28,21 +28,21 @@ export const getLunarPhase = (
   const cyclePosition = dayInCycle / DAYS_IN_LUNAR_CYCLE;
 
   // Determine phase
-  if (cyclePosition < 0.025) return { phase: "new-moon", name: "New Moon" };
+  if (cyclePosition < 0.025) return { phase: "new-moon", name: "New Moon", inWindow: false };
   if (cyclePosition < 0.25)
-    return { phase: "waxing-crescent", name: "Waxing Crescent" };
+    return { phase: "waxing-crescent", name: "Waxing Crescent", inWindow: false };
   if (cyclePosition < 0.275)
-    return { phase: "first-quarter", name: "First Quarter" };
+    return { phase: "first-quarter", name: "First Quarter", inWindow: false };
   if (cyclePosition < 0.475)
-    return { phase: "waxing-gibbous", name: "Waxing Gibbous" };
-  if (cyclePosition < 0.525) return { phase: "full-moon", name: "Full Moon" };
+    return { phase: "waxing-gibbous", name: "Waxing Gibbous", inWindow: false };
+  if (cyclePosition < 0.525) return { phase: "full-moon", name: "Full Moon", inWindow: true };
   if (cyclePosition < 0.725)
-    return { phase: "waning-gibbous", name: "Waning Gibbous" };
+    return { phase: "waning-gibbous", name: "Waning Gibbous", inWindow: true };
   if (cyclePosition < 0.775)
-    return { phase: "last-quarter", name: "Last Quarter" };
+    return { phase: "last-quarter", name: "Last Quarter", inWindow: true };
   if (cyclePosition < 0.975)
-    return { phase: "waning-crescent", name: "Waning Crescent" };
-  return { phase: "new-moon", name: "New Moon" };
+    return { phase: "waning-crescent", name: "Waning Crescent", inWindow: false };
+  return { phase: "new-moon", name: "New Moon", inWindow: false };
 };
 
 export const calculateDaysUntilNextFullMoon = (): number => {
