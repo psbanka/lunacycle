@@ -31,7 +31,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
 
 // Schema for task creation
@@ -158,7 +157,7 @@ export function EditTaskDialog({
             targetCount: values.targetCount,
             categoryId: values.categoryId,
           },
-          userIds,
+          userIds
         );
       }
 
@@ -190,16 +189,16 @@ export function EditTaskDialog({
     }
   };
 
-  const handleToggleBacklog = async () => {
-
-  }
+  const handleToggleBacklog = async () => {};
 
   if (!users) {
     return <LoadingScreen />;
   }
 
   // console.log(form.formState.errors);
-  const errorMessages = Object.values(form.formState.errors).map((error) => error.message);
+  const errorMessages = Object.values(form.formState.errors).map(
+    (error) => error.message
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -334,57 +333,59 @@ export function EditTaskDialog({
                 <FormItem>
                   <FormLabel>Assign to</FormLabel>
                   <div className="grid grid-cols-1 grid-cols-3 gap-3">
-                    {users.map((user) => (
-                      <FormField
-                        key={user.id}
-                        control={form.control}
-                        name="userIds"
-                        render={({ field }) => {
-                          const isSelected = field.value?.includes(user.id);
-                          return (
-                            <FormItem
-                              key={user.id}
-                              className="flex items-center space-x-2 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  style={{ marginTop: 0 }}
-                                  id={`checkbox-${user.id}`}
-                                  checked={isSelected}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      field.onChange([...field.value, user.id]);
-                                    } else {
-                                      // Don't allow unchecking the last user
-                                      if (field.value.length > 1) {
-                                        field.onChange(
-                                          field.value.filter(
-                                            (value) => value !== user.id
-                                          )
-                                        );
-                                      }
+                    {users.map((user) => {
+                      if (user.role === "admin") return null;
+                      return (
+                        <FormField
+                          key={user.id}
+                          control={form.control}
+                          name="userIds"
+                          render={({
+                            field: { onChange, value: selectedUserIds },
+                          }) => {
+                            const isSelected = selectedUserIds?.includes(
+                              user.id
+                            );
+                            return (
+                              <Button
+                                type="button"
+                                variant={isSelected ? "default" : "outline"}
+                                className="flex items-center justify-start gap-2 h-auto p-2"
+                                onClick={() => {
+                                  if (isSelected) {
+                                    // Don't allow unchecking the last user
+                                    if (selectedUserIds.length > 1) {
+                                      onChange(
+                                        selectedUserIds.filter(
+                                          (id) => id !== user.id
+                                        )
+                                      );
                                     }
-                                  }}
-                                />
-                              </FormControl>
-                              <label
-                                htmlFor={`checkbox-${user.id}`}
-                                className="flex items-center gap-2">
+                                  } else {
+                                    onChange([...selectedUserIds, user.id]);
+                                  }
+                                }}>
                                 <Avatar className="h-8 w-8">
                                   <UserAvatar
-                                    key={user.id}
                                     user={user}
-                                    dimmed={true}
+                                    dimmed={!isSelected}
                                   />
                                 </Avatar>
-                                <span className="hidden sm:inline">
+                                <span className="hidden sm:inline truncate">
                                   {user.name}
                                 </span>
-                              </label>
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    ))}
+                                <span className="sm:hidden inline">
+                                  {user.name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")}
+                                </span>
+                              </Button>
+                            );
+                          }}
+                        />
+                      );
+                    })}
                   </div>
                   <FormDescription>
                     Select at least one person to assign this task to
@@ -397,7 +398,9 @@ export function EditTaskDialog({
             <DialogFooter className="mt-6">
               {errorMessages.length > 0 && (
                 <div className="w-full text-left text-sm text-destructive space-y-1">
-                  {errorMessages.map((message, index) => <p key={`error-${index}`}>{message}</p>)}
+                  {errorMessages.map((message, index) => (
+                    <p key={`error-${index}`}>{message}</p>
+                  ))}
                 </div>
               )}
               {isEditingId && (isTemplateTask || !isContinuingTask) && (
@@ -415,33 +418,39 @@ export function EditTaskDialog({
                 control={form.control}
                 name="isFocused"
                 render={({ field }) => {
-                  return(
-                  <Button
-                    size="sm"
-                    variant={field.value === 1 ? "default" : "outline"}
-                    type="button"
-                    onClick={() => field.onChange(field.value === 1 ? 0 : 1)}>
-                    {field.value === 1 ? (
-                      <Eye className="w-4 h-4" />
-                    ) : (
-                      <EyeOff className="w-4 h-4" />
-                    )}
-                  </Button>
-                )}}
+                  return (
+                    <Button
+                      size="sm"
+                      variant={field.value === 1 ? "default" : "outline"}
+                      type="button"
+                      onClick={() => field.onChange(field.value === 1 ? 0 : 1)}>
+                      {field.value === 1 ? (
+                        <Eye className="w-4 h-4" />
+                      ) : (
+                        <EyeOff className="w-4 h-4" />
+                      )}
+                    </Button>
+                  );
+                }}
               />
               <FormField
                 control={form.control}
                 name="monthId"
                 render={({ field }) => {
-                  return(
-                  <Button
-                    size="sm"
-                    variant={field.value === null ? "default" : "outline"}
-                    type="button"
-                    onClick={() => field.onChange(field.value === null ? currentMonth : null)}>
+                  return (
+                    <Button
+                      size="sm"
+                      variant={field.value === null ? "default" : "outline"}
+                      type="button"
+                      onClick={() =>
+                        field.onChange(
+                          field.value === null ? currentMonth : null
+                        )
+                      }>
                       <Layers className="w-4 h-4" />
-                  </Button>
-                )}}
+                    </Button>
+                  );
+                }}
               />
               <DialogClose asChild>
                 <Button type="button" variant="outline">
