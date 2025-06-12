@@ -11,7 +11,7 @@ import type { AppRouter } from "../../server/index";
 import type { User, Task, TemplateTask, Category } from "../../server/schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/lib/trpc";
-import { useAuth } from "./AuthContext";
+// import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
 
 export type CurrentMonthType = inferProcedureOutput<AppRouter["getActiveMonth"]>;
@@ -20,7 +20,7 @@ type TemplateType = inferProcedureOutput<AppRouter["getTemplate"]>;
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   
@@ -53,6 +53,10 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   // TASKS --------------------------------------------------------- 6
   const getTasksByMonth = trpc.getCurrentMonthTasks.queryOptions();
   const getTasksByMonthQuery = useQuery(getTasksByMonth);
+
+  // STATISTICS ---------------------------------------------------- 6
+  const getStatistics = trpc.getStatistics.queryOptions();
+  const getStatisticsQuery = useQuery(getStatistics);
 
   // Clearing the cache --------------------------------------------
   type CacheCategory = "month" | "tasks" | "template" | "users" | "categories";
@@ -270,6 +274,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
         users: userQuery.data,
         categories: getCategoriesQuery.data,
         currentTasks: getTasksByMonthQuery.data,
+        statistics: getStatisticsQuery.data,
         template: templateQuery.data,
         templateTasks: templateTasksQuery.data,
         loadingTasks: monthQuery.isLoading,
@@ -299,6 +304,7 @@ type TaskContextType = {
   users: User[] | undefined;
   categories: Category[] | undefined;
   currentTasks: inferProcedureOutput<AppRouter["getCurrentMonthTasks"]> | undefined;
+  statistics: inferProcedureOutput<AppRouter["getStatistics"]> | undefined;
   template: TemplateType | undefined;
   templateTasks: inferProcedureOutput<AppRouter["getTemplateTasks"]> | undefined;
   backlogTasks: inferProcedureOutput<AppRouter["getBacklogTasks"]> | undefined;

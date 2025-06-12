@@ -1,10 +1,10 @@
-import { useRef } from "react";
 import { useTask } from "@/contexts/TaskContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { PlusCircle, Plus, ArrowUpToLine } from "lucide-react";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { LoadIndicator } from "@/components/LoadIndicator";
 
 export default function Backlog() {
   const { backlogTasks, loadingTasks, updateTask, currentMonth } = useTask();
@@ -57,6 +57,7 @@ export default function Backlog() {
         <div>
           <h1 className="text-left text-3xl font-bold">Backlog tasks</h1>
         </div>
+        <LoadIndicator />
       </div>
 
       <div className="mb-8">

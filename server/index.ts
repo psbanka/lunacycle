@@ -16,7 +16,6 @@ import {
   updateTaskWithCategoryAndAssignments,
 } from "./updateTasks.ts";
 import { UserUpdate, generateNewAvatar, updateAvatar, updateUser } from "./updateUsers.ts"
-import { fetchRandomAvatar } from "./avatarUtils.ts";
 
 const appRouter = router({
   login,
@@ -59,6 +58,33 @@ const appRouter = router({
       return user;
     }),
     */
+  getStatistics: publicProcedure.query(async () => {
+    // 1. get all months.
+    // 2. For each month, find all tasks associated with that month
+    // 3. Collect the story-points for that task. If the task is completed, add the story-points for that task to the `completedStoryPoints` var
+    // 3a. If the story is completed or incomplete, add the story points to the `committedStoryPoints` var
+    const completedStoryPoints = {} as Record<string, number>
+    const committedStoryPoints = {} as Record<string, number>
+    const months = await db.query.month.findMany({})
+    if (!months) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "No data" });
+    }
+
+    for (const month of months) {
+      const tasks = await db.query.task.findMany({
+        where: eq(schema.task.monthId, month.id),
+      });
+      let completed = 0
+      let committed = 0
+      for (const task of tasks) {
+        completed += task.completedCount * task.storyPoints;
+        committed += task.targetCount * task.storyPoints;
+      }
+      completedStoryPoints[month.id] = completed;
+      committedStoryPoints[month.id] = committed;
+    }
+    return { completedStoryPoints, committedStoryPoints }
+  }),
   getTemplate: publicProcedure.query(async () => {
     const template = await await db.query.template.findFirst({
       where: eq(schema.template.isActive, 1),
