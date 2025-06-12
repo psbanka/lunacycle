@@ -1,6 +1,4 @@
-import type { Task, User } from "../../server/schema";
-import { useTask, type CurrentMonthType } from "@/contexts/TaskContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useTask } from "@/contexts/TaskContext";
 import { cn } from "@/lib/utils";
 import { CheckCircle, CheckSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -66,6 +64,8 @@ export default function TaskCard({
     setIsEditDialogOpen(true);
   };
 
+  const isFocused = task.isFocused;
+
   return (
     <>
       <div
@@ -76,6 +76,7 @@ export default function TaskCard({
             : "glass-card hover:shadow-md",
           isContinuingTask && !isCompleted && "border-6 border-secondary/50 bg-primary/5",
           compact ? "w-full max-w-[200px]" : "w-full",
+          isFocused && "ring-2 ring-primary/70",
           className
         )}
         onClick={handleEditClick}>
