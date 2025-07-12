@@ -15,8 +15,12 @@ const sqlite = new Database("./db.sqlite");
 export const db = drizzle(sqlite, { schema });
 
 try {
-  console.log(`Creating month from active template...`)
+  console.log(`♻️ Cycling old month and creating new month from active template...`)
+  // even though this function is called `createMonthFromActiveTemplate`, 
+  // it will ALSO properly deal with the old month: making it inactive and
+  // moving all its tasks to the backlog!
   await createMonthFromActiveTemplate();
+
   console.log(`Done!`)
 } catch (thrown) {
  if (thrown instanceof Error) {

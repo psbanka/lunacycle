@@ -27,3 +27,5 @@ dist-ssr
 db.sqlite
 repomix-output.xml
 *.tsbuildinfo
+
+backup/
