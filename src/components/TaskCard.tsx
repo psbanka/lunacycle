@@ -4,6 +4,7 @@ import { CheckCircle, CheckSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { EditTaskDialog } from "./EditTaskDialog";
+import { StoryPointsBadge } from "./StoryPointsBadge";
 import { UserAvatar } from "./UserAvatar";
 
 type TaskCardProps = {
@@ -32,28 +33,6 @@ export default function TaskCard({
     task.targetCount > 0 ? (task.completedCount / task.targetCount) * 100 : 0;
   
   const isContinuingTask = task.targetCount > 1;
-
-  // Fibonacci numbers for story points badge color
-  const getStoryPointsColor = (points: number) => {
-    switch (points) {
-      case 1:
-        return "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100";
-      case 2:
-        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-100";
-      case 3:
-        return "bg-teal-100 text-teal-800 dark:bg-teal-800 dark:text-teal-100";
-      case 5:
-        return "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100";
-      case 8:
-        return "bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-100";
-      case 13:
-        return "bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100";
-      case 21:
-        return "bg-pink-100 text-pink-800 dark:bg-pink-800 dark:text-pink-100";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
-    }
-  };
 
   const handleComplete = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent the click from propagating to the parent div
@@ -95,14 +74,7 @@ export default function TaskCard({
               {task.title}
             </h3>
 
-            {/* Story Points Badge */}
-            <span
-              className={cn(
-                "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-                getStoryPointsColor(task.storyPoints)
-              )}>
-              {task.storyPoints} SP
-            </span>
+            <StoryPointsBadge storyPoints={task.storyPoints} />
           </div>
 
           {/* Counter for tasks that need to be done multiple times */}

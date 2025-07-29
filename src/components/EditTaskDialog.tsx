@@ -36,11 +36,11 @@ import { Slider } from "@/components/ui/slider";
 import { Avatar } from "@/components/ui/avatar";
 
 // Schema for task creation
-const TaskSchema = type({
+export const TaskSchema = type({
   "id?": "string",
   title: "string > 0",
-  description: "string",
-  storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13",
+  "description?": "string",
+  storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13 | 21",
   targetCount: "1 <= number.integer <= 31",
   "completedCount?": "number",
   userIds: "string[] >= 1",
@@ -114,7 +114,7 @@ export function EditTaskDialog({
           {
             title: values.title,
             description: values.description || null,
-            storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
+            storyPoints: values.storyPoints,
             targetCount: values.targetCount,
             completedCount: values.completedCount || 0,
             isFocused: values.isFocused || 0,
@@ -130,7 +130,7 @@ export function EditTaskDialog({
           {
             title: values.title,
             description: values.description || null,
-            storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
+            storyPoints: values.storyPoints,
             targetCount: values.targetCount,
             categoryId: values.categoryId,
           },
@@ -141,7 +141,7 @@ export function EditTaskDialog({
           {
             title: values.title,
             description: values.description || null,
-            storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
+            storyPoints: values.storyPoints,
             targetCount: values.targetCount,
             categoryId: categoryId,
             monthId: monthId,
@@ -155,7 +155,7 @@ export function EditTaskDialog({
           {
             title: values.title,
             description: values.description || null,
-            storyPoints: values.storyPoints as (typeof FIBONACCI)[number], // FIXME
+            storyPoints: values.storyPoints,
             targetCount: values.targetCount,
             categoryId: values.categoryId,
           },

@@ -1,29 +1,12 @@
 import { useTask } from "@/contexts/TaskContext";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { PlusCircle, Plus, ArrowUpToLine } from "lucide-react";
+import { PlusCircle, Plus } from "lucide-react";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { LoadIndicator } from "@/components/LoadIndicator";
+import BacklogTaskCard from "@/components/BacklogTaskCard";
 
 export default function Backlog() {
-  const { backlogTasks, loadingTasks, updateTask, currentMonth } = useTask();
-
-  function promoteToMonth(taskId: string) {
-    const task = backlogTasks
-      ?.flatMap((blt) => blt.tasks)
-      .find((task) => task.id === taskId);
-    if (!currentMonth) return;
-    if (!task) return;
-    updateTask(
-      taskId,
-      {
-        ...task,
-        monthId: currentMonth?.id,
-      },
-      task.taskUsers.map((tu) => tu.userId)
-    );
-  }
+  const { backlogTasks, loadingTasks, updateTask } = useTask();
 
   if (loadingTasks) {
     return <LoadingScreen />;
@@ -91,27 +74,10 @@ export default function Backlog() {
                     {blt.tasks
                       .sort((a, b) => a.title.localeCompare(b.title))
                       .map((task) => (
-                        <div
+                        <BacklogTaskCard
                           key={task.id}
-                          className="group relative p-4 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer glass-card hover:shadow-md w-full max-w-[200px]">
-                          <div className="flex flex-col h-full">
-                            <div className="flex justify-between items-start mb-2">
-                              <h3
-                                className={cn(
-                                  "font-medium transition-colors text-left font-bold"
-                                )}>
-                                {task.title}
-                              </h3>
-                              <Button
-                                onClick={() => promoteToMonth(task.id)}
-                                variant="ghost"
-                                size="sm"
-                                className="absolute top-1 right-1 h-6 w-6 p-0">
-                                <ArrowUpToLine className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
+                          taskId={task.id}
+                        />
                       ))}
                   </div>
                 )}

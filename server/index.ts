@@ -5,7 +5,7 @@ import { createHTTPServer } from "@trpc/server/adapters/standalone";
 import { createMonthFromActiveTemplate } from "./createMonth.ts";
 import { TRPCError } from "@trpc/server";
 import { login } from "./login.ts";
-import { eq, isNull } from "drizzle-orm";
+import { eq, isNull, and } from "drizzle-orm";
 import { fakerEN } from "@faker-js/faker";
 import cors from "cors";
 import * as schema from "./schema";
@@ -128,7 +128,10 @@ const appRouter = router({
   }),
   getBacklogTasks: publicProcedure.query(async () => {
     const backlogTasksRaw = await db.query.task.findMany({
-      where: isNull(schema.task.monthId),
+      where: and(
+        isNull(schema.task.monthId),
+        eq(schema.task.completedCount, 0),
+      ),
       with: {
         category: true,
         taskUsers: { with: { user: true } },
