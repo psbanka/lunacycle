@@ -20,8 +20,6 @@ export function StoryPointsBadge({ storyPoints }: { storyPoints: StoryPointType 
         return "bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-100";
       case 13:
         return "bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100";
-      case 21:
-        return "bg-pink-100 text-pink-800 dark:bg-pink-800 dark:text-pink-100";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
     }

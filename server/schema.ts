@@ -94,14 +94,6 @@ export type Task = typeof task.$inferSelect;
 
 export const taskRelations = relations(task, ({ many, one }) => ({
   taskUsers: many(taskUser),
-  category: one(category, {
-    fields: [task.categoryId],
-    references: [category.id],
-  }),
-  month: one(month, { // The month this task is assigned to (if not in backlog)
-    fields: [task.monthId],
-    references: [month.id],
-  }),
 }));
 
 // template table (singleton)

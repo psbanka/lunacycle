@@ -15,7 +15,12 @@ import {
   updateTemplateTaskWithCategoryAndAssignments,
   updateTaskWithCategoryAndAssignments,
 } from "./updateTasks.ts";
-import { UserUpdate, generateNewAvatar, updateAvatar, updateUser } from "./updateUsers.ts"
+import {
+  UserUpdate,
+  generateNewAvatar,
+  updateAvatar,
+  updateUser,
+} from "./updateUsers.ts";
 
 const appRouter = router({
   login,
@@ -26,7 +31,7 @@ const appRouter = router({
   generateNewAvatar: publicProcedure
     .input(type({ userId: "string" }))
     .mutation(async ({ input }) => {
-      return await generateNewAvatar(input.userId)
+      return await generateNewAvatar(input.userId);
     }),
   uploadAvatar: publicProcedure
     .input(type({ userId: "string", file: "string" }))
@@ -63,9 +68,9 @@ const appRouter = router({
     // 2. For each month, find all tasks associated with that month
     // 3. Collect the story-points for that task. If the task is completed, add the story-points for that task to the `completedStoryPoints` var
     // 3a. If the story is completed or incomplete, add the story points to the `committedStoryPoints` var
-    const completedStoryPoints = {} as Record<string, number>
-    const committedStoryPoints = {} as Record<string, number>
-    const months = await db.query.month.findMany({})
+    const completedStoryPoints = {} as Record<string, number>;
+    const committedStoryPoints = {} as Record<string, number>;
+    const months = await db.query.month.findMany({});
     if (!months) {
       throw new TRPCError({ code: "NOT_FOUND", message: "No data" });
     }
@@ -74,8 +79,8 @@ const appRouter = router({
       const tasks = await db.query.task.findMany({
         where: eq(schema.task.monthId, month.id),
       });
-      let completed = 0
-      let committed = 0
+      let completed = 0;
+      let committed = 0;
       for (const task of tasks) {
         completed += task.completedCount * task.storyPoints;
         committed += task.targetCount * task.storyPoints;
@@ -83,7 +88,7 @@ const appRouter = router({
       completedStoryPoints[month.id] = completed;
       committedStoryPoints[month.id] = committed;
     }
-    return { completedStoryPoints, committedStoryPoints }
+    return { completedStoryPoints, committedStoryPoints };
   }),
   getTemplate: publicProcedure.query(async () => {
     const template = await await db.query.template.findFirst({
@@ -130,33 +135,37 @@ const appRouter = router({
     const backlogTasksRaw = await db.query.task.findMany({
       where: and(
         isNull(schema.task.monthId),
-        eq(schema.task.completedCount, 0),
+        eq(schema.task.completedCount, 0)
       ),
       with: {
-        category: true,
         taskUsers: { with: { user: true } },
         // other relations as needed
       },
       orderBy: (tasks, { asc }) => [asc(tasks.title)], // Example ordering
     });
 
+    const categories = await db.query.category.findMany({});
+
     // Group tasks by category
     const backlogCategorized = backlogTasksRaw.reduce((acc, task) => {
-      if (!task.category) return acc;
-      const categoryId = task.category.id;
+      if (!task.categoryId) return acc;
+      const categoryId = task.categoryId;
       if (!acc[categoryId]) {
-        acc[categoryId] = { category: task.category, tasks: [] };
+        const category = categories.find((cat) => cat.id === categoryId);
+        if (!category) return acc;
+        acc[categoryId] = { category, tasks: [] };
       }
       acc[categoryId].tasks.push(task);
       return acc;
-    }, {} as Record<string, { category: schema.Category; tasks: Array<typeof backlogTasksRaw[0]> }>);
+    }, {} as Record<string, { category: schema.Category; tasks: Array<(typeof backlogTasksRaw)[0]> }>);
 
-    return Object.values(backlogCategorized).sort((a, b) => a.category.name.localeCompare(b.category.name));
+    return Object.values(backlogCategorized).sort((a, b) =>
+      a.category.name.localeCompare(b.category.name)
+    );
   }),
-  getCategories: publicProcedure
-    .query(async () => {
-      return await db.query.category.findMany({});
-    }),
+  getCategories: publicProcedure.query(async () => {
+    return await db.query.category.findMany({});
+  }),
   // FIXME: WHO USES THIS?
   getTasksByCategoryId: publicProcedure
     .input(type({ categoryId: "string" }))
@@ -253,7 +262,7 @@ const appRouter = router({
       }
       // TODO: Go through all tasks with categoryID and error if there are any
       const tasksOfThisCategory = await db.query.task.findMany({
-        where: eq(schema.category.id, category.id)
+        where: eq(schema.category.id, category.id),
       });
       if (tasksOfThisCategory.length > 0) {
         throw new TRPCError({
@@ -279,11 +288,9 @@ const appRouter = router({
         }),
       })
     )
-    .mutation(
-      async ({ input }) => {
-        await updateTaskWithCategoryAndAssignments(input.task)
-      }
-    ),
+    .mutation(async ({ input }) => {
+      await updateTaskWithCategoryAndAssignments(input.task);
+    }),
   updateTemplateTask: publicProcedure
     .input(
       type({
@@ -325,12 +332,17 @@ const appRouter = router({
         where: eq(schema.task.id, input.templateTaskId),
       });
       if (!task) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Template Task not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Template Task not found",
+        });
       }
       db.delete(schema.templateTaskUser)
         .where(eq(schema.templateTaskUser.templateTaskId, input.templateTaskId))
         .run();
-      db.delete(schema.templateTask).where(eq(schema.templateTask.id, input.templateTaskId)).run();
+      db.delete(schema.templateTask)
+        .where(eq(schema.templateTask.id, input.templateTaskId))
+        .run();
       return { success: true };
     }),
   completeTask: publicProcedure
