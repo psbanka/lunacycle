@@ -22,6 +22,48 @@ import {
   updateUser,
 } from "./updateUsers.ts";
 
+type VelocityData = Array<{
+  monthId: string;
+  name: string;
+  completed: number;
+  committed: number;
+}>;
+
+async function getVelocityByMonth(categoryId?: string) {
+  const overall = [] as VelocityData;
+  const months = await db.query.month.findMany({});
+  if (!months) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "No data" });
+  }
+
+  // Velocity data
+  for (const month of months) {
+    const tasks = categoryId
+      ? await db.query.task.findMany({
+          where: and(
+            eq(schema.task.monthId, month.id),
+            eq(schema.task.categoryId, categoryId)
+          ),
+        })
+      : await db.query.task.findMany({
+          where: eq(schema.task.monthId, month.id),
+        });
+    let completed = 0;
+    let committed = 0;
+    for (const task of tasks) {
+      completed += task.completedCount * task.storyPoints;
+      committed += task.targetCount * task.storyPoints;
+    }
+    overall.push({
+      monthId: month.id,
+      name: month.name,
+      completed,
+      committed,
+    });
+  }
+  return overall;
+}
+
 const appRouter = router({
   login,
   getUsers: publicProcedure.query(async () => {
@@ -64,29 +106,34 @@ const appRouter = router({
     }),
     */
   getStatistics: publicProcedure.query(async () => {
-    // 1. get all months.
-    // 2. For each month, find all tasks associated with that month
-    // 3. Collect the story-points for that task. If the task is completed, add the story-points for that task to the `completedStoryPoints` var
-    // 3a. If the story is completed or incomplete, add the story points to the `committedStoryPoints` var
-    const data = [] as Array<{monthId: string, name: string; completed: number, committed: number }>;
-    const months = await db.query.month.findMany({});
-    if (!months) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "No data" });
+    const overall = await getVelocityByMonth();
+
+    // category data
+    type CategoryData = Array<{
+      name: string;
+      categoryId: string;
+      data: VelocityData;
+      recurringTaskInfo?: Array<{
+        name: string;
+        taskId: string;
+        data: VelocityData;
+      }>;
+    }>;
+    const categoryData = [] as CategoryData;
+    const categories = await db.query.category.findMany({});
+    for (const category of categories) {
+      const name = category.name;
+      const id = category.id;
+      const categoryByMonth = await getVelocityByMonth(id);
+
+      categoryData.push({
+        categoryId: category.id,
+        name: category.name,
+        data: categoryByMonth,
+      });
     }
 
-    for (const month of months) {
-      const tasks = await db.query.task.findMany({
-        where: eq(schema.task.monthId, month.id),
-      });
-      let completed = 0;
-      let committed = 0;
-      for (const task of tasks) {
-        completed += task.completedCount * task.storyPoints;
-        committed += task.targetCount * task.storyPoints;
-      }
-      data.push({monthId: month.id, name: month.name, completed, committed});
-    }
-    return data;
+    return { overall, categoryData };
   }),
   getTemplate: publicProcedure.query(async () => {
     const template = await await db.query.template.findFirst({

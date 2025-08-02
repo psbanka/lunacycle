@@ -1,5 +1,15 @@
 import { Activity } from "lucide-react";
-import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Legend } from "recharts";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Legend,
+  Tooltip,
+} from "recharts";
 import { useTask } from "@/contexts/TaskContext";
 import { LoadingScreen } from "@/components/LoadingScreen";
 
@@ -30,10 +40,10 @@ export default function Goals() {
               Track your history of task completion versus commitment
             </p>
           </div>
-          <BarChart width={900} height={300} data={statistics}>
+          <BarChart width={900} height={300} data={statistics?.overall}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <Bar dataKey="completed" fill="hsl(var(--primary))" />
-            <Bar dataKey="committed" fill="hsl(var(--secondary))" />
+            <Bar dataKey="committed" fill="hsl(var(--muted-foreground))" />
             <XAxis
               dataKey="name"
               stroke="hsl(var(--muted-foreground))"
@@ -45,8 +55,40 @@ export default function Goals() {
               axisLine={{ stroke: "hsl(var(--border))" }}
               tickLine={false}
             />
-            <Legend wrapperStyle={{ color: "hsl(var(--muted-foreground))", paddingTop: '20px' }} />
+            <Tooltip />
+            <Legend
+              wrapperStyle={{
+                color: "hsl(var(--muted-foreground))",
+                paddingTop: "20px",
+              }}
+            />
           </BarChart>
+        </div>
+      </div>
+
+      <div className="text-center py-10 glass-card rounded-lg">
+        <div className="flex-row items-center justify-stretch">
+          <div>
+            <h2 className="text-2xl font-semibold">By Category</h2>
+          </div>
+          {statistics?.categoryData.map((category, index) => (
+            <div key={category.categoryId} className="flex justify-between py-5 px-10">
+              <h1 className="text-xl font-semibold">{category.name}</h1>
+              <AreaChart width={600} height={50} data={category?.data}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--border))"
+                />
+                <Area dataKey="completed" fill="hsl(var(--primary))" />
+                <Area dataKey="committed" fill="hsl(var(--muted-foreground))" />
+                <YAxis
+                  stroke="hsl(var(--muted-foreground))"
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={false}
+                />
+              </AreaChart>
+            </div>
+          ))}
         </div>
       </div>
     </div>

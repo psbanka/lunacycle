@@ -12,8 +12,8 @@ export function LoadIndicator() {
   useEffect(() => {
     if (!statistics) return;
     let totalCompletedStoryPoints = 0;
-    const totalMonths = statistics.length - 1;
-    statistics.forEach(({monthId, completed}) => {
+    const totalMonths = statistics.overall.length - 1;
+    statistics.overall.forEach(({monthId, completed}) => {
       if (monthId !== currentMonth?.id) {
         totalCompletedStoryPoints += completed;
       }
