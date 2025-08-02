@@ -68,8 +68,7 @@ const appRouter = router({
     // 2. For each month, find all tasks associated with that month
     // 3. Collect the story-points for that task. If the task is completed, add the story-points for that task to the `completedStoryPoints` var
     // 3a. If the story is completed or incomplete, add the story points to the `committedStoryPoints` var
-    const completedStoryPoints = {} as Record<string, number>;
-    const committedStoryPoints = {} as Record<string, number>;
+    const data = [] as Array<{monthId: string, name: string; completed: number, committed: number }>;
     const months = await db.query.month.findMany({});
     if (!months) {
       throw new TRPCError({ code: "NOT_FOUND", message: "No data" });
@@ -85,10 +84,9 @@ const appRouter = router({
         completed += task.completedCount * task.storyPoints;
         committed += task.targetCount * task.storyPoints;
       }
-      completedStoryPoints[month.id] = completed;
-      committedStoryPoints[month.id] = committed;
+      data.push({monthId: month.id, name: month.name, completed, committed});
     }
-    return { completedStoryPoints, committedStoryPoints };
+    return data;
   }),
   getTemplate: publicProcedure.query(async () => {
     const template = await await db.query.template.findFirst({

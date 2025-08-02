@@ -1,28 +1,14 @@
 import { Activity } from "lucide-react";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Legend } from "recharts";
-import { MOON_NAMES } from "../../shared/lunarPhase";
-
-function generateNumberBetween(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-const data = Array(10)
-  .fill(0)
-  .map((_, i) => {
-    const completed = generateNumberBetween(10, 70);
-    const committed = generateNumberBetween(completed, 100);
-    const monthName = MOON_NAMES[i];
-    const name = monthName.split(" ")[0];
-    return { name, completed, committed };
-  });
-
-function pickOne<T>(arr: readonly T[]): T {
-  if (arr.length === 0) throw new Error("have to provide a non-empty array");
-  const output = arr[Math.floor(Math.random() * arr.length)];
-  return output!;
-}
+import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Legend } from "recharts";
+import { useTask } from "@/contexts/TaskContext";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 export default function Goals() {
+  const { loadingTasks, statistics } = useTask();
+  if (loadingTasks) {
+    return <LoadingScreen />;
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex flex-row justify-between mb-8 gap-4">
@@ -44,14 +30,23 @@ export default function Goals() {
               Track your history of task completion versus commitment
             </p>
           </div>
-          <LineChart width={900} height={300} data={data}>
-            <CartesianGrid />
-            <Line dataKey="completed" />
-            <Line dataKey="committed" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Legend />
-          </LineChart>
+          <BarChart width={900} height={300} data={statistics}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <Bar dataKey="completed" fill="hsl(var(--primary))" />
+            <Bar dataKey="committed" fill="hsl(var(--secondary))" />
+            <XAxis
+              dataKey="name"
+              stroke="hsl(var(--muted-foreground))"
+              axisLine={{ stroke: "hsl(var(--border))" }}
+              tickLine={false}
+            />
+            <YAxis
+              stroke="hsl(var(--muted-foreground))"
+              axisLine={{ stroke: "hsl(var(--border))" }}
+              tickLine={false}
+            />
+            <Legend wrapperStyle={{ color: "hsl(var(--muted-foreground))", paddingTop: '20px' }} />
+          </BarChart>
         </div>
       </div>
     </div>

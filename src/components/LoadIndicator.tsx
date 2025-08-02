@@ -7,23 +7,21 @@ export function LoadIndicator() {
   const { inModificationWindow } = useLunarPhase();
   const { currentTasks, statistics, currentMonth } = useTask();
   const [ averageCompletedStoryPoints, setAverageCompletedStoryPoints ] = useState(0);
-  const [ averageCommittedStoryPoints, setAverageCommittedStoryPoints ] = useState(0);
 
   // Calculate average completed story points
   useEffect(() => {
     if (!statistics) return;
     let totalCompletedStoryPoints = 0;
-    const totalMonths = Object.keys(statistics.completedStoryPoints).length - 1;
-    Object.entries(statistics.completedStoryPoints).forEach(([monthId, completedStoryPoints]) => {
+    const totalMonths = statistics.length - 1;
+    statistics.forEach(({monthId, completed}) => {
       if (monthId !== currentMonth?.id) {
-        totalCompletedStoryPoints += completedStoryPoints;
+        totalCompletedStoryPoints += completed;
       }
     })
     setAverageCompletedStoryPoints(totalCompletedStoryPoints / totalMonths);
     console.log('averageCompletedStoryPoints', totalCompletedStoryPoints / totalMonths);
   }, [statistics, currentMonth]);
 
-  // const maxStoryPoints = averageCommittedStoryPoints;
   const GAUGE_VISIBLE_MAX = averageCompletedStoryPoints * 1.2; // Gauge visually extends to 120%
   const INDICATOR_WIDTH_PX = 12; // w-3 in Tailwind (0.75rem = 12px if 1rem=16px)
 
