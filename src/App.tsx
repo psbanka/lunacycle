@@ -14,6 +14,7 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Template from "./pages/Template";
 import Backlog from "./pages/Backlog";
+import Goals from "./pages/Goals";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -99,6 +100,17 @@ const AppCore = () => {
           <ProtectedRoute>
             <Layout>
               <Backlog />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/goals"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Goals />
             </Layout>
           </ProtectedRoute>
         }

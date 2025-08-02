@@ -64,3 +64,17 @@ export const calculateDaysUntilNextFullMoon = (): number => {
   }
   return DAYS_IN_LUNAR_CYCLE;
 };
+export const MOON_NAMES = [
+  "Wolf Moon",
+  "Snow Moon",
+  "Worm Moon",
+  "Pink Moon",
+  "Flower Moon",
+  "Strawberry Moon",
+  "Buck Moon",
+  "Sturgeon Moon",
+  "Corn Moon or Harvest Moon*",
+  "Hunter’s Moon",
+  "Beaver Moon",
+  "Cold Moon",
+];

@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { CalendarDays, LayoutTemplate, Layers } from "lucide-react";
+import { CalendarDays, LayoutTemplate, Layers, Activity } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 export default function NavBar() {
@@ -22,6 +22,11 @@ export default function NavBar() {
       href: "/backlog",
       label: "Backlog",
       icon: <Layers className="h-5 w-5" />,
+    },
+    {
+      href: "/goals",
+      label: "Goals",
+      icon: <Activity className="h-5 w-5" />,
     },
   ];
   

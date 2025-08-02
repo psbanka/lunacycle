@@ -4,6 +4,7 @@ import * as schema from "./schema";
 import { TRPCError } from "@trpc/server";
 import { fakerEN } from "@faker-js/faker";
 import { createTaskWithCategoryAndAssignments } from "./updateTasks.ts";
+import { MOON_NAMES } from "../shared/lunarPhase.ts";
 
 export async function createMonthFromActiveTemplate() {
   const template = await db.query.template.findFirst({
@@ -75,24 +76,10 @@ export async function createMonthFromActiveTemplate() {
 }
 
 function moonName() {
-  const MOON_LOOKUP = [
-    "Wolf Moon",
-    "Snow Moon",
-    "Worm Moon",
-    "Pink Moon",
-    "Flower Moon",
-    "Strawberry Moon",
-    "Buck Moon",
-    "Sturgeon Moon",
-    "Corn Moon or Harvest Moon*",
-    "Hunter’s Moon",
-    "Beaver Moon",
-    "Cold Moon",
-  ];
   // return the name of the moon based on the current month:
   const now = new Date();
   const month = now.getMonth();
-  return MOON_LOOKUP[month];
+  return MOON_NAMES[month];
 }
 
 async function createNewMonth() {
