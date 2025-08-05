@@ -45,7 +45,7 @@ export default function Goals() {
   }
 
   function handleToggleCommitted(templateTaskId: string, task: Task, targetCount: number) {
-    if (committedTasks.find((c) => c.id === task.id)) {
+    if (committedTasks.find((c) => c.id === templateTaskId)) {
       setCommittedTasks((prev) => prev.filter((c) => c.id !== templateTaskId));
     } else {
       setCommittedTasks((prev) => [
@@ -63,8 +63,6 @@ export default function Goals() {
   const totalTasksCount = getTaskIds(statistics).length;
   const readyToStartCycle = totalTasksCount === committedTasks.length;
   const allVariant = readyToStartCycle ? "destructive" : "outline";
-
-  console.log('>>>>>>>', committedTasks)
 
   return (
     <div className="max-w-6xl mx-auto">
