@@ -1,7 +1,8 @@
-import { Activity } from "lucide-react";
+import { Activity, ShieldCheck } from "lucide-react";
+import { useState } from "react";
 import {
-  AreaChart,
-  Area,
+  LineChart,
+  Line,
   BarChart,
   Bar,
   CartesianGrid,
@@ -12,22 +13,72 @@ import {
 } from "recharts";
 import { useTask } from "@/contexts/TaskContext";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { Button } from "@/components/ui/button";
+import RecurringTaskGoal from "@/components/RecurringTaskGoal";
+import { inferProcedureOutput } from "@trpc/server";
+import type { AppRouter } from "../../server/index";
+
+const PLANNING = true;
+
+function getTaskIds(
+  statistics: inferProcedureOutput<AppRouter["getStatistics"]> | undefined
+) {
+  if (!statistics) return [];
+  return Object.values(statistics.categoryData)
+    .flatMap((cd) => Object.values(cd.recurringTaskInfo ?? {}))
+    .flatMap((rtd) => rtd.task.id);
+}
 
 export default function Goals() {
   const { loadingTasks, statistics } = useTask();
+  const [committedTasks, setCommittedTasks] = useState<string[]>([]);
+
   if (loadingTasks) {
     return <LoadingScreen />;
   }
 
+  function handleToggleCommitted(taskId: string) {
+    if (committedTasks.includes(taskId)) {
+      setCommittedTasks((prev) => prev.filter((id) => id !== taskId));
+    } else {
+      setCommittedTasks((prev) => [...prev, taskId]);
+    }
+  }
+
+  function commitToAll() {
+    if (readyToStartCycle) {
+      setCommittedTasks([]);
+      return;
+    }
+    const allTaskIds = getTaskIds(statistics);
+    setCommittedTasks(allTaskIds);
+  }
+
+  const totalTasksCount = getTaskIds(statistics).length;
+  const readyToStartCycle = totalTasksCount === committedTasks.length;
+  const allVariant = readyToStartCycle ? "default" : "outline";
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex flex-row justify-between mb-8 gap-4">
-        <div>
-          <h1 className="text-left text-3xl font-bold">Goals</h1>
-          <p className="text-muted-foreground">
-            Set and track your long-term goals.
-          </p>
-        </div>
+        {PLANNING ? (
+          <div>
+            <div className="flex flex-row justify-between gap-4 align-center">
+              <h1 className="text-left text-3xl font-bold">Commit</h1>
+              <Button disabled={!readyToStartCycle}>Start Cycle</Button>
+            </div>
+            <p className="text-muted-foreground">
+              Set and track the coming cycle!
+            </p>
+          </div>
+        ) : (
+          <div>
+            <h1 className="text-left text-3xl font-bold">Goals</h1>
+            <p className="text-muted-foreground">
+              Review your long-term goals.
+            </p>
+          </div>
+        )}
         <div className="flex items-center">
           <Activity className="h-8 w-8" />
         </div>
@@ -66,29 +117,53 @@ export default function Goals() {
         </div>
       </div>
 
-      <div className="text-center py-10 glass-card rounded-lg">
+      <div className="text-center my-10 py-10 glass-card rounded-lg">
         <div className="flex-row items-center justify-stretch">
           <div>
-            <h2 className="text-2xl font-semibold">By Category</h2>
+            <h2 className="text-2xl font-semibold mr-5">By Category &nbsp;
+            {PLANNING && (
+              <Button type="button" onClick={commitToAll} size="icon" variant={allVariant}>
+                <ShieldCheck/>
+              </Button>
+            )}</h2>
           </div>
-          {statistics?.categoryData.map((category, index) => (
-            <div key={category.categoryId} className="flex justify-between py-5 px-10">
-              <h1 className="text-xl font-semibold">{category.name}</h1>
-              <AreaChart width={600} height={50} data={category?.data}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
-                />
-                <Area dataKey="completed" fill="hsl(var(--primary))" />
-                <Area dataKey="committed" fill="hsl(var(--muted-foreground))" />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  axisLine={{ stroke: "hsl(var(--border))" }}
-                  tickLine={false}
-                />
-              </AreaChart>
-            </div>
-          ))}
+          <div className="mt-6 space-y-8">
+            {statistics?.categoryData.map((category) => (
+              <div key={category.categoryId}>
+                <div className="flex justify-between items-center py-5 px-10">
+                  <h3 className="text-xl font-semibold">{category.name}</h3>
+                  <LineChart width={400} height={40} data={category?.data}>
+                    <Line
+                      type="monotone"
+                      dataKey="completed"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </div>
+                {category.recurringTaskInfo && (
+                  <div className="px-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(category.recurringTaskInfo).map(
+                      ([key, recurringTask]) => (
+                        <RecurringTaskGoal
+                          key={key}
+                          recurringTask={recurringTask}
+                          committed={committedTasks.includes(
+                            recurringTask.task.id
+                          )}
+                          toggleCommitted={() =>
+                            handleToggleCommitted(recurringTask.task.id)
+                          }
+                          planning={PLANNING}
+                        />
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

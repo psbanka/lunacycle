@@ -22,15 +22,21 @@ import {
   updateUser,
 } from "./updateUsers.ts";
 
-type VelocityData = Array<{
+export type VelocityData = Array<{
   monthId: string;
   name: string;
   completed: number;
   committed: number;
 }>;
 
-async function getVelocityByMonth(categoryId?: string) {
+export type RecurringTaskData = {
+  task: schema.Task;
+  history: VelocityData;
+};
+
+async function getVelocityByMonth(categoryId?: string): Promise<[VelocityData, Record<string, RecurringTaskData>]> {
   const overall = [] as VelocityData;
+  const includedTasks = {} as Record<string, RecurringTaskData>;
   const months = await db.query.month.findMany({});
   if (!months) {
     throw new TRPCError({ code: "NOT_FOUND", message: "No data" });
@@ -53,6 +59,20 @@ async function getVelocityByMonth(categoryId?: string) {
     for (const task of tasks) {
       completed += task.completedCount * task.storyPoints;
       committed += task.targetCount * task.storyPoints;
+      if (task.templateTaskId) {
+        if (!includedTasks[task.templateTaskId]) {
+          includedTasks[task.templateTaskId] = {
+            task,
+            history: [],
+          };
+        }
+        includedTasks[task.templateTaskId].history.push({
+          monthId: month.id,
+          name: month.name,
+          completed: task.completedCount * task.storyPoints,
+          committed: task.targetCount * task.storyPoints,
+        });
+      }
     }
     overall.push({
       monthId: month.id,
@@ -61,7 +81,7 @@ async function getVelocityByMonth(categoryId?: string) {
       committed,
     });
   }
-  return overall;
+  return [overall, includedTasks];
 }
 
 const appRouter = router({
@@ -106,30 +126,25 @@ const appRouter = router({
     }),
     */
   getStatistics: publicProcedure.query(async () => {
-    const overall = await getVelocityByMonth();
+    const [ overall ] = await getVelocityByMonth();
 
     // category data
     type CategoryData = Array<{
       name: string;
       categoryId: string;
       data: VelocityData;
-      recurringTaskInfo?: Array<{
-        name: string;
-        taskId: string;
-        data: VelocityData;
-      }>;
+      recurringTaskInfo?: Record<string, RecurringTaskData>;
     }>;
     const categoryData = [] as CategoryData;
     const categories = await db.query.category.findMany({});
     for (const category of categories) {
-      const name = category.name;
-      const id = category.id;
-      const categoryByMonth = await getVelocityByMonth(id);
+      const [ categoryByMonth, includedTasks] = await getVelocityByMonth(category.id);
 
       categoryData.push({
         categoryId: category.id,
         name: category.name,
         data: categoryByMonth,
+        recurringTaskInfo: includedTasks,
       });
     }
 
