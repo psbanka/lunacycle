@@ -91,7 +91,9 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   }
 
   // Mutations -----------------------------------------------------
-  const startCycleOptions = trpc.startCycle.mutationOptions();
+  const startCycleOptions = trpc.startCycle.mutationOptions({
+    onSuccess: async () => clearCache(["month", "tasks"]),
+  });
   const startCycleMutation = useMutation(startCycleOptions);
 
   const completeTaskOptions = trpc.completeTask.mutationOptions({
