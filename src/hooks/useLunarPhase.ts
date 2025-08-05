@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getLunarPhase, calculateDaysUntilNextFullMoon, type MoonPhase } from "../../shared/lunarPhase";
 
-export default function useLunarPhase() {
+export default function useLunarPhase(endDate?: string) {
   const [daysRemaining, setDaysRemaining] = useState(0);
   const [phase, setPhase] = useState<MoonPhase>('full-moon');
   const [phaseName, setPhaseName] = useState('Full Moon');
@@ -15,9 +15,16 @@ export default function useLunarPhase() {
     const { phase: currentPhase, name, inWindow } = getLunarPhase();
     setPhase(currentPhase);
     setPhaseName(name);
-    setDaysRemaining(calculateDaysUntilNextFullMoon());
+    if (endDate) {
+      const endDateObj = new Date(endDate);
+      const timeUntilEnd = endDateObj.getTime() - today.getTime();
+      const daysUntilEnd = Math.ceil(timeUntilEnd / (1000 * 3600 * 24));
+      setDaysRemaining(daysUntilEnd);
+    } else {
+      setDaysRemaining(calculateDaysUntilNextFullMoon());
+    }
     setInModificationWindow(inWindow)
-  }, [currentDate]);
+  }, [currentDate, endDate, today]);
   
   return { phase, phaseName, daysRemaining, inModificationWindow };
 }

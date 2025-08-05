@@ -11,6 +11,7 @@ import type { AppRouter } from "../../server/index";
 import type { User, Task, TemplateTask, Category } from "../../server/schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/lib/trpc";
+import { StartCycleType, RecurringTask } from "../../server/index.ts";
 // import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
 
@@ -90,8 +91,8 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   }
 
   // Mutations -----------------------------------------------------
-  const createMonthFromTemplateOptions = trpc.createMonthFromTemplate.mutationOptions();
-  const createMonthFromTemplateMutation = useMutation(createMonthFromTemplateOptions);
+  const startCycleOptions = trpc.startCycle.mutationOptions();
+  const startCycleMutation = useMutation(startCycleOptions);
 
   const completeTaskOptions = trpc.completeTask.mutationOptions({
     onSuccess: async () => clearCache(["month", "tasks"])
@@ -189,6 +190,12 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
     return newUser;
   };
 
+  const startCycle = async (props: typeof StartCycleType.infer) => {
+    if (monthQuery.isError || monthQuery.isLoading) return;
+    await startCycleMutation.mutateAsync(props);
+    toast.success("✨ New cycle created!");
+  };
+
   const completeTask = async (taskId: string) => {
     if (monthQuery.isError || monthQuery.isLoading) return;
     await completeTaskMutation.mutateAsync({ taskId });
@@ -279,7 +286,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
         templateTasks: templateTasksQuery.data,
         loadingTasks: monthQuery.isLoading,
         backlogTasks: backlogQuery.data,
-        createMonthFromTemplate: createMonthFromTemplateMutation.mutate,
+        startCycle,
         completeTask,
         addTask,
         addTemplateTask,
@@ -311,7 +318,7 @@ type TaskContextType = {
 
   // FIXME: Rename to 'loadingData'
   loadingTasks: boolean;
-  createMonthFromTemplate: () => void;
+  startCycle: (props: typeof StartCycleType.infer) => void;
   completeTask: (taskId: string) => void;
   addTask: (
     task: Omit<Task, "id" | "createdAt" | "templateTaskId">,

@@ -5,11 +5,13 @@ import { TRPCError } from "@trpc/server";
 import { fakerEN } from "@faker-js/faker";
 import { createTaskWithCategoryAndAssignments } from "./updateTasks.ts";
 import { MOON_NAMES } from "../shared/lunarPhase.ts";
+import { StartCycleType } from "./index.ts";
 
-export async function createMonthFromActiveTemplate() {
+export async function createMonthFromActiveTemplate(props: typeof StartCycleType.infer) {
   const template = await db.query.template.findFirst({
     where: eq(schema.template.isActive, 1),
   });
+  const { recurringTasks, backlogTasks } = props;
 
   if (!template) {
     throw new TRPCError({
@@ -24,6 +26,7 @@ export async function createMonthFromActiveTemplate() {
 
   // Move all non-template tasks to the backlog
   if (oldMonth?.id) {
+    // TODO: address backlogTasks
     console.log(`🚚 Move all the incomplete non-template tasks from ${oldMonth.name} to the backlog...`);
     const tasksToMove = await db.query.task.findMany({
       where: (tasks, { eq, and, isNull }) => eq(schema.task.monthId, oldMonth.id)
@@ -58,17 +61,23 @@ export async function createMonthFromActiveTemplate() {
   for (const templateTask of templateTasks) {
     const userIds = templateTask.templateTaskUsers.map((ttu) => ttu.userId);
     console.log(`...${templateTask.title}`);
-    await createTaskWithCategoryAndAssignments({
-      title: templateTask.title,
-      description: templateTask.description,
-      storyPoints: templateTask.storyPoints,
-      targetCount: templateTask.targetCount,
-      categoryId: templateTask.categoryId,
-      userIds,
-      monthId: month?.id ?? null,
-      templateTaskId: templateTask.id,
-      isFocused: 0,
-    });
+    const selectedRecurringTask = recurringTasks.find((rt) => rt.id === templateTask.id);
+    if (selectedRecurringTask) {
+      await createTaskWithCategoryAndAssignments({
+        title: templateTask.title,
+        description: templateTask.description,
+        storyPoints: templateTask.storyPoints,
+        targetCount: selectedRecurringTask.targetCount,
+        categoryId: templateTask.categoryId,
+        userIds,
+        monthId: month?.id ?? null,
+        templateTaskId: templateTask.id,
+        isFocused: 0,
+      });
+    } else {
+      console.log('🏈 Skipping un-selected recurring task', templateTask.title, templateTask.id);
+      recurringTasks.map((rt) => rt.id).forEach(x => console.log(x))
+    }
 
   }
 

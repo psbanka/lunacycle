@@ -19,7 +19,9 @@ try {
   // even though this function is called `createMonthFromActiveTemplate`, 
   // it will ALSO properly deal with the old month: making it inactive and
   // moving all its tasks to the backlog!
-  await createMonthFromActiveTemplate();
+
+  // FIXME: THIS IS BROKEN. Must add to the arrays.
+  await createMonthFromActiveTemplate({recurringTasks: [], backlogTasks: []});
 
   console.log(`Done!`)
 } catch (thrown) {

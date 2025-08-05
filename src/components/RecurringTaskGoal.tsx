@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 interface RecurringTaskGoalProps {
   recurringTask: RecurringTaskData;
   committed: boolean;
-  toggleCommitted: () => void;
+  toggleCommitted: (number) => void;
   planning: boolean;
 }
 
@@ -31,9 +31,10 @@ const ICON_LOOKUP = {
 };
 
 const roundToNearestMultipleStoryPoint = (task: Task, target: number) => {
-  const storyPoint = task.storyPoints;
-  return target + (target % storyPoint);
-}
+  const storyPoints = task.storyPoints;
+  if (storyPoints === 0) return target;
+  return target + (target % storyPoints);
+};
 
 const determineSuggestedTarget = (history: VelocityData, task: Task) => {
   /**
@@ -60,7 +61,8 @@ const determineSuggestedTarget = (history: VelocityData, task: Task) => {
 };
 
 const RecurringTaskGoal = (props: RecurringTaskGoalProps) => {
-  const [committedGoal, setCommittedGoal] = useState<number|undefined>();
+  const [committedGoal, setCommittedGoal] = useState<number | undefined>();
+  const [disabled, setDisabled] = useState<boolean>(false);
   const { task, history } = props.recurringTask;
 
   const getTrend = ():
@@ -103,22 +105,33 @@ const RecurringTaskGoal = (props: RecurringTaskGoalProps) => {
       ? "bg-green-100/10 border-green-100/20 text-primary"
       : "bg-muted/30 border-border text-muted-foreground";
 
-  const committedClasses = props.planning && props.committed ? "bg-green-500/10 border-green-500/20" : "";
+  const committedClasses =
+    props.planning && props.committed
+      ? "bg-green-500/10 border-green-500/20"
+      : "";
 
   const TrendIcon = ICON_LOOKUP[trend];
 
   const targetValue = task.targetCount;
-  const suggestedTargetValue = determineSuggestedTarget(
-    history,
-    task
+  const suggestedTargetValue = determineSuggestedTarget(history, task);
+  const roundedTargetValue = roundToNearestMultipleStoryPoint(
+    task,
+    suggestedTargetValue
   );
-  const roundedTargetValue = roundToNearestMultipleStoryPoint(task, suggestedTargetValue);
 
   function updateCommittedGoal(upDown: "up" | "down") {
+    if (disabled) return;
     const modifier = upDown === "up" ? 1 : -1;
-    const newCommittedGoal = (committedGoal ?? roundedTargetValue) + modifier * task.storyPoints;
+    const newCommittedGoal =
+      (committedGoal ?? roundedTargetValue) + modifier * task.storyPoints;
     setCommittedGoal(newCommittedGoal);
   }
+
+  const handleCommit = () => {
+    props.toggleCommitted(committedGoal ?? roundedTargetValue);
+    setDisabled((prev) => !prev);
+  };
+
 
   return (
     <div
@@ -136,13 +149,30 @@ const RecurringTaskGoal = (props: RecurringTaskGoalProps) => {
       </div>
       {props.planning && (
         <div className="flex items-center gap-1">
-          <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => updateCommittedGoal("up")}>
-            <CirclePlus className="h-3 w-3"/>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-6 w-6"
+            disabled={disabled}
+            onClick={() => updateCommittedGoal("up")}>
+            <CirclePlus className="h-3 w-3" />
           </Button>
-          <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => updateCommittedGoal("down")} >
-            <CircleMinus className="h-3 w-3"/>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-6 w-6"
+            disabled={disabled}
+            onClick={() => updateCommittedGoal("down")}>
+            <CircleMinus className="h-3 w-3" />
           </Button>
-          <Button type="button" variant={props.committed ? "default" : "outline"} size="icon" className="h-6 w-6" onClick={props.toggleCommitted}>
+          <Button
+            type="button"
+            variant={props.committed ? "default" : "outline"}
+            size="icon"
+            className="h-6 w-6"
+            onClick={handleCommit}>
             <CircleCheckBig className="h-3 w-3" />
           </Button>
         </div>

@@ -34,7 +34,9 @@ export type RecurringTaskData = {
   history: VelocityData;
 };
 
-async function getVelocityByMonth(categoryId?: string): Promise<[VelocityData, Record<string, RecurringTaskData>]> {
+async function getVelocityByMonth(
+  categoryId?: string
+): Promise<[VelocityData, Record<string, RecurringTaskData>]> {
   const overall = [] as VelocityData;
   const includedTasks = {} as Record<string, RecurringTaskData>;
   const months = await db.query.month.findMany({});
@@ -84,6 +86,12 @@ async function getVelocityByMonth(categoryId?: string): Promise<[VelocityData, R
   return [overall, includedTasks];
 }
 
+export const RecurringTask = type({ id: "string", targetCount: "number" });
+export const StartCycleType = type({
+  recurringTasks: RecurringTask.array(),
+  backlogTasks: "string[]",
+});
+
 const appRouter = router({
   login,
   getUsers: publicProcedure.query(async () => {
@@ -126,7 +134,7 @@ const appRouter = router({
     }),
     */
   getStatistics: publicProcedure.query(async () => {
-    const [ overall ] = await getVelocityByMonth();
+    const [overall] = await getVelocityByMonth();
 
     // category data
     type CategoryData = Array<{
@@ -138,7 +146,9 @@ const appRouter = router({
     const categoryData = [] as CategoryData;
     const categories = await db.query.category.findMany({});
     for (const category of categories) {
-      const [ categoryByMonth, includedTasks] = await getVelocityByMonth(category.id);
+      const [categoryByMonth, includedTasks] = await getVelocityByMonth(
+        category.id
+      );
 
       categoryData.push({
         categoryId: category.id,
@@ -150,15 +160,18 @@ const appRouter = router({
 
     return { overall, categoryData };
   }),
+  startCycle: publicProcedure
+    .input(StartCycleType)
+    .mutation(async ({ input }) => {
+      const { recurringTasks, backlogTasks } = input;
+      return await createMonthFromActiveTemplate(input);
+    }),
   getTemplate: publicProcedure.query(async () => {
     const template = await await db.query.template.findFirst({
       where: eq(schema.template.isActive, 1),
     });
     return template;
   }),
-  createMonthFromTemplate: publicProcedure.mutation(
-    createMonthFromActiveTemplate
-  ),
   getActiveMonth: publicProcedure.query(async () => {
     const currentMonth = await db.query.month.findFirst({
       where: eq(schema.month.isActive, 1),

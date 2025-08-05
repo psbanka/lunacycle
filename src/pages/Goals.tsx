@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import RecurringTaskGoal from "@/components/RecurringTaskGoal";
 import { inferProcedureOutput } from "@trpc/server";
 import type { AppRouter } from "../../server/index";
+import type { Task } from "../../server/schema";
 
 const PLANNING = true;
 
@@ -29,34 +30,41 @@ function getTaskIds(
     .flatMap((rtd) => rtd.task.id);
 }
 
+type CommittedTask = {
+  id: string;
+  title: string;
+  targetCount: number;
+};
+
 export default function Goals() {
-  const { loadingTasks, statistics } = useTask();
-  const [committedTasks, setCommittedTasks] = useState<string[]>([]);
+  const { loadingTasks, statistics, startCycle } = useTask();
+  const [committedTasks, setCommittedTasks] = useState<CommittedTask[]>([]);
 
   if (loadingTasks) {
     return <LoadingScreen />;
   }
 
-  function handleToggleCommitted(taskId: string) {
-    if (committedTasks.includes(taskId)) {
-      setCommittedTasks((prev) => prev.filter((id) => id !== taskId));
+  function handleToggleCommitted(templateTaskId: string, task: Task, targetCount: number) {
+    if (committedTasks.find((c) => c.id === task.id)) {
+      setCommittedTasks((prev) => prev.filter((c) => c.id !== templateTaskId));
     } else {
-      setCommittedTasks((prev) => [...prev, taskId]);
+      setCommittedTasks((prev) => [
+        ...prev,
+        { id: templateTaskId, title: task.title, targetCount },
+      ]);
     }
   }
 
-  function commitToAll() {
-    if (readyToStartCycle) {
-      setCommittedTasks([]);
-      return;
-    }
-    const allTaskIds = getTaskIds(statistics);
-    setCommittedTasks(allTaskIds);
+  async function handleStartCycle() {
+    const backlogTasks = [];
+    await startCycle({ recurringTasks: committedTasks, backlogTasks });
   }
 
   const totalTasksCount = getTaskIds(statistics).length;
   const readyToStartCycle = totalTasksCount === committedTasks.length;
-  const allVariant = readyToStartCycle ? "default" : "outline";
+  const allVariant = readyToStartCycle ? "destructive" : "outline";
+
+  console.log('>>>>>>>', committedTasks)
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -65,7 +73,12 @@ export default function Goals() {
           <div>
             <div className="flex flex-row justify-between gap-4 align-center">
               <h1 className="text-left text-3xl font-bold">Commit</h1>
-              <Button disabled={!readyToStartCycle}>Start Cycle</Button>
+              <Button
+                disabled={!readyToStartCycle}
+                onClick={handleStartCycle}
+                variant={allVariant}>
+                Start Cycle
+              </Button>
             </div>
             <p className="text-muted-foreground">
               Set and track the coming cycle!
@@ -120,12 +133,7 @@ export default function Goals() {
       <div className="text-center my-10 py-10 glass-card rounded-lg">
         <div className="flex-row items-center justify-stretch">
           <div>
-            <h2 className="text-2xl font-semibold mr-5">By Category &nbsp;
-            {PLANNING && (
-              <Button type="button" onClick={commitToAll} size="icon" variant={allVariant}>
-                <ShieldCheck/>
-              </Button>
-            )}</h2>
+            <h2 className="text-2xl font-semibold mr-5">By Category</h2>
           </div>
           <div className="mt-6 space-y-8">
             {statistics?.categoryData.map((category) => (
@@ -149,11 +157,17 @@ export default function Goals() {
                         <RecurringTaskGoal
                           key={key}
                           recurringTask={recurringTask}
-                          committed={committedTasks.includes(
-                            recurringTask.task.id
-                          )}
-                          toggleCommitted={() =>
-                            handleToggleCommitted(recurringTask.task.id)
+                          committed={
+                            committedTasks.find(
+                              (ct) => ct.id === key
+                            ) != null
+                          }
+                          toggleCommitted={(targetCount: number) =>
+                            handleToggleCommitted(
+                              key,
+                              recurringTask.task,
+                              targetCount
+                            )
                           }
                           planning={PLANNING}
                         />

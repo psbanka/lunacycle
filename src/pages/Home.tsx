@@ -2,8 +2,6 @@ import { useTask } from "@/contexts/TaskContext";
 import LunarPhase from "@/components/Moon";
 import CategorySection from "@/components/CategorySection";
 import TaskCard from "@/components/TaskCard";
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import { LoadIndicator } from "@/components/LoadIndicator";
@@ -17,7 +15,6 @@ export default function Home() {
     currentTasks,
     categories,
     loadingTasks,
-    createMonthFromTemplate,
   } = useTask();
   const { inModificationWindow } = useLunarPhase();
 
@@ -33,16 +30,7 @@ export default function Home() {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold">No Current Month Exists</h1>
-            <div className="mb-8 flex flex-wrap gap-3">
-              <Button
-                variant="outline"
-                className="gap-1"
-                onClick={() => createMonthFromTemplate()}>
-                <PlusCircle className="h-4 w-4" />
-                Create Month
-              </Button>
-            </div>
+            <h1 className="text-3xl font-bold">No Current Month Exists. Go to Planning screen to create</h1>
           </div>
         </div>
       </div>

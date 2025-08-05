@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useLunarPhase from "@/hooks/useLunarPhase";
+import { useTask } from "@/contexts/TaskContext";
 
 type LunarCycleProgressBandProps = {
   currentDate?: Date;
@@ -10,8 +11,9 @@ export default function LunarCycleProgressBand({
   currentDate,
   className,
 }: LunarCycleProgressBandProps) {
+  const { currentMonth, loadingTasks } = useTask();
   const [cyclePosition, setCyclePosition] = useState(0);
-  const { daysRemaining, phaseName } = useLunarPhase();
+  const { daysRemaining, phaseName } = useLunarPhase(currentMonth?.endDate);
 
   // Calculate lunar cycle position
   useEffect(() => {
