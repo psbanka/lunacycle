@@ -138,8 +138,7 @@ export function EditTaskDialog({
             values.userIds
           );
         } // FIXME: THESE USE-CASES ARE BROKEN
-      }
-      /*else if (categoryId) {
+      } else if (isTemplateTask === false) {
         await addTask(
           {
             title: values.title,
@@ -153,7 +152,7 @@ export function EditTaskDialog({
           },
           userIds
         );
-      } else if (isTemplateTask) {
+      } else {
         await addTemplateTask(
           {
             title: values.title,
@@ -165,7 +164,6 @@ export function EditTaskDialog({
           userIds
         );
       }
-        */
 
       // Reset form and close dialog
       form.reset();
