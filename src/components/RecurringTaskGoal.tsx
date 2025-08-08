@@ -30,12 +30,6 @@ const ICON_LOOKUP = {
   neutral: Minus,
 };
 
-const roundToNearestMultipleStoryPoint = (task: Task, target: number) => {
-  const storyPoints = task.storyPoints;
-  if (storyPoints === 0) return target;
-  return target + (target % storyPoints);
-};
-
 const determineSuggestedTarget = (history: VelocityData, task: Task) => {
   /**
    * Strategy:
@@ -54,7 +48,7 @@ const determineSuggestedTarget = (history: VelocityData, task: Task) => {
 
   const average =
     completedArray.reduce((a, b) => a + b, 0) / completedArray.length;
-  if (lastHistory < average) return average;
+  if (lastHistory < average) return Math.floor(average);
 
   if (lastHistory < task.targetCount) return task.targetCount;
   return task.targetCount + 1;
@@ -114,21 +108,17 @@ const RecurringTaskGoal = (props: RecurringTaskGoalProps) => {
 
   const targetValue = task.targetCount;
   const suggestedTargetValue = determineSuggestedTarget(history, task);
-  const roundedTargetValue = roundToNearestMultipleStoryPoint(
-    task,
-    suggestedTargetValue
-  );
 
   function updateCommittedGoal(upDown: "up" | "down") {
     if (disabled) return;
     const modifier = upDown === "up" ? 1 : -1;
     const newCommittedGoal =
-      (committedGoal ?? roundedTargetValue) + modifier * task.storyPoints;
+      (committedGoal ?? suggestedTargetValue) + modifier;
     setCommittedGoal(newCommittedGoal);
   }
 
   const handleCommit = () => {
-    props.toggleCommitted(committedGoal ?? roundedTargetValue);
+    props.toggleCommitted(committedGoal ?? suggestedTargetValue);
     setDisabled((prev) => !prev);
   };
 
@@ -145,7 +135,7 @@ const RecurringTaskGoal = (props: RecurringTaskGoalProps) => {
       <div className="flex flex-row items-center gap-2">
         <h2>{targetValue}</h2>
         <ArrowBigRightDash />
-        <h2>{committedGoal ?? roundedTargetValue}</h2>
+        <h2>{committedGoal ?? suggestedTargetValue}</h2>
       </div>
       {props.planning && (
         <div className="flex items-center gap-1">

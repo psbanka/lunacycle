@@ -61,13 +61,13 @@ export async function createMonthFromActiveTemplate(props: typeof StartCycleType
   for (const templateTask of templateTasks) {
     const userIds = templateTask.templateTaskUsers.map((ttu) => ttu.userId);
     console.log(`...${templateTask.title}`);
-    const selectedRecurringTask = recurringTasks.find((rt) => rt.id === templateTask.id);
-    if (selectedRecurringTask) {
+    if (recurringTasks.length == 0) {
+      console.log("🤖 Generating strictly from template")
       await createTaskWithCategoryAndAssignments({
         title: templateTask.title,
         description: templateTask.description,
         storyPoints: templateTask.storyPoints,
-        targetCount: selectedRecurringTask.targetCount,
+        targetCount: templateTask.targetCount,
         categoryId: templateTask.categoryId,
         userIds,
         monthId: month?.id ?? null,
@@ -75,8 +75,23 @@ export async function createMonthFromActiveTemplate(props: typeof StartCycleType
         isFocused: 0,
       });
     } else {
-      console.log('🏈 Skipping un-selected recurring task', templateTask.title, templateTask.id);
-      recurringTasks.map((rt) => rt.id).forEach(x => console.log(x))
+      const selectedRecurringTask = recurringTasks.find((rt) => rt.id === templateTask.id);
+      if (selectedRecurringTask) {
+        await createTaskWithCategoryAndAssignments({
+          title: templateTask.title,
+          description: templateTask.description,
+          storyPoints: templateTask.storyPoints,
+          targetCount: selectedRecurringTask.targetCount,
+          categoryId: templateTask.categoryId,
+          userIds,
+          monthId: month?.id ?? null,
+          templateTaskId: templateTask.id,
+          isFocused: 0,
+        });
+      } else {
+        console.log('🏈 Skipping un-selected recurring task', templateTask.title, templateTask.id);
+        recurringTasks.map((rt) => rt.id).forEach(x => console.log(x))
+      }
     }
 
   }
