@@ -1,6 +1,6 @@
 import { useTask } from "@/contexts/TaskContext";
 import { cn } from "@/lib/utils";
-import { Trash, CheckSquare, ArrowUpToLine } from "lucide-react";
+import { Trash, PencilIcon, ArrowUpToLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { EditTaskDialog } from "./EditTaskDialog";
@@ -69,8 +69,7 @@ export default function BacklogTaskCard({ taskId, className }: TaskCardProps) {
           isFocused && "ring-2 ring-primary/70",
           className
         )}
-        onClick={handleEditClick}>
-        {/* Task Details */}
+        >
         <div className="flex flex-col h-full justify-between">
           <div className="flex justify-between items-start mb-2">
             <h3
@@ -98,6 +97,11 @@ export default function BacklogTaskCard({ taskId, className }: TaskCardProps) {
               </div>
 
               <div className="flex gap-2">
+                <Button
+                  onClick={handleEditClick}
+                  className="text-xs gap-1 hover:bg-primary/10">
+                  <PencilIcon className="h-3.5 w-3.5" />
+                </Button>
                 <Button
                   onClick={promoteToMonth}
                   className="text-xs gap-1 hover:bg-primary/10">
