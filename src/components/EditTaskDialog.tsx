@@ -108,35 +108,38 @@ export function EditTaskDialog({
     setIsSubmitting(true);
     const userIds = values.userIds;
     try {
-      if (isEditingId && categoryId) {
-        await updateTask(
-          isEditingId,
-          {
-            title: values.title,
-            description: values.description || null,
-            storyPoints: values.storyPoints,
-            targetCount: values.targetCount,
-            completedCount: values.completedCount || 0,
-            isFocused: values.isFocused || 0,
-            monthId: values.monthId,
-            templateTaskId: null,
-            categoryId: values.categoryId,
-          },
-          values.userIds
-        );
-      } else if (isEditingId && isTemplateTask) {
-        await updateTemplateTask(
-          isEditingId,
-          {
-            title: values.title,
-            description: values.description || null,
-            storyPoints: values.storyPoints,
-            targetCount: values.targetCount,
-            categoryId: values.categoryId,
-          },
-          values.userIds
-        );
-      } else if (categoryId) {
+      if (isEditingId) {
+        if (isTemplateTask === false) {
+          await updateTask(
+            isEditingId,
+            {
+              title: values.title,
+              description: values.description || null,
+              storyPoints: values.storyPoints,
+              targetCount: values.targetCount,
+              completedCount: values.completedCount || 0,
+              isFocused: values.isFocused || 0,
+              monthId: values.monthId,
+              templateTaskId: null,
+              categoryId: values.categoryId,
+            },
+            values.userIds
+          );
+        } else {
+          await updateTemplateTask(
+            isEditingId,
+            {
+              title: values.title,
+              description: values.description || null,
+              storyPoints: values.storyPoints,
+              targetCount: values.targetCount,
+              categoryId: values.categoryId,
+            },
+            values.userIds
+          );
+        } // FIXME: THESE USE-CASES ARE BROKEN
+      }
+      /*else if (categoryId) {
         await addTask(
           {
             title: values.title,
@@ -162,6 +165,7 @@ export function EditTaskDialog({
           userIds
         );
       }
+        */
 
       // Reset form and close dialog
       form.reset();
@@ -207,8 +211,7 @@ export function EditTaskDialog({
           isMobile
             ? "h-screen w-screen max-w-full fixed top-0 left-0 m-0 p-4 rounded-none border-none translate-x-0 translate-y-0 data-[state=open]:animate-none data-[state=closed]:animate-none"
             : "sm:max-w-[425px]"
-        )}
-      >
+        )}>
         {/* On mobile, the DialogPrimitive.Close 'X' button (if part of base DialogContent) will be at top-right. */}
         {/* The form content will scroll within this full-screen container. */}
         <DialogHeader>
