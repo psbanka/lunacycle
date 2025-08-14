@@ -1,69 +1,30 @@
-# Welcome to your Lovable project
+# LunaCycle
 
-## Project info
+## Running in Production with PM2
 
-**URL**: https://lovable.dev/projects/87b997ed-118a-4bd8-8744-a7ed4c5251c9
+This project uses [PM2](https://pm2.keymetrics.io/) to manage the running process in a production-like environment.
 
-## How can I edit this code?
+1.  **Install PM2 globally** (if you haven't already):
+    ```bash
+    pnpm add -g pm2
+    ```
 
-There are several ways of editing your application.
+2.  **Build the server executable:**
 
-**Use Lovable**
+    This command compiles the TypeScript server into a single, standalone executable. This is ideal for low-powered environments as it minimizes runtime overhead.
+    ```bash
+    pnpm run build:server
+    ```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/87b997ed-118a-4bd8-8744-a7ed4c5251c9) and start prompting.
+3.  **Start the application using PM2:**
 
-Changes made via Lovable will be committed automatically to this repo.
+    This project includes an `ecosystem.config.js` file that is configured to run the compiled server executable.
+    ```bash
+    pm2 start ecosystem.config.js
+    ```
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/87b997ed-118a-4bd8-8744-a7ed4c5251c9) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+4.  **(Optional) Configure PM2 to start on system boot:**
+    ```bash
+    pm2 startup
+    ```
+    Follow the instructions output by the command.
