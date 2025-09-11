@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createTRPCClient, httpBatchLink } from "@trpc/client";
+// import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { useState } from "react";
 import { TRPCProvider, useTRPC } from "./lib/trpc";
 import type { AppRouter } from "../server";
@@ -18,6 +18,7 @@ import Goals from "./pages/Goals";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { trpc } from "./api";
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { env } from "./env";
 import "./App.css";
@@ -136,14 +137,17 @@ const AppCore = () => {
 const App = () => {
   const queryClient = getQueryClient();
   const [trpcClient] = useState(() =>
+    trpc
+  /*
     createTRPCClient<AppRouter>({
       links: [
         httpBatchLink({
           // TODO: remove duplicate stuff?
-          url: `http://${env.VITE_BACKEND_ORIGIN}`,
+          url: `http://${env.VITE_BACKEND_ORIGIN}/api/`,
         }),
       ],
     })
+      */
   );
 
   return (

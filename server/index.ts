@@ -1,13 +1,12 @@
 import { db } from "./db.ts";
 import { type } from "arktype";
 import { publicProcedure, router } from "./trpc.ts";
-import { createHTTPServer } from "@trpc/server/adapters/standalone";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { createMonthFromActiveTemplate } from "./createMonth.ts";
 import { TRPCError } from "@trpc/server";
 import { login } from "./login.ts";
 import { eq, isNull, and } from "drizzle-orm";
 import { fakerEN } from "@faker-js/faker";
-import cors from "cors";
 import * as schema from "./schema";
 import {
   addTask,
@@ -445,17 +444,50 @@ const appRouter = router({
     }),
 });
 
-const server = createHTTPServer({
-  middleware: cors(),
-  router: appRouter,
-  createContext() {
-    console.log("context 3");
-    return {};
+const server = Bun.serve({
+  port: 3000,
+  async fetch(req) {
+    const url = new URL(req.url);
+
+    // Handle CORS preflight requests
+    if (req.method === "OPTIONS") {
+      const res = new Response(null, { status: 204 });
+      res.headers.set("Access-Control-Allow-Origin", "*");
+      res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.headers.set(
+        "Access-Control-Allow-Headers",
+        "Content-Type, authorization"
+      );
+      return res;
+    }
+
+    if (url.pathname.startsWith("/api/")) {
+      const response = await fetchRequestHandler({
+        endpoint: "/api",
+        req,
+        router: appRouter,
+        createContext: () => ({}),
+      });
+
+      response.headers.set("Access-Control-Allow-Origin", "*");
+      return response;
+    }
+
+    // TODO: Add logic to serve your frontend static files here
+    return new Response("Not Found", { status: 404 });
   },
 });
 
-console.log("Listening on http://localhost:3000");
-server.listen(3000);
+const gracefulShutdown = (signal: string) => {
+  console.log(`Received ${signal}, shutting down gracefully...`);
+  server.stop(true);
+};
+
+// Listen for termination signals
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+console.log(`Listening on http://localhost:${server.port}`);
 
 // Export type router type signature,
 // NOT the router itself.
