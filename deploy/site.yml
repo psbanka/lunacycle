@@ -1,107 +1,84 @@
-# deploy/site.yml
+# site.yml — local-only deploy of prebuilt dist/ to /app/lunacycle
 - hosts: local
   become: true
 
   vars:
-    app_dir: /opt/myapp               # path where your code lives
-    node_major: "22"
-    pnpm_version: "9.12.0"
-    bun_version: "latest"
+    # Where we copy the build to:
+    app_root: /app/lunacycle
+    dist_dest: "{{ app_root }}/dist"
 
-    app_user: app
-    app_service_name: myapp
+    # Where the built files live relative to this playbook (repo/ansible/site.yml)
+    src_dist_path: "{{ playbook_dir }}/../dist"
+
+    # Systemd + nginx settings
+    app_user: lunacycle
+    app_service_name: lunacycle
     app_port: 3000
-    server_name: "_"                  # or your domain
+    nginx_port: 8080
+    server_name: "_"   # or your domain
 
-    # Production env for your service
+    # .env written next to dist; change or extend as needed
     app_env:
       NODE_ENV: production
       PORT: "{{ app_port }}"
 
   tasks:
-    - name: Ensure base packages (Debian/Ubuntu)
+    - name: Ensure base packages
       ansible.builtin.apt:
         name:
-          - curl
-          - ca-certificates
-          - gnupg
-          - build-essential
-          - unzip
           - nginx
-          - git
         state: present
         update_cache: true
 
-    - name: Create app user and dir
-      block:
-        - name: Create app user
-          ansible.builtin.user:
-            name: "{{ app_user }}"
-            system: true
-            create_home: false
-            shell: /usr/sbin/nologin
+    - name: Create system user (no home) for running the service
+      ansible.builtin.user:
+        name: "{{ app_user }}"
+        system: true
+        create_home: false
+        shell: /usr/sbin/nologin
 
-        - name: Ensure app directory exists
-          ansible.builtin.file:
-            path: "{{ app_dir }}"
-            state: directory
-            owner: "{{ app_user }}"
-            group: "{{ app_user }}"
-            mode: "0755"
+    - name: Ensure app directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: "0755"
+      loop:
+        - "{{ app_root }}"
+        - "{{ dist_dest }}"
 
-    # --- Node.js 22.x from NodeSource (no SSH, just local install) ---
-    - name: Add NodeSource GPG key
-      ansible.builtin.get_url:
-        url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
-        dest: /usr/share/keyrings/nodesource.gpg
-        mode: "0644"
+    - name: Validate that local dist exists (sanity check)
+      ansible.builtin.stat:
+        path: "{{ src_dist_path }}"
+      register: local_dist
 
-    - name: Add NodeSource repo
+    - name: Fail if local dist/ not found
+      ansible.builtin.fail:
+        msg: >
+          Expected built artifacts at {{ src_dist_path }} but didn't find them.
+          Run your build locally first (e.g., 'pnpm run build') and try again.
+      when: not local_dist.stat.exists
+
+    - name: Sync dist/ to server (no Node/Bun involved)
+      ansible.builtin.synchronize:
+        src: "{{ src_dist_path }}/"
+        dest: "{{ dist_dest }}/"
+        delete: true          # remove files not in the new build
+        recursive: true
+      delegate_to: localhost
+
+    - name: Ensure dist ownership
+      ansible.builtin.file:
+        path: "{{ dist_dest }}"
+        state: directory
+        recurse: true
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+
+    - name: Write production .env next to dist
       ansible.builtin.copy:
-        dest: /etc/apt/sources.list.d/nodesource.list
-        mode: "0644"
-        content: |
-          deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_{{ node_major }}.x nodistro main
-
-    - name: Install Node.js {{ node_major }}.x
-      ansible.builtin.apt:
-        name: nodejs
-        state: present
-        update_cache: true
-
-    # --- pnpm via corepack (local) ---
-    - name: Enable corepack
-      ansible.builtin.command: corepack enable
-      changed_when: false
-
-    - name: Pin pnpm version
-      ansible.builtin.command: corepack prepare pnpm@{{ pnpm_version }} --activate
-      changed_when: false
-
-    # --- Bun (local) ---
-    - name: Install Bun
-      ansible.builtin.shell: |
-        set -e
-        if [ ! -x /usr/local/bin/bun ]; then
-          curl -fsSL https://bun.sh/install | bash
-          ln -sf /root/.bun/bin/bun /usr/local/bin/bun
-        fi
-
-    # --- Dependencies & build (runs as app user) ---
-    - name: Install node modules
-      ansible.builtin.shell: |
-        set -e
-        cd "{{ app_dir }}"
-        pnpm install --frozen-lockfile || pnpm install
-      args:
-        chdir: "{{ app_dir }}"
-      environment:
-        PATH: "/usr/local/bin:/usr/bin:{{ ansible_env.PATH }}"
-      become_user: "{{ app_user }}"
-
-    - name: Write production .env
-      ansible.builtin.copy:
-        dest: "{{ app_dir }}/.env"
+        dest: "{{ app_root }}/.env"
         owner: "{{ app_user }}"
         group: "{{ app_user }}"
         mode: "0640"
@@ -110,47 +87,88 @@
           {{ k }}={{ v }}
           {% endfor %}
 
-    - name: Build server & client
-      ansible.builtin.shell: |
-        set -e
-        cd "{{ app_dir }}"
-        pnpm run build
-      args:
-        chdir: "{{ app_dir }}"
-      environment:
-        PATH: "/usr/local/bin:/usr/bin:{{ ansible_env.PATH }}"
-      become_user: "{{ app_user }}"
-
-    # --- systemd service (local) ---
-    - name: Install systemd unit
-      ansible.builtin.template:
-        src: templates/app.service.j2
-        dest: /etc/systemd/system/{{ app_service_name }}.service
+    # ---------------- systemd ----------------
+    - name: Install systemd unit (runs compiled binary dist/server)
+      ansible.builtin.copy:
+        dest: "/etc/systemd/system/{{ app_service_name }}.service"
         mode: "0644"
+        content: |
+          [Unit]
+          Description={{ app_service_name }} API service
+          After=network-online.target
+          Wants=network-online.target
+
+          [Service]
+          Type=simple
+          User={{ app_user }}
+          Group={{ app_user }}
+          WorkingDirectory={{ app_root }}
+          EnvironmentFile={{ app_root }}/.env
+          ExecStart={{ dist_dest }}/server
+          Restart=on-failure
+          RestartSec=3
+          TimeoutStartSec=60
+          NoNewPrivileges=true
+          ProtectSystem=full
+          ProtectHome=true
+
+          [Install]
+          WantedBy=multi-user.target
       notify: [daemon-reload, restart app]
 
-    # --- Nginx config (local) ---
-    - name: Write Nginx site
-      ansible.builtin.template:
-        src: templates/nginx-site.conf.j2
-        dest: /etc/nginx/sites-available/{{ app_service_name }}
+    # ---------------- nginx ----------------
+    - name: Write nginx site config
+      ansible.builtin.copy:
+        dest: "/etc/nginx/sites-available/{{ app_service_name }}"
         mode: "0644"
+        content: |
+          server {
+            listen {{ nginx_port }} default_server;
+            server_name {{ server_name }};
 
-    - name: Enable site
+            client_max_body_size 20m;
+
+            # Proxy API to compiled server on :{{ app_port }}
+            location /api/ {
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+              proxy_pass http://127.0.0.1:{{ app_port }}/;
+            }
+
+            # Serve React build
+            root {{ dist_dest }};
+            index index.html;
+
+            # SPA fallback
+            location / {
+              try_files $uri $uri/ /index.html;
+            }
+
+            # Cache static assets aggressively (optional)
+            location ~* \.(?:js|css|woff2?|ttf|otf|eot|svg|png|jpg|jpeg|gif|webp)$ {
+              add_header Cache-Control "public, max-age=31536000, immutable";
+              try_files $uri =404;
+            }
+          }
+      notify: [reload nginx]
+
+    - name: Enable nginx site
       ansible.builtin.file:
-        src: /etc/nginx/sites-available/{{ app_service_name }}
-        dest: /etc/nginx/sites-enabled/{{ app_service_name }}
+        src: "/etc/nginx/sites-available/{{ app_service_name }}"
+        dest: "/etc/nginx/sites-enabled/{{ app_service_name }}"
         state: link
         force: true
       notify: [reload nginx]
 
-    - name: Disable default site
+    - name: Disable default nginx site (if present)
       ansible.builtin.file:
         path: /etc/nginx/sites-enabled/default
         state: absent
       notify: [reload nginx]
 
-    - name: Enable & start services locally
+    - name: Enable & start services
       block:
         - name: Ensure app service enabled & started
           ansible.builtin.systemd:
