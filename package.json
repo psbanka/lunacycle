@@ -15,7 +15,8 @@
     "db:generate": "bun drizzle-kit generate",
     "db:migrate": "bun drizzle-kit migrate",
     "db:recreate": "rm db.sqlite;bun ./scripts/setup-db.bun.ts",
-    "typecheck": "tsc -b",
+    "test:playwright": "playwright test",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -91,6 +92,7 @@
   "devDependencies": {
     "@eslint/js": "^9.27.0",
     "@tailwindcss/typography": "^0.5.16",
+    "@playwright/test": "^1.45.3",
     "@types/cors": "^2.8.18",
     "@types/node": "^22.15.21",
     "@types/react": "^18.3.22",
