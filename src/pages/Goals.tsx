@@ -102,7 +102,7 @@ export default function Goals() {
               Track your history of task completion versus commitment
             </p>
           </div>
-          <BarChart width={900} height={300} data={statistics?.overall}>
+          <BarChart width={1050} height={300} data={statistics?.overall}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <Bar dataKey="completed" fill="hsl(var(--primary))" />
             <Bar dataKey="committed" fill="hsl(var(--muted-foreground))" />
