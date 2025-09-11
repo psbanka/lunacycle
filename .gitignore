@@ -11,6 +11,7 @@ lerna-debug.log*
 
 test-results
 playwright-report
+playwright/.auth
 node_modules
 dist
 dist-ssr
