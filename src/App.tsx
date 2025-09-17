@@ -2,16 +2,16 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-// import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { useState } from "react";
-import { TRPCProvider, useTRPC } from "./lib/trpc";
-import type { AppRouter } from "../server";
+import { TRPCProvider } from "./lib/trpc";
 import { TaskProvider } from "./contexts/TaskContext";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
+// TODO: MOVE FILE
+import CheckInSheet from "@/components/CheckInSheet";
 import Template from "./pages/Template";
 import Backlog from "./pages/Backlog";
 import Goals from "./pages/Goals";
@@ -19,9 +19,6 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { trpc } from "./api";
-// import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { env } from "./env";
-import "./App.css";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -80,6 +77,17 @@ const AppCore = () => {
             <Layout>
               <Home />
             </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/check-in"
+        element={
+          <ProtectedRoute>
+            <div className="mb-8 flex flex-wrap gap-3">
+              <CheckInSheet />
+            </div>
           </ProtectedRoute>
         }
       />

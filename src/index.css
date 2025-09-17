@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  text-align: center;
+}
+
 /* Add your custom styles here */
 @layer base {
   :root {
@@ -76,59 +84,66 @@
   }
 }
 
-/* Glass card style */
 .glass-card {
   @apply bg-card/80 backdrop-blur-sm border border-border/50;
+  background: rgba(255, 255, 255, 0.116);
+  border-radius: 16px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Print styles */
+.avatar-container {
+  filter: grayscale(0.5) opacity(0.5); /* Dim the avatars */
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
 @media print {
-  body * {
-    visibility: hidden;
+  /* Hide the main application wrapper when printing */
+  body > #root {
+    background-color: white;
+    /* display: none; */
   }
-  
-  .print\:visible,
-  [data-state="open"] .h-\\[95vh\\] > *,
-  [data-state="open"] .h-\\[90vh\\] > * {
-    visibility: visible;
+
+  .bg-background {
+    background-color: white;
   }
-  
-  [data-state="open"] {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9999;
-    background: white;
-    overflow: visible;
-  }
-  
-  [data-state="open"] button {
-    display: none;
-  }
-  
-  [data-state="open"] .print\:hidden {
-    display: none;
-  }
-  
-  [data-state="open"] .print\:block {
-    display: block;
-  }
-  
-  [data-state="open"] .print\:flex {
-    display: flex;
-  }
-  
-  [data-state="open"] .print\:border {
-    border: 1px solid #ddd;
-  }
-  
-  /* Fix for rating buttons in print view */
-  [data-state="open"] .gap-2 button {
-    display: inline-flex;
-    border: 1px solid #ddd;
-  }
+
 }
 
 /* Default Theme (No specific class) */

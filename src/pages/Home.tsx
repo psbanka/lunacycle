@@ -5,7 +5,6 @@ import TaskCard from "@/components/TaskCard";
 import { Separator } from "@/components/ui/separator";
 import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import { LoadIndicator } from "@/components/LoadIndicator";
-import CheckInSheet from "@/components/CheckInSheet";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import useLunarPhase from "@/hooks/useLunarPhase";
 
@@ -67,10 +66,6 @@ export default function Home() {
         ) : (
           <LunarCycleProgressBand className="shadow-md" />
         )}
-      </div>
-
-      <div className="mb-8 flex flex-wrap gap-3">
-        <CheckInSheet />
       </div>
 
       <div className="mb-8">
