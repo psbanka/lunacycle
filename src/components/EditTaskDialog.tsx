@@ -9,7 +9,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 import { useTask } from "@/contexts/TaskContext";
 import { Trash, Layers, Eye, EyeOff } from "lucide-react";
-import { UserAvatar } from "@/components/UserAvatar";
+import { UserSelectionFormItem } from "./UserSelectionFormItem";
 
 import {
   Dialog,
@@ -335,73 +335,10 @@ export function EditTaskDialog({
                 />
               )}
 
-            <FormField
+            <UserSelectionFormItem
               control={form.control}
               name="userIds"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Assign to</FormLabel>
-                  <div className="grid grid-cols-1 grid-cols-3 gap-3">
-                    {users.map((user) => {
-                      if (user.role === "admin") return null;
-                      return (
-                        <FormField
-                          key={user.id}
-                          control={form.control}
-                          name="userIds"
-                          render={({
-                            field: { onChange, value: selectedUserIds },
-                          }) => {
-                            const isSelected = selectedUserIds?.includes(
-                              user.id
-                            );
-                            return (
-                              <Button
-                                type="button"
-                                variant={isSelected ? "default" : "outline"}
-                                className="flex items-center justify-start gap-2 h-auto p-2"
-                                onClick={() => {
-                                  if (isSelected) {
-                                    // Don't allow unchecking the last user
-                                    if (selectedUserIds.length > 1) {
-                                      onChange(
-                                        selectedUserIds.filter(
-                                          (id) => id !== user.id
-                                        )
-                                      );
-                                    }
-                                  } else {
-                                    onChange([...selectedUserIds, user.id]);
-                                  }
-                                }}>
-                                <Avatar className="h-8 w-8">
-                                  <UserAvatar
-                                    user={user}
-                                    dimmed={!isSelected}
-                                  />
-                                </Avatar>
-                                <span className="hidden sm:inline truncate">
-                                  {user.name}
-                                </span>
-                                <span className="sm:hidden inline">
-                                  {user.name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")}
-                                </span>
-                              </Button>
-                            );
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                  <FormDescription>
-                    Select at least one person to assign this task to
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+              users={users}
             />
 
             <DialogFooter className="mt-6">

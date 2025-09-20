@@ -85,9 +85,7 @@ const AppCore = () => {
         path="/check-in"
         element={
           <ProtectedRoute>
-            <div className="mb-8 flex flex-wrap gap-3">
-              <CheckInSheet />
-            </div>
+            <CheckInSheet />
           </ProtectedRoute>
         }
       />
