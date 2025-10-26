@@ -29,7 +29,7 @@ export default function CategorySection({ id, isTemplate }: CategorySectionProps
         isTemplateTask={isTemplate}
         categoryId={id}
       />
-      <div className="mb-4 flex justify-between items-center">
+      <div className="mb-4 flex justify-around items-center">
         <h2 className="text-xl font-semibold">
           {category?.emoji} {category?.name}
         </h2>

@@ -360,6 +360,7 @@ export function EditTaskDialog({
                 </Button>
               )}
 
+              {/* --- FOCUS BUTTON --- */}
               <FormField
                 control={form.control}
                 name="isFocused"
@@ -379,6 +380,7 @@ export function EditTaskDialog({
                   );
                 }}
               />
+              {/* --- BACKLOG BUTTON --- */}
               <FormField
                 control={form.control}
                 name="monthId"
@@ -398,11 +400,13 @@ export function EditTaskDialog({
                   );
                 }}
               />
+              {/* --- CLOSE BUTTON --- */}
               <DialogClose asChild>
                 <Button type="button" variant="outline">
                   Cancel
                 </Button>
               </DialogClose>
+              {/* --- SAVE BUTTON --- */}
               {isEditingId ? (
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? "Updating..." : "Save"}

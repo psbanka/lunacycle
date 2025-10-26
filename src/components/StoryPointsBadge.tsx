@@ -28,7 +28,7 @@ export function StoryPointsBadge({ storyPoints }: { storyPoints: StoryPointType 
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+        "inline-flex items-center mx-1 px-2 py-0.5 rounded text-xs font-medium",
         getStoryPointsColor(storyPoints)
       )}>
       {storyPoints} SP

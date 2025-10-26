@@ -49,7 +49,7 @@ export default function TaskCard({
     <>
       <div
         className={cn(
-          "group relative p-4 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer",
+          "@container group relative p-4 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer",
           isCompleted
             ? "bg-secondary/50 border border-secondary"
             : "glass-card hover:shadow-md",
@@ -118,12 +118,12 @@ export default function TaskCard({
                 {task.targetCount > 1 ? (
                   <>
                     <Plus className="h-3.5 w-3.5" />
-                    Add progress
+                    <span className="hidden @min-[180px]:inline">Add progress</span>
                   </>
                 ) : (
                   <>
                     <CheckCircle className="h-3.5 w-3.5" />
-                    Mark complete
+                    <span className="hidden @min-[180px]:inline">Mark complete</span>
                   </>
                 )}
               </Button>

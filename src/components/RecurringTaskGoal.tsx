@@ -130,8 +130,8 @@ const RecurringTaskGoal = (props: RecurringTaskGoalProps) => {
         trendClasses,
         committedClasses
       )}>
-      <TrendIcon className="h-5 w-5 flex-shrink-0" />
-      <h3 className="font-medium flex-grow text-left">{task.title}</h3>
+      <TrendIcon className="h-5 w-5 shrink-0" />
+      <h3 className="font-medium grow text-left">{task.title}</h3>
       <div className="flex flex-row items-center gap-2">
         <h2>{targetValue}</h2>
         <ArrowBigRightDash />
@@ -159,7 +159,7 @@ const RecurringTaskGoal = (props: RecurringTaskGoalProps) => {
           </Button>
           <Button
             type="button"
-            variant={props.committed ? "default" : "outline"}
+            variant={props.committed ? "default" : "outline-solid"}
             size="icon"
             className="h-6 w-6"
             onClick={handleCommit}>

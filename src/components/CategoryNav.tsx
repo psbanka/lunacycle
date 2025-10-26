@@ -50,7 +50,7 @@ export default function CategoryNav({ categories, activeCategoryId }: NavBarProp
         <Button
           key={id}
           variant={variant}
-          className="w-full justify-start gap-2"
+          className="w-full justify-start gap-2 text-2xl"
           onClick={scroll}>
           {emoji}
           <span className="hidden lg:inline">{name}</span>
@@ -61,7 +61,7 @@ export default function CategoryNav({ categories, activeCategoryId }: NavBarProp
 
   return (
   <nav className="w-full h-full bg-background">
-    <div className="flex flex-col items-center justify-start space-y-2 p-2 md:items-center md:justify-around md:space-y-0  md:p-4">
+    <div className="flex flex-col items-center justify-start space-y-2 md:items-center md:justify-around md:space-y-0  md:p-4">
       {renderCategoryLinks()}
     </div>
   </nav>

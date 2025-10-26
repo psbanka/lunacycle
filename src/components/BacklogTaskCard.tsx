@@ -59,7 +59,7 @@ export default function BacklogTaskCard({ taskId, className }: TaskCardProps) {
     <>
       <div
         className={cn(
-          "group relative p-4 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer",
+          "group relative p-4 rounded-lg shadow-xs transition-all duration-300 hover:shadow-md cursor-pointer",
           isCompleted
             ? "bg-secondary/50 border border-secondary"
             : "glass-card hover:shadow-md",

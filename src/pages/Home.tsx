@@ -43,11 +43,6 @@ export default function Home() {
 
   const upNextTasks = pendingTasks.filter((task) => task.isFocused === 1);
 
-  // Filter tasks for "Recently Completed" section - completed tasks from user
-  const completedTasks = currentTasks
-    .filter((task) => task.targetCount === task.completedCount)
-    .slice(0, 5);
-
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex flex-row justify-between mb-8 gap-4">
@@ -85,22 +80,6 @@ export default function Home() {
           </div>
         )}
       </div>
-
-      {completedTasks.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Recently Completed</h2>
-          <div className="flex space-x-4 pb-4">
-            {completedTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                taskId={task.id}
-                compact
-                className="w-56"
-              />
-            ))}
-          </div>
-        </div>
-      )}
 
       <Separator className="my-8" />
 

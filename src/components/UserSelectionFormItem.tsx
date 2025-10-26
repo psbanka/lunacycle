@@ -44,7 +44,7 @@ export function UserSelectionFormItem({
           <FormItem>
             <FormLabel>{label}</FormLabel>
             <FormControl>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 {users
                   .filter((user) => user.role !== "admin")
                   .map((user) => {

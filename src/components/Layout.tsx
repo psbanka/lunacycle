@@ -53,11 +53,11 @@ export default function Layout({ children }: LayoutProps) {
   }, [navData]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       <Header />
 
-      <div className="flex flex-1">
-        <div className="sticky top-16 h-screen">
+      <div className="flex flex-1 overflow-y-auto">
+        <div className="sticky top-0 h-full">
           {/* This div now correctly positions CategoryNav below the header and fixes its height */}
           {/* On mobile (default), w-16 matches CategoryNav's fixed width, ensuring main content is offset */}
           {/* On md screens and up, it takes w-64 (adjust as needed) */}
