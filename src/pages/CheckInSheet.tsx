@@ -8,16 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import LunarPhase from "@/components/Moon";
 import { toast } from "sonner";
-import { UserSelectionFormItem } from "./UserSelectionFormItem";
+import { UserSelectionFormItem } from "../components/UserSelectionFormItem";
 import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
 
 type RatingInputProps = {

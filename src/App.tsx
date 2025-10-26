@@ -11,7 +11,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 // TODO: MOVE FILE
-import CheckInSheet from "@/components/CheckInSheet";
+import CheckInSheet from "@/pages/CheckInSheet";
 import Template from "./pages/Template";
 import Backlog from "./pages/Backlog";
 import Goals from "./pages/Goals";
