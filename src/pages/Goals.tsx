@@ -62,7 +62,7 @@ export default function Goals() {
 
   const totalTasksCount = getTaskIds(statistics).length;
   const readyToStartCycle = totalTasksCount === committedTasks.length;
-  const allVariant = readyToStartCycle ? "destructive" : "outline";
+  const allVariant = readyToStartCycle ? "destructive" : "outline-solid";
 
   return (
     <div className="max-w-6xl mx-auto">

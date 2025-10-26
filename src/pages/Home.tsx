@@ -89,7 +89,7 @@ export default function Home() {
       {completedTasks.length > 0 && (
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Recently Completed</h2>
-          <div className="flex space-x-4 overflow-x-auto pb-4">
+          <div className="flex space-x-4 pb-4">
             {completedTasks.map((task) => (
               <TaskCard
                 key={task.id}

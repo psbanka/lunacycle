@@ -39,7 +39,7 @@ const RatingInput = ({ label, value, onChange }: RatingInputProps) => {
             key={rating}
             type="button"
             size="sm"
-            variant={value === rating ? "default" : "outline"}
+            variant={value === rating ? "default" : "outline-solid"}
             className="flex-1 h-8"
             onClick={() => onChange(rating)}>
             {rating}
