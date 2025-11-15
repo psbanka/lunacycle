@@ -12,13 +12,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { UserAvatar } from "@/components/UserAvatar";
+import { UserShape } from "../../server/index.ts";
 
 interface UserSelectionFormItemProps {
   control: Control<any>; // Using `any` for now, can be improved with form values type
   name: string;
   label?: string;
   description?: React.ReactNode;
-  users: User[];
+  users: Record<string, UserShape>;
   onSelectionChange?: (userIds: string[]) => void;
 }
 
@@ -30,6 +31,13 @@ export function UserSelectionFormItem({
   users,
   onSelectionChange,
 }: UserSelectionFormItemProps) {
+  const nonAdminUsers = Object.values(users).reduce((acc, user) => {
+    if (user.role !== "admin") {
+      acc.push(user);
+    }
+    return acc;
+  }, [] as UserShape[]);
+
   return (
     <FormField
       control={control}
@@ -45,8 +53,7 @@ export function UserSelectionFormItem({
             <FormLabel>{label}</FormLabel>
             <FormControl>
               <div className="grid grid-cols-3 gap-3">
-                {users
-                  .filter((user) => user.role !== "admin")
+                {nonAdminUsers
                   .map((user) => {
                     const isSelected = field.value?.includes(user.id);
 

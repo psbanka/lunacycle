@@ -1,25 +1,51 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { type User } from "../../server/schema";
+import { type UserShape } from "../../server/index.ts";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useTask } from "@/contexts/TaskContext";
 
 interface UserAvatarProps {
-  user: User;
+  user: UserShape;
+  updatedAvatar?: string;
   dimmed?: boolean; // Add a prop to control dimming
   size?: "sm" | "md" | "lg";
 }
 
-export const UserAvatar: React.FC<UserAvatarProps> = ({ user, dimmed }) => {
+export const UserAvatar: React.FC<UserAvatarProps> = ({
+  user,
+  dimmed,
+  updatedAvatar,
+}) => {
+  const { users } = useTask();
+  if (
+    users == null ||
+    users[user.id] == null ||
+    (users[user.id].avatar == null && updatedAvatar == null)
+  )
+    return null;
+  const avatar = updatedAvatar
+    ? updatedAvatar
+    : users
+    ? users[user.id].avatar
+    : null;
+
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <Avatar className={cn(dimmed && "avatar-dimmed")}>
-            {user.avatar ? (
-              <AvatarImage src={user.avatar} alt={user.email} />
+            {avatar ? (
+              <AvatarImage src={avatar} alt={user.email} />
             ) : (
-              <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+              <AvatarFallback>
+                {user.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
             )}
           </Avatar>
         </TooltipTrigger>

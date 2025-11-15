@@ -95,7 +95,8 @@ export async function updateTaskWithCategoryAndAssignments(
     .values(taskInfo.userIds.map((userId) => ({ taskId: taskInfo.id, userId })))
     .run();
 
-  return db.query.task.findFirst({ where: eq(schema.task.id, taskInfo.id) });
+  const output = db.query.task.findFirst({ where: eq(schema.task.id, taskInfo.id) });
+  return output;
 }
 
 type TemplateTaskModificationProps = Omit<schema.TemplateTask, "createdAt"> & {

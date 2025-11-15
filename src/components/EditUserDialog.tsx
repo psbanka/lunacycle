@@ -14,13 +14,17 @@ import { useState, useEffect } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useTask } from "@/contexts/TaskContext";
 import { toast } from "sonner";
+import { type UserShape } from "../../server/index.ts";
 
 interface EditUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: User;
+  user: UserShape;
   onUserUpdated: (user: User) => void;
 }
+
+type FullUser = UserShape & { passwordHash: string };
+
 
 export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   open,
@@ -28,14 +32,17 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   user,
   onUserUpdated,
 }) => {
-  const [editedUser, setEditedUser] = useState<User>({ ...user });
+  const [editedUser, setEditedUser] = useState<FullUser>({ ...user, passwordHash: ""});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [newAvatar, setNewAvatar] = useState<string | undefined>(undefined);
   const { generateAvatarTask, uploadAvatarTask, updateUserTask } = useTask();
+  const [newPasswordHash, setPasswordHash] = useState("");
 
   // Update the editedUser state when the user prop changes
   useEffect(() => {
-    setEditedUser({ ...user });
-  }, [user.avatar, user.email, user.id, user.name, user.passwordHash, user.role]); // eslint-disable-line
+    debugger
+    setEditedUser({ ...user, passwordHash: newPasswordHash, avatar: newAvatar ?? user.avatar });
+  }, [newAvatar, user.email, user.id, user.name, newPasswordHash, user.role]); // eslint-disable-line
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -43,10 +50,9 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   };
 
   const handleGenerateNewAvatar = async () => {
-    const newUser = await generateAvatarTask(editedUser.id);
-    if (newUser) setEditedUser(newUser);
-    // onOpenChange(false);
-    toast.success("New avatar generated!");
+    debugger
+    const generatedAvatar = await generateAvatarTask();
+    if (generatedAvatar) setNewAvatar(generatedAvatar);
   };
 
   const handleUpdateAvatar = async () => {
@@ -142,6 +148,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
             <Label>Avatar</Label>
             <UserAvatar
               user={editedUser}
+              updatedAvatar={newAvatar}
               size="lg"
             />
             <div className="flex gap-2 mt-2">

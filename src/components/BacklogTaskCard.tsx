@@ -13,7 +13,7 @@ type TaskCardProps = {
 };
 
 export default function BacklogTaskCard({ taskId, className }: TaskCardProps) {
-  const { backlogTasks, loadingTasks, updateTask, currentMonth, deleteTask } = useTask();
+  const { backlogTasks, updateTask, currentMonth, deleteTask } = useTask();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const task = backlogTasks

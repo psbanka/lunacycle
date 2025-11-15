@@ -33,7 +33,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Avatar } from "@/components/ui/avatar";
 
 // Schema for task creation
 export const TaskSchema = type({

@@ -1,5 +1,4 @@
-export const fetchRandomAvatar = async (email: string): Promise<string> => {
-  // const encodedEmail = encodeURIComponent(email);
+export const fetchRandomAvatar = async (): Promise<string> => {
   const avatarUrl = `https://avatar.iran.liara.run/public`;
 
   console.log('>>', avatarUrl);

@@ -91,16 +91,30 @@ export const StartCycleType = type({
   backlogTasks: "string[]",
 });
 
+export type UserShape = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar: string | null;
+}
+
 const appRouter = router({
   login,
   getUsers: publicProcedure.query(async () => {
     const users = await db.query.user.findMany();
-    return users;
+    const userProfiles = await db.query.userProfile.findMany()
+    const output: Record<string, UserShape> = {}
+    users.map(({ id, name, email, role}) => {
+      console.log(`id: ${id}, name: ${name}`)
+      const profile = userProfiles.find(p => p.userId === id)
+      output[id] = { id, name, email, role, avatar: profile?.avatar ?? null};
+    })
+    return output;
   }),
   generateNewAvatar: publicProcedure
-    .input(type({ userId: "string" }))
-    .mutation(async ({ input }) => {
-      return await generateNewAvatar(input.userId);
+    .query(async () => {
+      return await generateNewAvatar();
     }),
   uploadAvatar: publicProcedure
     .input(type({ userId: "string", file: "string" }))
@@ -361,7 +375,7 @@ const appRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      await updateTaskWithCategoryAndAssignments(input.task);
+      return await updateTaskWithCategoryAndAssignments(input.task);
     }),
   updateTemplateTask: publicProcedure
     .input(

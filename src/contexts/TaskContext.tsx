@@ -11,8 +11,7 @@ import type { AppRouter } from "../../server/index";
 import type { User, Task, TemplateTask, Category } from "../../server/schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/lib/trpc";
-import { StartCycleType, RecurringTask } from "../../server/index.ts";
-// import { useAuth } from "./AuthContext";
+import { StartCycleType, UserShape } from "../../server/index.ts";
 import { toast } from "sonner";
 
 export type CurrentMonthType = inferProcedureOutput<AppRouter["getActiveMonth"]>;
@@ -58,6 +57,10 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   // STATISTICS ---------------------------------------------------- 6
   const getStatistics = trpc.getStatistics.queryOptions();
   const getStatisticsQuery = useQuery(getStatistics);
+
+  // AVATAR -------------------------------------------------------- 6
+  const generateNewAvatarOptions = trpc.generateNewAvatar.queryOptions();
+  const generateNewAvatarQuery = useQuery(generateNewAvatarOptions);
 
   // Clearing the cache --------------------------------------------
   type CacheCategory = "month" | "tasks" | "template" | "users" | "categories";
@@ -155,11 +158,6 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   });
   const uploadAvatarMutation = useMutation(uploadAvatarOptions);
   
-  const generateNewAvatarOptions = trpc.generateNewAvatar.mutationOptions({
-    onSuccess: async () => clearCache(["month", "tasks", "users", "template", "categories"]),
-  });
-  const generateNewAvatarMutation = useMutation(generateNewAvatarOptions);
-
   // Helper functions ----------------------------------------------
 
   const updateUserTask = async(updates: Omit<User, "passwordHash"> & { password?: string }) => {
@@ -185,11 +183,10 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
     toast.success("Progress updated!");
   };
 
-  const generateAvatarTask = async (userId: string) => {
+  const generateAvatarTask = async () => {
     if (monthQuery.isError || monthQuery.isLoading) return;
-    const newUser = await generateNewAvatarMutation.mutateAsync({ userId });
-    toast.success("Progress updated!");
-    return newUser;
+    const newAvatar = await generateNewAvatarQuery.data
+    return newAvatar;
   };
 
   const startCycle = async (props: typeof StartCycleType.infer) => {
@@ -310,7 +307,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
 type TaskContextType = {
   currentMonth: CurrentMonthType | undefined;
-  users: User[] | undefined;
+  users: Record<string, UserShape>| undefined;
   categories: Category[] | undefined;
   currentTasks: inferProcedureOutput<AppRouter["getCurrentMonthTasks"]> | undefined;
   statistics: inferProcedureOutput<AppRouter["getStatistics"]> | undefined;
@@ -349,7 +346,7 @@ type TaskContextType = {
   ) => void;
   deleteCategory: (categoryId: string) => void;
   updateUserTask: (userId: Omit<User, "passwordHash"> & { password?: string }) => void;
-  generateAvatarTask: (userId: string) => Promise<User | undefined>;
+  generateAvatarTask: () => Promise<string | undefined>;
   uploadAvatarTask: (userId: string, file: File) => void;
 };
 

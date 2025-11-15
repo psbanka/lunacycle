@@ -10,13 +10,14 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { UserAvatar } from "@/components/UserAvatar";
 import { EditUserDialog } from "@/components/EditUserDialog";
 import { User } from "../../server/schema";
+import { type UserShape } from "../../server/index.ts";
 
 export default function Admin() {
   const { user } = useAuth();
   const { users } = useTask();
   const navigate = useNavigate();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserShape | null>(null);
 
   const [newUser, setNewUser] = useState({
     name: "",
@@ -35,7 +36,7 @@ export default function Admin() {
     return null;
   }
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: UserShape) => {
     setSelectedUser(user);
     setIsEditDialogOpen(true);
   };
@@ -49,7 +50,7 @@ export default function Admin() {
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newId = (users.length + 1).toString();
+    const newId = (Object.entries(users).length + 1).toString();
 
     setNewUser({
       name: "",
@@ -148,8 +149,8 @@ export default function Admin() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-b">
+              {Object.entries(users).map(([id, user]) => (
+                <tr key={id} className="border-b">
                   <td className="text-left p-2">{user.name}</td>
                   <td className="text-left p-2">{user.email}</td>
                   <td className="text-left p-2">

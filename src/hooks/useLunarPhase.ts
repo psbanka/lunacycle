@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getLunarPhase, calculateDaysUntilNextFullMoon, type MoonPhase } from "../../shared/lunarPhase";
+import { Moon } from "lunarphase-js"
 
 export default function useLunarPhase(endDate?: string) {
   const [daysRemaining, setDaysRemaining] = useState(0);
