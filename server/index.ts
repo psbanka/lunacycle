@@ -106,7 +106,6 @@ const appRouter = router({
     const userProfiles = await db.query.userProfile.findMany()
     const output: Record<string, UserShape> = {}
     users.map(({ id, name, email, role}) => {
-      console.log(`id: ${id}, name: ${name}`)
       const profile = userProfiles.find(p => p.userId === id)
       output[id] = { id, name, email, role, avatar: profile?.avatar ?? null};
     })
@@ -194,6 +193,12 @@ const appRouter = router({
     }
     return currentMonth;
   }),
+  getFocusedTaskIds: publicProcedure.query(async () => {
+    const tasks = await db.query.task.findMany({
+      where: eq(schema.task.isFocused, 1),
+    });
+    return tasks.map((task) => task.id);
+  }),
   getCurrentMonthTasks: publicProcedure.query(async () => {
     const currentMonth = await db.query.month.findFirst({
       where: eq(schema.month.isActive, 1),
@@ -252,6 +257,20 @@ const appRouter = router({
   getCategories: publicProcedure.query(async () => {
     return await db.query.category.findMany({});
   }),
+  getCategory: publicProcedure
+    .input(type({ categoryId: "string" }))
+    .query(async ({ input }) => {
+      return await db.query.category.findFirst({
+        where: eq(schema.category.id, input.categoryId),
+      });
+    }),
+  getTask: publicProcedure
+    .input(type({ taskId: "string" }))
+    .query(async ({ input }) => {
+      return await db.query.task.findFirst({
+        where: eq(schema.task.id, input.taskId),
+      });
+    }),
   // FIXME: WHO USES THIS?
   getTasksByCategoryId: publicProcedure
     .input(type({ categoryId: "string" }))
@@ -466,7 +485,8 @@ const server = Bun.serve({
     // Handle CORS preflight requests
     if (req.method === "OPTIONS") {
       const res = new Response(null, { status: 204 });
-      res.headers.set("Access-Control-Allow-Origin", "*");
+      res.headers.set("Access-Control-Allow-Origin", "http://localhost:8080");
+      res.headers.set("Access-Control-Allow-Credentials", "true");
       res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
       res.headers.set(
         "Access-Control-Allow-Headers",
@@ -483,7 +503,8 @@ const server = Bun.serve({
         createContext: () => ({}),
       });
 
-      response.headers.set("Access-Control-Allow-Origin", "*");
+      response.headers.set("Access-Control-Allow-Origin", "http://localhost:8080");
+      response.headers.set("Access-Control-Allow-Credentials", "true");
       return response;
     }
 
