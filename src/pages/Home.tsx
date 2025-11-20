@@ -1,4 +1,6 @@
 import { useTask } from "@/contexts/TaskContext";
+import { getState } from "atom.io";
+import { useI, useLoadable, useO } from "atom.io/react";
 import LunarPhase from "@/components/Moon";
 import CategorySection from "@/components/CategorySection";
 import TaskCard from "@/components/TaskCard";
@@ -7,47 +9,49 @@ import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import { LoadIndicator } from "@/components/LoadIndicator";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import useLunarPhase from "@/hooks/useLunarPhase";
+import {
+  focusedTaskIdsAtom,
+  currentTaskIdsAtom,
+  currentMonthAtom,
+  categoryIdsAtom,
+  EMPTY_MONTH,
+} from "@/atoms";
 
 export default function Home() {
-  const {
-    currentMonth,
-    currentTasks,
-    categories,
-    loadingTasks,
-  } = useTask();
   const { inModificationWindow } = useLunarPhase();
+  const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
+  const currentTaskIds = useLoadable(currentTaskIdsAtom, []);
+  const focusedTaskIds = useLoadable(focusedTaskIdsAtom, []);
+  const categoryIds = useLoadable(categoryIdsAtom, []);
 
   // Function to scroll to a category
   // const scrollToCategory = (index: number) => {
   //   categoryRefs.current[index]?.scrollIntoView({ behavior: "smooth" });
-  if (loadingTasks) {
+  if (currentMonth.loading || currentTaskIds.loading) {
     return <LoadingScreen />;
   }
 
-  if (!currentMonth || !currentTasks || !categories) {
+  if (!currentMonth) {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold">No Current Month Exists. Go to Planning screen to create</h1>
+            <h1 className="text-3xl font-bold">
+              No Current Month Exists. Go to Planning screen to create
+            </h1>
           </div>
         </div>
       </div>
     );
   }
 
-  // Filter tasks for "Up Next" section - pending tasks from user
-  const pendingTasks = currentTasks.filter(
-    (task) => task.targetCount > task.completedCount
-  );
-
-  const upNextTasks = pendingTasks.filter((task) => task.isFocused === 1);
-
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex flex-row justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-left text-3xl font-bold">{currentMonth.name}</h1>
+          <h1 className="text-left text-3xl font-bold">
+            {currentMonth.value.name}
+          </h1>
         </div>
 
         <div className="flex items-center">
@@ -66,7 +70,7 @@ export default function Home() {
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Up Next</h2>
 
-        {upNextTasks.length === 0 ? (
+        {focusedTaskIds.value.length === 0 ? (
           <div className="glass-card p-8 text-center rounded-lg">
             <p className="text-muted-foreground">
               All caught up! No focused tasks.
@@ -74,8 +78,8 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {upNextTasks.map((task) => (
-              <TaskCard key={task.id} taskId={task.id} />
+            {focusedTaskIds.value.map((taskId) => (
+              <TaskCard key={taskId} taskId={taskId} />
             ))}
           </div>
         )}
@@ -86,11 +90,11 @@ export default function Home() {
       <h2 className="text-2xl font-semibold mb-6">Categories</h2>
 
       <div>
-        {categories
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map((category) => (
-            <div key={category?.id} id={category?.id}>
-              <CategorySection id={category.id} isTemplate={false} />
+        {categoryIds.value
+          .sort()
+          .map((categoryId) => (
+            <div key={categoryId} id={categoryId}>
+              <CategorySection id={categoryId} isTemplate={false} />
             </div>
           ))}
       </div>

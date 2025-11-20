@@ -11,10 +11,10 @@ const basePath = "/";
 
 export default defineConfig(({ mode }) => ({
   server: {
-    allowedHosts: ['sparq.local', 'sparq'],
+    allowedHosts: ['sparq.local', 'sparq', 'localhost'],
     cors: false,
     headers: {
-      "Access-Control-Allow-Origin": "*", // Allow CORS
+      "Access-Control-Allow-Origin": "http://localhost:8080", // Allow CORS
     },
     host: "::",
     port: VITE_DEVELOPMENT_PORT,

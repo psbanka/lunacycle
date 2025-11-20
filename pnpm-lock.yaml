@@ -131,6 +131,9 @@ importers:
       arktype:
         specifier: ^2.1.20
         version: 2.1.20
+      atom.io:
+        specifier: ^0.44.8
+        version: 0.44.8(@floating-ui/react-dom@2.1.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@typescript-eslint/parser@8.38.0(eslint@9.32.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.32.0(jiti@2.6.1))(react@18.3.1)
       bun-types:
         specifier: ^1.2.14
         version: 1.2.19(@types/react@18.3.23)
@@ -2326,6 +2329,41 @@ packages:
 
   arktype@2.1.20:
     resolution: {integrity: sha512-IZCEEXaJ8g+Ijd59WtSYwtjnqXiwM8sWQ5EjGamcto7+HVN9eK0C4p0zDlCuAwWhpqr6fIBkxPuYDl4/Mcj/+Q==}
+
+  atom.io@0.44.8:
+    resolution: {integrity: sha512-wFuoW6SBpjI3ASFS6ts4Fo2JOJYYkTP2chRfoLWl5eqd6QhY3sGVUeVvQsKlTlpndPBjUDTXZpPFehLAFV0ayQ==}
+    peerDependencies:
+      '@floating-ui/react': '>=0.25.0'
+      '@floating-ui/react-dom': '>=2.0.0'
+      '@testing-library/react': '>=14.0.0'
+      '@typescript-eslint/parser': '>=8.0.0'
+      eslint: '>=9.0.0'
+      happy-dom: '>=17.4.4'
+      motion: '>=11.0.0'
+      react: ^18.0.0 || ^19.0.0
+      socket.io: '>=4.0.0'
+      socket.io-client: '>=4.0.0'
+    peerDependenciesMeta:
+      '@floating-ui/react':
+        optional: true
+      '@floating-ui/react-dom':
+        optional: true
+      '@testing-library/react':
+        optional: true
+      '@typescript-eslint/parser':
+        optional: true
+      eslint:
+        optional: true
+      happy-dom:
+        optional: true
+      motion:
+        optional: true
+      react:
+        optional: true
+      socket.io:
+        optional: true
+      socket.io-client:
+        optional: true
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
@@ -5567,6 +5605,13 @@ snapshots:
     dependencies:
       '@ark/schema': 0.46.0
       '@ark/util': 0.46.0
+
+  atom.io@0.44.8(@floating-ui/react-dom@2.1.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@typescript-eslint/parser@8.38.0(eslint@9.32.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.32.0(jiti@2.6.1))(react@18.3.1):
+    optionalDependencies:
+      '@floating-ui/react-dom': 2.1.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@typescript-eslint/parser': 8.38.0(eslint@9.32.0(jiti@2.6.1))(typescript@5.9.2)
+      eslint: 9.32.0(jiti@2.6.1)
+      react: 18.3.1
 
   balanced-match@1.0.2: {}
 
