@@ -59,8 +59,8 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const getStatisticsQuery = useQuery(getStatistics);
 
   // AVATAR -------------------------------------------------------- 6
-  const generateNewAvatarOptions = trpc.generateNewAvatar.queryOptions();
-  const generateNewAvatarQuery = useQuery(generateNewAvatarOptions);
+  // const generateNewAvatarOptions = trpc.generateNewAvatar.queryOptions();
+  // const generateNewAvatarQuery = useQuery(generateNewAvatarOptions);
 
   // Clearing the cache --------------------------------------------
   type CacheCategory = "month" | "tasks" | "template" | "users" | "categories";
@@ -185,8 +185,8 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const generateAvatarTask = async () => {
     if (monthQuery.isError || monthQuery.isLoading) return;
-    const newAvatar = await generateNewAvatarQuery.data
-    return newAvatar;
+    // const newAvatar = await generateNewAvatarQuery.data
+    return "foo";
   };
 
   const startCycle = async (props: typeof StartCycleType.infer) => {
