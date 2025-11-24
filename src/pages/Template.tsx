@@ -1,3 +1,5 @@
+import { useLoadable } from "atom.io/react";
+import { EmptyState } from "@/components/EmptyState";
 import { useState, useRef } from "react";
 import { useTask } from "@/contexts/TaskContext";
 import LunarPhase from "@/components/Moon";
@@ -7,18 +9,14 @@ import { Separator } from "@/components/ui/separator";
 import { Plus, FolderPlus } from "lucide-react";
 import { AddCategoryDialog } from "@/components/AddCategoryDialog";
 import { EditTaskDialog } from "@/components/EditTaskDialog";
-import { EmptyState } from "@/components/EmptyState";
-import { TemplateTaskCard } from "@/components/TemplateTaskCard";
-import type { Category, TemplateTask } from "../../server/schema";
-
-
+import { TemplateCategorySection } from "@/components/TemplateCategorySection";
+import { categoryIdsAtom } from "@/atoms";
 
 export default function Template() {
-  const { templateTasks, loadingTasks, currentMonth, categories } = useTask();
+  const categoryIds = useLoadable(categoryIdsAtom, [])
+  const { templateTasks, loadingTasks, currentMonth } = useTask();
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<
-    string | null
-  >(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const categoryRefs = useRef<(HTMLElement | null)[]>([]);
 
@@ -30,6 +28,7 @@ export default function Template() {
     setIsAddTaskOpen(true);
   };
 
+  if (categoryIds.error) return null
   if (loadingTasks) {
     return (
       <div className="flex items-center justify-center h-[80vh]">
@@ -41,7 +40,7 @@ export default function Template() {
     );
   }
 
-  if (!templateTasks || !categories) {
+  if (!templateTasks) {
     return null;
   }
 
@@ -93,49 +92,14 @@ export default function Template() {
 
       <Separator className="my-8" />
 
-      {/* FIXME: Make this a bit bolder */}
-      {categories.map((category) => {
-        const categoryTasks = templateTasks.filter(
-          (task) => task.categoryId === category.id,
-        );
-
-        return (
-        <div key={category.id} className="mb-10">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">
-              {category.emoji} {category.name}
-            </h2>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1 text-xs"
-              onClick={() => handleAddTaskClick(category.id)}>
-              <Plus className="h-3.5 w-3.5" />
-              Add Task
-            </Button>
-          </div>
-
-          {categoryTasks.length === 0 ? (
-            <EmptyState
-              title="No tasks yet"
-              description="This category doesn't have any tasks yet. Add your first task to get started."
-              icon={<FolderPlus className="h-10 w-10 opacity-40" />}
-            />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categoryTasks.map((templateTask) => (
-                <TemplateTaskCard
-                  key={templateTask.id}
-                  templateTask={templateTask}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-        )
-      })}
-
-      {categories.length === 0 && (
+      {categoryIds.value.map((categoryId) => (
+        <TemplateCategorySection
+          key={categoryId}
+          categoryId={categoryId}
+          handleAddTaskClick={handleAddTaskClick}
+        />
+      ))}
+      {categoryIds.value.length === 0 && (
         <EmptyState
           title="No categories defined yet"
           description="Create your first category to start organizing your monthly tasks."

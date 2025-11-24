@@ -1,17 +1,13 @@
-import { useTask } from "@/contexts/TaskContext";
-import { getState } from "atom.io";
-import { useI, useLoadable, useO } from "atom.io/react";
+import { useLoadable } from "atom.io/react";
 import LunarPhase from "@/components/Moon";
 import CategorySection from "@/components/CategorySection";
 import TaskCard from "@/components/TaskCard";
 import { Separator } from "@/components/ui/separator";
 import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import { LoadIndicator } from "@/components/LoadIndicator";
-import { LoadingScreen } from "@/components/LoadingScreen";
 import useLunarPhase from "@/hooks/useLunarPhase";
 import {
   focusedTaskIdsAtom,
-  currentTaskIdsAtom,
   currentMonthAtom,
   categoryIdsAtom,
   EMPTY_MONTH,
@@ -20,18 +16,10 @@ import {
 export default function Home() {
   const { inModificationWindow } = useLunarPhase();
   const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
-  const currentTaskIds = useLoadable(currentTaskIdsAtom, []);
   const focusedTaskIds = useLoadable(focusedTaskIdsAtom, []);
   const categoryIds = useLoadable(categoryIdsAtom, []);
 
-  // Function to scroll to a category
-  // const scrollToCategory = (index: number) => {
-  //   categoryRefs.current[index]?.scrollIntoView({ behavior: "smooth" });
-  if (currentMonth.loading || currentTaskIds.loading) {
-    return <LoadingScreen />;
-  }
-
-  if (!currentMonth) {
+  if (!currentMonth.value) {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">

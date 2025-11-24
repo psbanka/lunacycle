@@ -222,6 +222,21 @@ const appRouter = router({
     });
     return output;
   }),
+  getTemplateTask: publicProcedure
+    .input(type({ templateTaskId: "string" }))
+    .query(async ({ input }) => {
+    const output = await db.query.templateTask.findFirst({
+      where: eq(schema.templateTask.id, input.templateTaskId),
+      with: {
+        templateTaskUsers: { with: { user: true } },
+      },
+    });
+    // TODO: DO MORE OF THIS
+    if (!output) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Template task not found" });
+    }
+    return output;
+  }),
   getBacklogTasks: publicProcedure.query(async () => {
     const backlogTasksRaw = await db.query.task.findMany({
       where: and(
