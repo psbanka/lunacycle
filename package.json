@@ -16,7 +16,7 @@
     "db:migrate": "bun drizzle-kit migrate",
     "db:recreate": "rm db.sqlite;bun ./scripts/setup-db.bun.ts",
     "test:playwright": "playwright test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -b",
     "preview": "vite preview"
   },
   "dependencies": {
