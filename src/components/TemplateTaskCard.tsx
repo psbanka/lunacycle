@@ -49,7 +49,7 @@ export function TemplateTaskCard( props : TemplateTaskCardProps) {
             return (
               <UserAvatar
                 key={ttu.userId}
-                user={ttu.user}
+                userId={ttu.userId}
                 dimmed={true}
               />
             );

@@ -2,7 +2,7 @@ import { type Loadable, setState, selectorFamily } from "atom.io";
 import { trpcClient } from "./trpc-client-service";
 import { TRPCError, inferProcedureOutput } from "@trpc/server";
 import { atom, atomFamily } from "atom.io";
-import type { AppRouter } from "../server/index";
+import type { AppRouter, UserShape } from "../server/index";
 import type {
   ISO18601,
   Month,
@@ -27,6 +27,15 @@ export const FAKE_CATEGORY: Category = {
   name: '',
   description: '',
 }
+
+export const FAKE_USER: UserShape = {
+  id: '',
+  email: '',
+  role: 'user',
+  name: '',
+  avatar: null,
+}
+
 type Base<T extends readonly unknown[]> = T[number];
 
 // type A = string[];
@@ -36,6 +45,34 @@ type Base<T extends readonly unknown[]> = T[number];
 // type D = Base<C>;   // number | boolean
 
 // - ATOMS ---------------------------------------
+
+export const userIdsAtom = atom<Loadable<string[]>, Error>({
+  key: `userIds`,
+  default: async () => {
+    const users = await trpcClient.getUsers.query();
+    users.forEach((user) => 
+      setState(userAtoms, user.id, user)
+    );
+    const userIds = users.map((user) => user.id)
+    return userIds;
+  },
+});
+
+export type ServerGetUser = inferProcedureOutput<AppRouter["getUser"]>;
+export const userAtoms = atomFamily<
+  Loadable<ServerGetUser>,
+  string,
+  Error
+>({
+  key: `userById`,
+  default: async (userId) => {
+    const user = await trpcClient.getUser.query({ userId })
+    if (user === undefined) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "user not found" })
+    }
+    return user
+  },
+});
 
 export type ServerFocusedTaskIds = inferProcedureOutput<AppRouter["getFocusedTaskIds"]>;
 export const focusedTaskIdsAtom = atom<Loadable<ServerFocusedTaskIds>, Error>({
@@ -136,6 +173,63 @@ export const templateTasksByCategoryIdAtom = selectorFamily<
         }
         if (templateTask.categoryId === categoryId) {
           output = [...output, templateTask];
+        }
+      }
+      return output;
+    },
+});
+
+export type ServerBacklogTasks = inferProcedureOutput<AppRouter["getBacklogTasks"]>;
+export type ServerBacklogTask = Base<ServerBacklogTasks>;
+export const backlogTaskIdsAtom = atom<Loadable<string[]>, Error>({
+  key: `backlogTaskIds`,
+  default: async () => {
+    const backlogTasks = await trpcClient.getBacklogTasks.query();
+    for (const backlogTask of backlogTasks) {
+      setState(backlogTaskAtoms, backlogTask.id, backlogTask);
+    }
+    const backlogTaskIds = backlogTasks.map((backlogTask) => backlogTask.id);
+    return backlogTaskIds;
+  },
+});
+
+export const backlogTaskAtoms = atomFamily<
+  Loadable<ServerBacklogTask>,
+  string,
+  Error
+>({
+  key: `backlogTask`,
+  default: async (backlogTaskId) => {
+    const backlogTask = await trpcClient.getTask.query({
+      taskId: backlogTaskId,
+    });
+    if (!backlogTask) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "backlogTask not found" });
+    }
+    return backlogTask;
+  },
+});
+
+export const backlogTasksByCategoryIdAtom = selectorFamily<
+  Loadable<ServerBacklogTask[]>,
+  string,
+  Error
+>({
+  key: `backlogTasksByCategory`,
+  get: (categoryId) =>
+    async ({ get }) => {
+      const backlogTaskIds = await get(backlogTaskIdsAtom);
+      if (backlogTaskIds instanceof Error) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "no tasks found" });
+      }
+      let output: ServerBacklogTasks = [];
+      for (const backlogTaskId of backlogTaskIds) {
+        const backlogTask = await get(backlogTaskAtoms, backlogTaskId);
+        if (backlogTask instanceof Error) {
+          continue;
+        }
+        if (backlogTask.categoryId === categoryId) {
+          output = [...output, backlogTask];
         }
       }
       return output;

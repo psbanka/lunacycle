@@ -1,7 +1,6 @@
 import { useLoadable } from "atom.io/react";
 import { EmptyState } from "@/components/EmptyState";
 import { useState, useRef } from "react";
-import { useTask } from "@/contexts/TaskContext";
 import LunarPhase from "@/components/Moon";
 import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import { Button } from "@/components/ui/button";
@@ -10,17 +9,14 @@ import { Plus, FolderPlus } from "lucide-react";
 import { AddCategoryDialog } from "@/components/AddCategoryDialog";
 import { EditTaskDialog } from "@/components/EditTaskDialog";
 import { TemplateCategorySection } from "@/components/TemplateCategorySection";
-import { categoryIdsAtom } from "@/atoms";
+import { categoryIdsAtom, currentMonthAtom, EMPTY_MONTH } from "@/atoms";
 
 export default function Template() {
   const categoryIds = useLoadable(categoryIdsAtom, [])
-  const { templateTasks, loadingTasks, currentMonth } = useTask();
+  const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH)
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
-  const categoryRefs = useRef<(HTMLElement | null)[]>([]);
-
-  // Function to scroll to a category
 
   // Function to handle opening the EditTaskDialog
   const handleAddTaskClick = (categoryId: string) => {
@@ -28,8 +24,8 @@ export default function Template() {
     setIsAddTaskOpen(true);
   };
 
-  if (categoryIds.error) return null
-  if (loadingTasks) {
+  if (categoryIds.error || currentMonth.error) return null
+  if (categoryIds.loading) {
     return (
       <div className="flex items-center justify-center h-[80vh]">
         <div className="text-center">
@@ -38,10 +34,6 @@ export default function Template() {
         </div>
       </div>
     );
-  }
-
-  if (!templateTasks) {
-    return null;
   }
 
   return (
@@ -81,7 +73,7 @@ export default function Template() {
 
         {activeCategory && (
           <EditTaskDialog
-            monthId={currentMonth?.id || null}
+            monthId={currentMonth.value.id || null}
             isTemplateTask={true}
             open={isAddTaskOpen}
             onOpenChange={setIsAddTaskOpen}

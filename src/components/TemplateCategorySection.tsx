@@ -1,6 +1,5 @@
 import { EmptyState } from "@/components/EmptyState";
 import { useLoadable } from "atom.io/react"
-import { getState } from "atom.io";
 import { TemplateTaskCard } from "@/components/TemplateTaskCard";
 import { Button } from "@/components/ui/button";
 import { Plus, FolderPlus } from "lucide-react";

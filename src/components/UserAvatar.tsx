@@ -1,4 +1,5 @@
 import React from "react";
+import { useLoadable } from "atom.io/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { type UserShape } from "../../server/index.ts";
 import { cn } from "@/lib/utils";
@@ -8,32 +9,26 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useTask } from "@/contexts/TaskContext";
+import { userAtoms, FAKE_USER} from "@/atoms";
 
 interface UserAvatarProps {
-  user: UserShape;
+  userId: string;
   updatedAvatar?: string;
   dimmed?: boolean; // Add a prop to control dimming
   size?: "sm" | "md" | "lg";
 }
 
 export const UserAvatar: React.FC<UserAvatarProps> = ({
-  user,
+  userId,
   dimmed,
   updatedAvatar,
 }) => {
-  const { users } = useTask();
-  if (
-    users == null ||
-    users[user.id] == null ||
-    (users[user.id].avatar == null && updatedAvatar == null)
-  )
-    return null;
+  const user = useLoadable(userAtoms, userId, FAKE_USER);
+  if (user.error) return null;
+
   const avatar = updatedAvatar
     ? updatedAvatar
-    : users
-    ? users[user.id].avatar
-    : null;
+    : user.value.avatar
 
   return (
     <TooltipProvider>
@@ -41,16 +36,16 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
         <TooltipTrigger asChild>
           <Avatar className={cn(dimmed && "avatar-dimmed")}>
             {avatar ? (
-              <AvatarImage src={avatar} alt={user.email} />
+              <AvatarImage src={avatar} alt={user.value.email} />
             ) : (
               <AvatarFallback>
-                {user.name.charAt(0).toUpperCase()}
+                {user.value.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             )}
           </Avatar>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{user.name}</p>
+          <p>{user.value.name}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

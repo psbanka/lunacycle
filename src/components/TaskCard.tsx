@@ -104,7 +104,7 @@ export default function TaskCard({
                 {(task.taskUsers).map((tu) => (
                   <UserAvatar
                     key={tu.userId}
-                    user={tu.user}
+                    userId={tu.userId}
                     dimmed={true}
                   />
                 ))}

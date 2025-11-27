@@ -80,7 +80,7 @@ export function UserSelectionFormItem({
                         }}
                       >
                         <Avatar className="h-8 w-8">
-                          <UserAvatar user={user} dimmed={!isSelected} />
+                          <UserAvatar userId={user.id} dimmed={!isSelected} />
                         </Avatar>
                         <span className="hidden sm:inline truncate">
                           {user.name}

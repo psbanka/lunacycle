@@ -104,13 +104,31 @@ const appRouter = router({
   getUsers: publicProcedure.query(async () => {
     const users = await db.query.user.findMany();
     const userProfiles = await db.query.userProfile.findMany()
-    const output: Record<string, UserShape> = {}
-    users.map(({ id, name, email, role}) => {
+    const output: UserShape[] = users.map(({ id, name, email, role}) => {
       const profile = userProfiles.find(p => p.userId === id)
-      output[id] = { id, name, email, role, avatar: profile?.avatar ?? null};
+      return { id, name, email, role, avatar: profile?.avatar ?? null};
     })
     return output;
   }),
+  getUser: publicProcedure
+    .input(type({ userId: "string" }))
+    .query(async ({ input }) => {
+      const user = await db.query.user.findFirst({
+        where: eq(schema.user.id, input.userId)
+      });
+      if (user === undefined) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found"})
+      }
+      const userProfile = await db.query.userProfile.findFirst({
+        where: eq(schema.userProfile.userId, input.userId)
+      })
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar: userProfile?.avatar ?? null
+      } as UserShape
+    }),
   generateNewAvatar: publicProcedure
     .query(async () => {
       return await generateNewAvatar();
@@ -238,36 +256,17 @@ const appRouter = router({
     return output;
   }),
   getBacklogTasks: publicProcedure.query(async () => {
-    const backlogTasksRaw = await db.query.task.findMany({
+    const backlogTasks = await db.query.task.findMany({
       where: and(
         isNull(schema.task.monthId),
         eq(schema.task.completedCount, 0)
       ),
       with: {
         taskUsers: { with: { user: true } },
-        // other relations as needed
       },
       orderBy: (tasks, { asc }) => [asc(tasks.title)], // Example ordering
     });
-
-    const categories = await db.query.category.findMany({});
-
-    // Group tasks by category
-    const backlogCategorized = backlogTasksRaw.reduce((acc, task) => {
-      if (!task.categoryId) return acc;
-      const categoryId = task.categoryId;
-      if (!acc[categoryId]) {
-        const category = categories.find((cat) => cat.id === categoryId);
-        if (!category) return acc;
-        acc[categoryId] = { category, tasks: [] };
-      }
-      acc[categoryId].tasks.push(task);
-      return acc;
-    }, {} as Record<string, { category: schema.Category; tasks: Array<(typeof backlogTasksRaw)[0]> }>);
-
-    return Object.values(backlogCategorized).sort((a, b) =>
-      a.category.name.localeCompare(b.category.name)
-    );
+    return backlogTasks;
   }),
   getCategories: publicProcedure.query(async () => {
     return await db.query.category.findMany({});
@@ -284,6 +283,9 @@ const appRouter = router({
     .query(async ({ input }) => {
       return await db.query.task.findFirst({
         where: eq(schema.task.id, input.taskId),
+        with: {
+          taskUsers: { with: { user: true } },
+        },
       });
     }),
   // FIXME: WHO USES THIS?
