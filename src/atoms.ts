@@ -265,3 +265,12 @@ export const currentTasksAtom = atomFamily<Loadable<ServerTask>, string, Error>(
     return task;
   },
 });
+
+export type ServerStatistics = inferProcedureOutput<AppRouter["getStatistics"]>
+export const statisticsAtom = atom<Loadable<ServerStatistics>, Error>({
+  key: `statistics`,
+  default: async () => {
+    const output = await trpcClient.getStatistics.query()
+    return output
+  },
+})

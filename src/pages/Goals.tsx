@@ -1,5 +1,6 @@
-import { Activity, ShieldCheck } from "lucide-react";
+import { Activity } from "lucide-react";
 import { useState } from "react";
+import { useLoadable } from "atom.io/react";
 import {
   LineChart,
   Line,
@@ -18,6 +19,7 @@ import RecurringTaskGoal from "@/components/RecurringTaskGoal";
 import { inferProcedureOutput } from "@trpc/server";
 import type { AppRouter } from "../../server/index";
 import type { Task } from "../../server/schema";
+import { statisticsAtom } from "@/atoms"
 
 const PLANNING = true;
 
@@ -37,12 +39,14 @@ type CommittedTask = {
 };
 
 export default function Goals() {
-  const { loadingTasks, statistics, startCycle } = useTask();
+  const statistics = useLoadable(statisticsAtom)
+  const { startCycle } = useTask();
   const [committedTasks, setCommittedTasks] = useState<CommittedTask[]>([]);
 
-  if (loadingTasks) {
+  if (statistics === "LOADING") {
     return <LoadingScreen />;
   }
+  if (statistics.value instanceof Error) return null
 
   function handleToggleCommitted(templateTaskId: string, task: Task, targetCount: number) {
     if (committedTasks.find((c) => c.id === templateTaskId)) {
@@ -60,9 +64,9 @@ export default function Goals() {
     await startCycle({ recurringTasks: committedTasks, backlogTasks });
   }
 
-  const totalTasksCount = getTaskIds(statistics).length;
+  const totalTasksCount = getTaskIds(statistics.value).length;
   const readyToStartCycle = totalTasksCount === committedTasks.length;
-  const allVariant = readyToStartCycle ? "destructive" : "outline-solid";
+  const allVariant = readyToStartCycle ? "destructive" : "outline";
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -102,7 +106,7 @@ export default function Goals() {
               Track your history of task completion versus commitment
             </p>
           </div>
-          <BarChart width={1050} height={300} data={statistics?.overall}>
+          <BarChart width={1050} height={300} data={statistics.value.overall}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <Bar dataKey="completed" fill="hsl(var(--primary))" />
             <Bar dataKey="committed" fill="hsl(var(--muted-foreground))" />
@@ -134,7 +138,7 @@ export default function Goals() {
             <h2 className="text-2xl font-semibold mr-5">By Category</h2>
           </div>
           <div className="mt-6 space-y-8">
-            {statistics?.categoryData.map((category) => (
+            {statistics.value.categoryData.map((category) => (
               <div key={category.categoryId}>
                 <div className="flex justify-between items-center py-5 px-10">
                   <h3 className="text-xl font-semibold">{category.name}</h3>

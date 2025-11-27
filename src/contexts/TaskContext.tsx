@@ -277,7 +277,6 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
     <TaskContext.Provider
       value={{
         currentMonth: monthQuery.data,
-        users: userQuery.data,
         categories: getCategoriesQuery.data,
         currentTasks: getTasksByMonthQuery.data,
         statistics: getStatisticsQuery.data,
@@ -307,7 +306,6 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
 type TaskContextType = {
   currentMonth: CurrentMonthType | undefined;
-  users: Record<string, UserShape>| undefined;
   categories: Category[] | undefined;
   currentTasks: inferProcedureOutput<AppRouter["getCurrentMonthTasks"]> | undefined;
   statistics: inferProcedureOutput<AppRouter["getStatistics"]> | undefined;
