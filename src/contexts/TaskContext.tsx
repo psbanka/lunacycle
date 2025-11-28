@@ -276,14 +276,6 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <TaskContext.Provider
       value={{
-        currentMonth: monthQuery.data,
-        categories: getCategoriesQuery.data,
-        currentTasks: getTasksByMonthQuery.data,
-        statistics: getStatisticsQuery.data,
-        template: templateQuery.data,
-        templateTasks: templateTasksQuery.data,
-        loadingTasks: monthQuery.isLoading,
-        backlogTasks: backlogQuery.data,
         startCycle,
         completeTask,
         addTask,
@@ -305,16 +297,7 @@ export const TaskProvider: FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 type TaskContextType = {
-  currentMonth: CurrentMonthType | undefined;
-  categories: Category[] | undefined;
-  currentTasks: inferProcedureOutput<AppRouter["getCurrentMonthTasks"]> | undefined;
-  statistics: inferProcedureOutput<AppRouter["getStatistics"]> | undefined;
-  template: TemplateType | undefined;
-  templateTasks: inferProcedureOutput<AppRouter["getTemplateTasks"]> | undefined;
-  backlogTasks: inferProcedureOutput<AppRouter["getBacklogTasks"]> | undefined;
-
   // FIXME: Rename to 'loadingData'
-  loadingTasks: boolean;
   startCycle: (props: typeof StartCycleType.infer) => void;
   completeTask: (taskId: string) => void;
   addTask: (

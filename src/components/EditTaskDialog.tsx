@@ -1,4 +1,5 @@
 import { FIBONACCI } from "../../shared/types";
+import { useLoadable } from "atom.io/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { type } from "arktype";
@@ -9,6 +10,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useTask } from "@/contexts/TaskContext";
 import { Trash, Layers, Eye, EyeOff } from "lucide-react";
 import { UserSelectionFormItem } from "./UserSelectionFormItem";
+import { currentMonthAtom, EMPTY_MONTH } from "@/atoms";
 
 import {
   Dialog,
@@ -67,7 +69,6 @@ export function EditTaskDialog({
   initialValues,
 }: EditTaskDialogProps) {
   const {
-    currentMonth,
     addTask,
     updateTask,
     updateTemplateTask,
@@ -75,6 +76,7 @@ export function EditTaskDialog({
     deleteTask,
     deleteTemplateTask,
   } = useTask();
+  const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
   const isMobile = useMediaQuery("(max-width: 640px)"); // Tailwind's 'sm' breakpoint
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditingId = initialValues?.id;
@@ -99,7 +101,7 @@ export function EditTaskDialog({
     },
   });
 
-  if (!categoryId) return null;
+  if (!categoryId || currentMonth instanceof Error) return null;
 
   const onSubmit = async (values: TaskFormValues) => {
     setIsSubmitting(true);
@@ -384,7 +386,7 @@ export function EditTaskDialog({
                       type="button"
                       onClick={() =>
                         field.onChange(
-                          field.value === null ? currentMonth : null
+                          field.value === null ? currentMonth.value : null
                         )
                       }>
                       <Layers className="w-4 h-4" />

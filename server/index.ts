@@ -274,19 +274,27 @@ const appRouter = router({
   getCategory: publicProcedure
     .input(type({ categoryId: "string" }))
     .query(async ({ input }) => {
-      return await db.query.category.findFirst({
+      const output = await db.query.category.findFirst({
         where: eq(schema.category.id, input.categoryId),
       });
+      if (output === undefined) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
+      }
+      return output;
     }),
   getTask: publicProcedure
     .input(type({ taskId: "string" }))
     .query(async ({ input }) => {
-      return await db.query.task.findFirst({
+      const output = await db.query.task.findFirst({
         where: eq(schema.task.id, input.taskId),
         with: {
           taskUsers: { with: { user: true } },
         },
       });
+      if (output === undefined) {
+        throw new TRPCError({ code: "NOT_FOUND", message: `could not find task ${input.taskId}` })
+      }
+      return output;
     }),
   // FIXME: WHO USES THIS?
   getTasksByCategoryId: publicProcedure

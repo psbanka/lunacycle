@@ -2,16 +2,30 @@ import { type Loadable, setState, selector, selectorFamily } from "atom.io";
 import { trpcClient } from "./trpc-client-service";
 import { TRPCError, inferProcedureOutput } from "@trpc/server";
 import { atom, atomFamily } from "atom.io";
-import type { AppRouter, UserShape } from "../server/index";
+import type { AppRouter } from "../server/index";
 import type {
   ISO18601,
-  Month,
-  Task,
-  TemplateTask,
-  Category,
 } from "../server/schema";
 
-export const EMPTY_MONTH: Month = {
+// = TYPES ============================================================
+
+export type ServerFocusedTaskIds = inferProcedureOutput<AppRouter["getFocusedTaskIds"]>;
+export type ServerBacklogTasks = inferProcedureOutput<AppRouter["getBacklogTasks"]>;
+export type ServerBacklogTask = Base<ServerBacklogTasks>;
+export type ServerGetCategories = inferProcedureOutput<AppRouter["getCategories"]>;
+export type ServerGetCategory = inferProcedureOutput<AppRouter["getCategory"]>;
+export type ServerActiveMonth = inferProcedureOutput<AppRouter["getActiveMonth"]>;
+export type ServerStatistics = inferProcedureOutput<AppRouter["getStatistics"]>
+export type ServerGetTemplateTasks = inferProcedureOutput<AppRouter["getTemplateTasks"]>;
+export type ServerGetUser = inferProcedureOutput<AppRouter["getUser"]>;
+export type ServerGetTask = inferProcedureOutput<AppRouter["getTask"]>;
+export type ServerGetTemplate = inferProcedureOutput<AppRouter["getTemplate"]>;
+
+type Base<T extends readonly unknown[]> = T[number];
+
+// = PLACEHOLDERS =====================================================
+
+export const EMPTY_MONTH: ServerActiveMonth = {
   id: "",
   name: "",
   startDate: "start_date" as ISO18601,
@@ -21,14 +35,33 @@ export const EMPTY_MONTH: Month = {
   isActive: 0,
 };
 
-export const FAKE_CATEGORY: Category = {
+export const EMPTY_STATISTICS: ServerStatistics = {
+  overall: [],
+  categoryData: [],
+}
+
+export const EMPTY_TASK: ServerGetTask = {
+  id: '',
+  description: '',
+  title: '',
+  storyPoints: 0,
+  targetCount: 1,
+  categoryId: '',
+  templateTaskId: null,
+  isFocused: 0,
+  monthId: '',
+  completedCount: 0,
+  taskUsers: [],
+}
+
+export const FAKE_CATEGORY: ServerGetCategory = {
   id: '',
   emoji: '',
   name: '',
   description: '',
 }
 
-export const FAKE_USER: UserShape = {
+export const FAKE_USER: ServerGetUser = {
   id: '',
   email: '',
   role: 'user',
@@ -36,13 +69,10 @@ export const FAKE_USER: UserShape = {
   avatar: null,
 }
 
-type Base<T extends readonly unknown[]> = T[number];
-
-// type A = string[];
-// type B = Base<A>;   // string
-
-// type C = readonly [number, boolean];
-// type D = Base<C>;   // number | boolean
+export const EMPTY_TEMPLATE: ServerGetTemplate = {
+  id: '',
+  isActive: 1,
+}
 
 // = ATOMS ============================================================
 
@@ -60,7 +90,6 @@ export const userIdsAtom = atom<Loadable<string[]>, Error>({
   },
 });
 
-export type ServerGetUser = inferProcedureOutput<AppRouter["getUser"]>;
 export const userAtoms = atomFamily<
   Loadable<ServerGetUser>,
   string,
@@ -87,8 +116,7 @@ export const currentTaskIdsAtom = atom<Loadable<string[]>, Error>({
   },
 });
 
-export type ServerTask = inferProcedureOutput<AppRouter["getTask"]>;
-export const currentTasksAtom = atomFamily<Loadable<ServerTask>, string, Error>({
+export const currentTasksAtom = atomFamily<Loadable<ServerGetTask>, string, Error>({
   key: `tasks`,
   default: async (taskId) => {
     const task = await trpcClient.getTask.query({ taskId });
@@ -99,7 +127,32 @@ export const currentTasksAtom = atomFamily<Loadable<ServerTask>, string, Error>(
   },
 });
 
-export type ServerFocusedTaskIds = inferProcedureOutput<AppRouter["getFocusedTaskIds"]>;
+export const currentTasksByCategoryIdAtom = selectorFamily<
+  Loadable<ServerGetTask[]>,
+  string,
+  Error
+>({
+  key: `currentTasksByCategory`,
+  get: (categoryId) =>
+    async ({ get }) => {
+      const currentTaskIds = await get(currentTaskIdsAtom);
+      if (currentTaskIds instanceof Error) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "no tasks found" });
+      }
+      let output: ServerGetTask[] = [];
+      for (const currentTaskId of currentTaskIds) {
+        const currentTask = await get(currentTasksAtom, currentTaskId);
+        if (currentTask instanceof Error) {
+          continue;
+        }
+        if (currentTask?.categoryId === categoryId) {
+          output = [...output, currentTask];
+        }
+      }
+      return output;
+    },
+});
+
 export const focusedTaskIdsAtom = atom<Loadable<ServerFocusedTaskIds>, Error>({
   key: `focusedTaskIds`,
   default: async () => {
@@ -108,8 +161,6 @@ export const focusedTaskIdsAtom = atom<Loadable<ServerFocusedTaskIds>, Error>({
   },
 });
 
-export type ServerBacklogTasks = inferProcedureOutput<AppRouter["getBacklogTasks"]>;
-export type ServerBacklogTask = Base<ServerBacklogTasks>;
 export const backlogTaskIdsAtom = atom<Loadable<string[]>, Error>({
   key: `backlogTaskIds`,
   default: async () => {
@@ -167,13 +218,12 @@ export const backlogTasksByCategoryIdAtom = selectorFamily<
 
 // - CATEGORIES -------------------------------------------------------
 
-export type ServerGetCategories = inferProcedureOutput<AppRouter["getCategories"]>;
 export const categoryIdsAtom = atom<Loadable<string[]>, Error>({
   key: `categoryIds`,
   default: async () => {
     const categories = await trpcClient.getCategories.query();
     categories.forEach((category) =>
-      setState(categoriesAtom, category.id, category)
+      setState(categoryAtoms, category.id, category)
     );
     const categoryIds = categories.map((category) => category.id);
     return categoryIds;
@@ -185,7 +235,7 @@ export const categoryIdsAtom = atom<Loadable<string[]>, Error>({
 export const categoryByIdAtom = selectorFamily<Loadable<Base<ServerGetCategories>>, string, Error>({
   key: `categoryById`,
   get: (categoryId) => async ({ get }) => {
-      const category = await get(categoriesAtom, categoryId);
+      const category = await get(categoryAtoms, categoryId);
       if (category instanceof Error) {
         throw new TRPCError({ code: "NOT_FOUND", message: "No categories found" });
       }
@@ -195,8 +245,7 @@ export const categoryByIdAtom = selectorFamily<Loadable<Base<ServerGetCategories
     },
   })
 
-export type ServerGetCategory = inferProcedureOutput<AppRouter["getCategory"]>;
-export const categoriesAtom = atomFamily<Loadable<ServerGetCategory>, string, Error>({
+export const categoryAtoms = atomFamily<Loadable<ServerGetCategory>, string, Error>({
   key: `categories`,
   default: async (categoryId) => {
     const category = await trpcClient.getCategory.query({ categoryId });
@@ -207,9 +256,16 @@ export const categoriesAtom = atomFamily<Loadable<ServerGetCategory>, string, Er
   },
 });
 
-// - TEMPLATE TASKS ---------------------------------------------------
+// - TEMPLATES AND TEMPLATE TASKS -------------------------------------
 
-export type ServerGetTemplateTasks = inferProcedureOutput<AppRouter["getTemplateTasks"]>;
+export const templateAtom = atom<Loadable<ServerGetTemplate>, Error>({
+  key: `template`,
+  default: async () => {
+    const template = await trpcClient.getTemplate.query();
+    return template;
+  },
+});
+
 export const templateTaskIdsAtom = atom<Loadable<string[]>, Error>({
   key: `templateTaskIds`,
   default: async () => {
@@ -268,7 +324,6 @@ export const templateTasksByCategoryIdAtom = selectorFamily<
 
 // - CURRENT MONTH ----------------------------------------------------
 
-export type ServerActiveMonth = inferProcedureOutput<AppRouter["getActiveMonth"]>;
 export const currentMonthAtom = atom<Loadable<ServerActiveMonth>, Error>({
   key: `currentMonth`,
   default: async () => {
@@ -279,7 +334,6 @@ export const currentMonthAtom = atom<Loadable<ServerActiveMonth>, Error>({
 
 // -- STATISTICS ------------------------------------------------------
 
-export type ServerStatistics = inferProcedureOutput<AppRouter["getStatistics"]>
 export const statisticsAtom = atom<Loadable<ServerStatistics>, Error>({
   key: `statistics`,
   default: async () => {
@@ -299,7 +353,7 @@ type StatusPageCategoryStatus = {
 const categoryStatusSelector = selectorFamily<Loadable<StatusPageCategoryStatus>, string>({
   key: 'categoryStatusSelector',
   get: (categoryId) => async ({ get }) => {
-    const category = await get(categoriesAtom, categoryId)
+    const category = await get(categoryAtoms, categoryId)
     const currentTaskIds = await get (currentTaskIdsAtom)
     if (!category || currentTaskIds instanceof Error)
       throw new Error("no stuff")

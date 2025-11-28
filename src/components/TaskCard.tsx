@@ -1,4 +1,5 @@
 import { useTask } from "@/contexts/TaskContext";
+import { useLoadable } from "atom.io/react";
 import { cn } from "@/lib/utils";
 import { CheckCircle, CheckSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { useState } from "react";
 import { EditTaskDialog } from "./EditTaskDialog";
 import { StoryPointsBadge } from "./StoryPointsBadge";
 import { UserAvatar } from "./UserAvatar";
+import { currentMonthAtom, currentTasksAtom, EMPTY_TASK, EMPTY_MONTH } from "@/atoms";
 
 type TaskCardProps = {
   taskId: string;
@@ -18,32 +20,32 @@ export default function TaskCard({
   compact = false,
   className,
 }: TaskCardProps) {
-  const { completeTask, currentMonth, currentTasks } = useTask();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { completeTask } = useTask();
+  const task = useLoadable(currentTasksAtom, taskId, EMPTY_TASK);
+  const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
 
-  const task = currentTasks?.find((task) => task.id === taskId);
-  if (!task) return null;
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // FIXME
   // const isAssignedToUser = user && Boolean(task.assignedTo.find((u) => u.id === user.id));
   // const isAssignedToUser = Boolean(taskUsers?.find(tu => tu.userId === user?.id && tu.taskId === userTask.taskId));
   const isAssignedToUser = true;
-  const isCompleted = task.targetCount === task.completedCount;
+  const isCompleted = task.value.targetCount === task.value.completedCount;
   const progress =
-    task.targetCount > 0 ? (task.completedCount / task.targetCount) * 100 : 0;
+    task.value.targetCount > 0 ? (task.value.completedCount / task.value.targetCount) * 100 : 0;
   
-  const isContinuingTask = task.targetCount > 1;
+  const isContinuingTask = task.value.targetCount > 1;
 
   const handleComplete = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent the click from propagating to the parent div
-    completeTask(task.id);
+    completeTask(taskId);
   };
 
   const handleEditClick = () => {
     setIsEditDialogOpen(true);
   };
 
-  const isFocused = task.isFocused;
+  const isFocused = task.value.isFocused;
 
   return (
     <>
@@ -71,19 +73,19 @@ export default function TaskCard({
                 // Make the title bolder for continuing tasks
                 isContinuingTask && !isCompleted && "font-bold"
               )}>
-              {task.title}
+              {task.value.title}
             </h3>
 
-            <StoryPointsBadge storyPoints={task.storyPoints} />
+            <StoryPointsBadge storyPoints={task.value.storyPoints} />
           </div>
 
           {/* Counter for tasks that need to be done multiple times */}
-          {task.targetCount > 1 && (
+          {task.value.targetCount > 1 && (
             <div className="mt-2 flex items-center text-sm text-muted-foreground">
               <div className="flex items-center">
                 <CheckSquare className="h-4 w-4 mr-1" />
                 <span>
-                  {task.completedCount} / {task.targetCount}
+                  {task.value.completedCount} / {task.value.targetCount}
                 </span>
               </div>
 
@@ -101,7 +103,7 @@ export default function TaskCard({
           {isAssignedToUser && !compact && !isCompleted && (
             <div className="mt-4 flex justify-between items-center">
               <div className="flex -space-x-2 avatar-container">
-                {(task.taskUsers).map((tu) => (
+                {(task.value.taskUsers).map((tu) => (
                   <UserAvatar
                     key={tu.userId}
                     userId={tu.userId}
@@ -115,7 +117,7 @@ export default function TaskCard({
                 variant="ghost"
                 size="sm"
                 className="text-xs gap-1 hover:bg-primary/10">
-                {task.targetCount > 1 ? (
+                {task.value.targetCount > 1 ? (
                   <>
                     <Plus className="h-3.5 w-3.5" />
                     <span className="hidden @min-[180px]:inline">Add progress</span>
@@ -137,7 +139,7 @@ export default function TaskCard({
               variant="ghost"
               size="sm"
               className="absolute top-1 right-1 h-6 w-6 p-0">
-              {task.targetCount > 1 ? (
+              {task.value.targetCount > 1 ? (
                 <Plus className="h-3.5 w-3.5" />
               ) : (
                 <CheckCircle className="h-3.5 w-3.5" />
@@ -151,19 +153,19 @@ export default function TaskCard({
       <EditTaskDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        categoryId={task.categoryId}
-        monthId={currentMonth?.id || null}
+        categoryId={task.value.categoryId}
+        monthId={currentMonth?.value.id || null}
         isTemplateTask={false}
         initialValues={{
-          id: task.id,
-          title: task.title,
-          description: task.description || "",
-          storyPoints: task.storyPoints,
-          targetCount: task.targetCount,
-          isFocused: task.isFocused,
-          completedCount: task.completedCount,
-          monthId: task.monthId,
-          userIds: task.taskUsers.map((tu) => tu.userId),
+          id: task.value.id,
+          title: task.value.title,
+          description: task.value.description || "",
+          storyPoints: task.value.storyPoints,
+          targetCount: task.value.targetCount,
+          isFocused: task.value.isFocused,
+          completedCount: task.value.completedCount,
+          monthId: task.value.monthId,
+          userIds: task.value.taskUsers.map((tu) => tu.userId),
         }}
       />
     </>

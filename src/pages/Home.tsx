@@ -82,7 +82,7 @@ export default function Home() {
           .sort()
           .map((categoryId) => (
             <div key={categoryId} id={categoryId}>
-              <CategorySection id={categoryId} isTemplate={false} />
+              <CategorySection categoryId={categoryId} isTemplate={false} />
             </div>
           ))}
       </div>

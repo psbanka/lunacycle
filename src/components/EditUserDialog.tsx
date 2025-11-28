@@ -43,6 +43,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [newAvatar, setNewAvatar] = useState<string | undefined>(undefined);
   const { generateAvatarTask, uploadAvatarTask, updateUserTask } = useTask();
+  // FIXME: setPasswordHash is not used.
   const [newPasswordHash, setPasswordHash] = useState("");
 
   // Update the editedUser state when the user prop changes
