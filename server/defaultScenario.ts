@@ -80,14 +80,13 @@ async function createCategoryTasksAndAssignments({
 
 async function createUser(name: string, email: string, role: string) {
   const passwordHash = await hash("abc123", 10);
-  const avatar = await fetchRandomAvatar(email);
+  const avatar = await fetchRandomAvatar();
   db.insert(schema.user)
     .values({
       id: fakerEN.string.uuid(),
       name,
       email,
       role,
-      avatar,
       passwordHash,
     })
     .run();
@@ -191,5 +190,5 @@ export async function defaultScenario() {
     templateId: template.id,
   });
 
-  await createMonthFromActiveTemplate();
+  await createMonthFromActiveTemplate({ recurringTasks: [], backlogTasks: []});
 }

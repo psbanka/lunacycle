@@ -159,7 +159,7 @@ const RecurringTaskGoal = (props: RecurringTaskGoalProps) => {
           </Button>
           <Button
             type="button"
-            variant={props.committed ? "default" : "outline-solid"}
+            variant={props.committed ? "default" : "outline"}
             size="icon"
             className="h-6 w-6"
             onClick={handleCommit}>

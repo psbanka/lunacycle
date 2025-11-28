@@ -1,4 +1,4 @@
-import { type Loadable, setState, selectorFamily } from "atom.io";
+import { type Loadable, setState, selector, selectorFamily } from "atom.io";
 import { trpcClient } from "./trpc-client-service";
 import { TRPCError, inferProcedureOutput } from "@trpc/server";
 import { atom, atomFamily } from "atom.io";
@@ -44,7 +44,9 @@ type Base<T extends readonly unknown[]> = T[number];
 // type C = readonly [number, boolean];
 // type D = Base<C>;   // number | boolean
 
-// - ATOMS ---------------------------------------
+// = ATOMS ============================================================
+
+// - USERS ------------------------------------------------------------
 
 export const userIdsAtom = atom<Loadable<string[]>, Error>({
   key: `userIds`,
@@ -74,6 +76,29 @@ export const userAtoms = atomFamily<
   },
 });
 
+// - TASKS ------------------------------------------------------------
+
+export const currentTaskIdsAtom = atom<Loadable<string[]>, Error>({
+  key: `taskIds`,
+  default: async () => {
+    const tasks = await trpcClient.getCurrentMonthTasks.query();
+    tasks.forEach((task) => setState(currentTasksAtom, task.id, task));
+    return tasks.map((task) => task.id);
+  },
+});
+
+export type ServerTask = inferProcedureOutput<AppRouter["getTask"]>;
+export const currentTasksAtom = atomFamily<Loadable<ServerTask>, string, Error>({
+  key: `tasks`,
+  default: async (taskId) => {
+    const task = await trpcClient.getTask.query({ taskId });
+    if (!task) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
+    }
+    return task;
+  },
+});
+
 export type ServerFocusedTaskIds = inferProcedureOutput<AppRouter["getFocusedTaskIds"]>;
 export const focusedTaskIdsAtom = atom<Loadable<ServerFocusedTaskIds>, Error>({
   key: `focusedTaskIds`,
@@ -81,102 +106,6 @@ export const focusedTaskIdsAtom = atom<Loadable<ServerFocusedTaskIds>, Error>({
     const taskIds = await trpcClient.getFocusedTaskIds.query();
     return taskIds;
   },
-});
-
-export type ServerGetCategories = inferProcedureOutput<AppRouter["getCategories"]>;
-export const categoryIdsAtom = atom<Loadable<string[]>, Error>({
-  key: `categoryIds`,
-  default: async () => {
-    const categories = await trpcClient.getCategories.query();
-    categories.forEach((category) =>
-      setState(categoriesAtom, category.id, category)
-    );
-    const categoryIds = categories.map((category) => category.id);
-    return categoryIds;
-  },
-});
-
-// TODO::REname to categoryByIdSelector
-export const categoryByIdAtom = selectorFamily<Loadable<Base<ServerGetCategories>>, string, Error>({
-  key: `categoryById`,
-  get: (categoryId) => async ({ get }) => {
-      const category = await get(categoriesAtom, categoryId);
-      if (category instanceof Error) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "No categories found" });
-      }
-      if (category === undefined)
-        throw new TRPCError({ code: "NOT_FOUND", message: "No categories found" });
-      return category;
-    },
-  })
-
-export type ServerGetCategory = inferProcedureOutput<AppRouter["getCategory"]>;
-export const categoriesAtom = atomFamily<Loadable<ServerGetCategory>, string, Error>({
-  key: `categories`,
-  default: async (categoryId) => {
-    const category = await trpcClient.getCategory.query({ categoryId });
-    if (!category) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
-    }
-    return category;
-  },
-});
-
-export type ServerGetTemplateTasks = inferProcedureOutput<AppRouter["getTemplateTasks"]>;
-export const templateTaskIdsAtom = atom<Loadable<string[]>, Error>({
-  key: `templateTaskIds`,
-  default: async () => {
-    const templateTasks = await trpcClient.getTemplateTasks.query();
-    for (const templateTask of templateTasks) {
-      setState(templateTaskAtoms, templateTask.id, templateTask);
-    }
-    const templateTaskIds = templateTasks.map((category) => category.id);
-    return templateTaskIds;
-  },
-  catch: [],
-});
-
-export const templateTaskAtoms = atomFamily<
-  Loadable<Base<ServerGetTemplateTasks>>,
-  string,
-  Error
->({
-  key: `templateTask`,
-  default: async (templateTaskId) => {
-    const templateTask = await trpcClient.getTemplateTask.query({
-      templateTaskId,
-    });
-    if (!templateTask) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "templateTask not found" });
-    }
-    return templateTask;
-  },
-});
-
-export const templateTasksByCategoryIdAtom = selectorFamily<
-  Loadable<Base<ServerGetTemplateTasks>[]>,
-  string,
-  Error
->({
-  key: `templateTasksByCategory`,
-  get: (categoryId) =>
-    async ({ get }) => {
-      const templateTaskIds = await get(templateTaskIdsAtom);
-      if (templateTaskIds instanceof Error) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "no tasks found" });
-      }
-      let output: ServerGetTemplateTasks = [];
-      for (const templateTaskId of templateTaskIds) {
-        const templateTask = await get(templateTaskAtoms, templateTaskId);
-        if (templateTask instanceof Error) {
-          continue;
-        }
-        if (templateTask.categoryId === categoryId) {
-          output = [...output, templateTask];
-        }
-      }
-      return output;
-    },
 });
 
 export type ServerBacklogTasks = inferProcedureOutput<AppRouter["getBacklogTasks"]>;
@@ -236,6 +165,109 @@ export const backlogTasksByCategoryIdAtom = selectorFamily<
     },
 });
 
+// - CATEGORIES -------------------------------------------------------
+
+export type ServerGetCategories = inferProcedureOutput<AppRouter["getCategories"]>;
+export const categoryIdsAtom = atom<Loadable<string[]>, Error>({
+  key: `categoryIds`,
+  default: async () => {
+    const categories = await trpcClient.getCategories.query();
+    categories.forEach((category) =>
+      setState(categoriesAtom, category.id, category)
+    );
+    const categoryIds = categories.map((category) => category.id);
+    return categoryIds;
+  },
+});
+
+// FIXME
+// TODO::REname to categoryByIdSelector
+export const categoryByIdAtom = selectorFamily<Loadable<Base<ServerGetCategories>>, string, Error>({
+  key: `categoryById`,
+  get: (categoryId) => async ({ get }) => {
+      const category = await get(categoriesAtom, categoryId);
+      if (category instanceof Error) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "No categories found" });
+      }
+      if (category === undefined)
+        throw new TRPCError({ code: "NOT_FOUND", message: "No categories found" });
+      return category;
+    },
+  })
+
+export type ServerGetCategory = inferProcedureOutput<AppRouter["getCategory"]>;
+export const categoriesAtom = atomFamily<Loadable<ServerGetCategory>, string, Error>({
+  key: `categories`,
+  default: async (categoryId) => {
+    const category = await trpcClient.getCategory.query({ categoryId });
+    if (!category) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
+    }
+    return category;
+  },
+});
+
+// - TEMPLATE TASKS ---------------------------------------------------
+
+export type ServerGetTemplateTasks = inferProcedureOutput<AppRouter["getTemplateTasks"]>;
+export const templateTaskIdsAtom = atom<Loadable<string[]>, Error>({
+  key: `templateTaskIds`,
+  default: async () => {
+    const templateTasks = await trpcClient.getTemplateTasks.query();
+    for (const templateTask of templateTasks) {
+      setState(templateTaskAtoms, templateTask.id, templateTask);
+    }
+    const templateTaskIds = templateTasks.map((category) => category.id);
+    return templateTaskIds;
+  },
+  catch: [],
+});
+
+export const templateTaskAtoms = atomFamily<
+  Loadable<Base<ServerGetTemplateTasks>>,
+  string,
+  Error
+>({
+  key: `templateTask`,
+  default: async (templateTaskId) => {
+    const templateTask = await trpcClient.getTemplateTask.query({
+      templateTaskId,
+    });
+    if (!templateTask) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "templateTask not found" });
+    }
+    return templateTask;
+  },
+});
+
+export const templateTasksByCategoryIdAtom = selectorFamily<
+  Loadable<Base<ServerGetTemplateTasks>[]>,
+  string,
+  Error
+>({
+  key: `templateTasksByCategory`,
+  get: (categoryId) =>
+    async ({ get }) => {
+      const templateTaskIds = await get(templateTaskIdsAtom);
+      if (templateTaskIds instanceof Error) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "no tasks found" });
+      }
+      let output: ServerGetTemplateTasks = [];
+      for (const templateTaskId of templateTaskIds) {
+        const templateTask = await get(templateTaskAtoms, templateTaskId);
+        if (templateTask instanceof Error) {
+          continue;
+        }
+        if (templateTask.categoryId === categoryId) {
+          output = [...output, templateTask];
+        }
+      }
+      return output;
+    },
+});
+
+// - CURRENT MONTH ----------------------------------------------------
+
 export type ServerActiveMonth = inferProcedureOutput<AppRouter["getActiveMonth"]>;
 export const currentMonthAtom = atom<Loadable<ServerActiveMonth>, Error>({
   key: `currentMonth`,
@@ -245,26 +277,7 @@ export const currentMonthAtom = atom<Loadable<ServerActiveMonth>, Error>({
   },
 });
 
-export const currentTaskIdsAtom = atom<Loadable<string[]>, Error>({
-  key: `taskIds`,
-  default: async () => {
-    const tasks = await trpcClient.getCurrentMonthTasks.query();
-    tasks.forEach((task) => setState(currentTasksAtom, task.id, task));
-    return tasks.map((task) => task.id);
-  },
-});
-
-export type ServerTask = inferProcedureOutput<AppRouter["getTask"]>;
-export const currentTasksAtom = atomFamily<Loadable<ServerTask>, string, Error>({
-  key: `tasks`,
-  default: async (taskId) => {
-    const task = await trpcClient.getTask.query({ taskId });
-    if (!task) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
-    }
-    return task;
-  },
-});
+// -- STATISTICS ------------------------------------------------------
 
 export type ServerStatistics = inferProcedureOutput<AppRouter["getStatistics"]>
 export const statisticsAtom = atom<Loadable<ServerStatistics>, Error>({
@@ -274,3 +287,55 @@ export const statisticsAtom = atom<Loadable<ServerStatistics>, Error>({
     return output
   },
 })
+
+type StatusPageCategoryStatus = {
+  totalTasks: number,
+  completedTasks: number,
+  completion: number,
+  behindScheduleTasks: never[]
+}
+
+// TODO: IN PROGRESS
+const categoryStatusSelector = selectorFamily<Loadable<StatusPageCategoryStatus>, string>({
+  key: 'categoryStatusSelector',
+  get: (categoryId) => async ({ get }) => {
+    const category = await get(categoriesAtom, categoryId)
+    const currentTaskIds = await get (currentTaskIdsAtom)
+    if (!category || currentTaskIds instanceof Error)
+      throw new Error("no stuff")
+
+    const totalTasks = currentTaskIds.length;
+
+    if (totalTasks === 0) {
+      throw new Error("no stuff")
+    }
+
+    const completedTasks = 0;
+    const recurringTasks = []; // TODO
+    const behindScheduleTasks = []; // TODO
+
+    // Check if any recurring tasks are behind schedule
+    /*
+    const behindScheduleTasks = recurringTasks.filter((task) => {
+      // If we have more than 0 days remaining
+      if (task.daysRemaining <= 0) return false;
+
+      const remainingCount = task.targetCount - task.completedCount;
+      const remainingCount = 1;
+      const daysPerRemaining = daysRemaining / remainingCount;
+
+      // If we need to do more than one every other day, we're behind
+      return daysPerRemaining < 2;
+    });
+    */
+
+    const status = {
+      totalTasks,
+      completedTasks,
+      completion: Math.round((completedTasks / totalTasks) * 100),
+      behindScheduleTasks,
+    };
+
+    return status;
+  },
+});

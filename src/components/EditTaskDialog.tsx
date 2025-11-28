@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { type } from "arktype";
 import { arktypeResolver } from "@hookform/resolvers/arktype";
-import { LoadingScreen } from "./LoadingScreen";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
@@ -73,7 +72,6 @@ export function EditTaskDialog({
     updateTask,
     updateTemplateTask,
     addTemplateTask,
-    users,
     deleteTask,
     deleteTemplateTask,
   } = useTask();
@@ -191,10 +189,6 @@ export function EditTaskDialog({
       setIsSubmitting(false);
     }
   };
-
-  if (!users) {
-    return <LoadingScreen />;
-  }
 
   const errorMessages = Object.values(form.formState.errors).map(
     (error) => error.message
@@ -337,7 +331,6 @@ export function EditTaskDialog({
             <UserSelectionFormItem
               control={form.control}
               name="userIds"
-              users={users}
             />
 
             <DialogFooter className="mt-6">

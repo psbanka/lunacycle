@@ -1,5 +1,5 @@
 import { useLoadable } from "atom.io/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { EditUserDialog } from "@/components/EditUserDialog";
 import { User } from "../../server/schema";
-import { type UserShape } from "../../server/index.ts";
 import { userIdsAtom } from "@/atoms.ts";
 import { UserRow } from "@/components/UserRow";
 

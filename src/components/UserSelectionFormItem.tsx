@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import type { Control } from "react-hook-form";
-import type { User } from "../../server/schema";
+import { useLoadable } from "atom.io/react";
+import { getState } from "atom.io";
 import {
   FormControl,
   FormDescription,
@@ -13,13 +14,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { UserAvatar } from "@/components/UserAvatar";
 import { UserShape } from "../../server/index.ts";
+import { userIdsAtom, userAtoms, FAKE_USER } from "@/atoms";
 
 interface UserSelectionFormItemProps {
   control: Control<any>; // Using `any` for now, can be improved with form values type
   name: string;
   label?: string;
   description?: React.ReactNode;
-  users: Record<string, UserShape>;
   onSelectionChange?: (userIds: string[]) => void;
 }
 
@@ -28,16 +29,28 @@ export function UserSelectionFormItem({
   name,
   label = "Assign to",
   description = "Select at least one person to assign this task to",
-  users,
   onSelectionChange,
 }: UserSelectionFormItemProps) {
-  const nonAdminUsers = Object.values(users).reduce((acc, user) => {
-    if (user.role !== "admin") {
-      acc.push(user);
-    }
-    return acc;
-  }, [] as UserShape[]);
+  const userIds = useLoadable(userIdsAtom, [])
+  const [ nonAdminUsers, setNonAdminUsers ] = useState<UserShape[]>([])
 
+  useEffect(() => {
+    async function getNonAdminUsers() {
+      const newNonAdminUsers: UserShape[] = [];
+      for (const userId of userIds.value) {
+        const user = await getState(userAtoms, userId)
+        if (user instanceof Error) continue;
+        if (user.role !== "admin") {
+          newNonAdminUsers.push(user);
+        }
+      }
+      setNonAdminUsers(newNonAdminUsers);
+    }
+
+    getNonAdminUsers()
+  }, []);
+
+  if (userIds instanceof Error) return null;
   return (
     <FormField
       control={control}
