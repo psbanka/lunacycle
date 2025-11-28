@@ -1,4 +1,3 @@
-import { useTask } from "@/contexts/TaskContext";
 import { useLoadable } from "atom.io/react";
 import { cn } from "@/lib/utils";
 import { CheckCircle, CheckSquare, Plus } from "lucide-react";
@@ -8,6 +7,7 @@ import { EditTaskDialog } from "./EditTaskDialog";
 import { StoryPointsBadge } from "./StoryPointsBadge";
 import { UserAvatar } from "./UserAvatar";
 import { currentMonthAtom, currentTasksAtom, EMPTY_TASK, EMPTY_MONTH } from "@/atoms";
+import { completeTask } from "@/actions";
 
 type TaskCardProps = {
   taskId: string;
@@ -20,7 +20,6 @@ export default function TaskCard({
   compact = false,
   className,
 }: TaskCardProps) {
-  const { completeTask } = useTask();
   const task = useLoadable(currentTasksAtom, taskId, EMPTY_TASK);
   const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
 

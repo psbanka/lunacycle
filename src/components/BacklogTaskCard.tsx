@@ -1,4 +1,3 @@
-import { useTask } from "@/contexts/TaskContext";
 import { useLoadable } from "atom.io/react"
 import { cn } from "@/lib/utils";
 import { Trash, PencilIcon, ArrowUpToLine } from "lucide-react";
@@ -8,6 +7,7 @@ import { EditTaskDialog } from "./EditTaskDialog";
 import { UserAvatar } from "./UserAvatar";
 import { StoryPointsBadge } from "./StoryPointsBadge";
 import { type ServerBacklogTask, currentMonthAtom, EMPTY_MONTH } from "@/atoms";
+import { updateTask, deleteTask } from "@/actions";
 
 type TaskCardProps = {
   task: ServerBacklogTask;
@@ -16,7 +16,6 @@ type TaskCardProps = {
 
 export default function BacklogTaskCard({ task, className }: TaskCardProps) {
   const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH)
-  const { updateTask, deleteTask } = useTask();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   if (!task) return null;
@@ -30,14 +29,12 @@ export default function BacklogTaskCard({ task, className }: TaskCardProps) {
 
   function promoteToMonth() {
     if (currentMonth.loading) return;
-    updateTask(
-      task.id,
-      {
-        ...task,
-        monthId: currentMonth.value.id,
-      },
-      task.taskUsers.map((tu) => tu.userId)
-    );
+    const userIds = task.taskUsers.map((tu) => (tu.userId))
+    updateTask({ task: {
+      ...task,
+      monthId: currentMonth.value.id,
+      userIds,
+    }});
   }
 
   function handleDelete() {

@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { TRPCProvider } from "./lib/trpc";
-import { TaskProvider } from "./contexts/TaskContext";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -132,18 +131,8 @@ const AppCore = () => {
 // Main App with all providers
 const App = () => {
   const queryClient = getQueryClient();
-  const [trpcClient] = useState(() =>
-    trpc
-  /*
-    createTRPCClient<AppRouter>({
-      links: [
-        httpBatchLink({
-          // TODO: remove duplicate stuff?
-          url: `http://${env.VITE_BACKEND_ORIGIN}/api/`,
-        }),
-      ],
-    })
-      */
+  const [trpcClient] = useState(
+    () => trpc
   );
 
   return (
@@ -153,13 +142,11 @@ const App = () => {
         <TooltipProvider>
           <ThemeProvider>
             <AuthProvider>
-              <TaskProvider>
               <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <AppCore />
-                </BrowserRouter>
-              </TaskProvider>
+              <Sonner />
+              <BrowserRouter>
+                <AppCore />
+              </BrowserRouter>
             </AuthProvider>
           </ThemeProvider>
         </TooltipProvider>

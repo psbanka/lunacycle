@@ -1,13 +1,11 @@
 import { FIBONACCI } from "../../shared/types";
 import { useLoadable } from "atom.io/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { type } from "arktype";
 import { arktypeResolver } from "@hookform/resolvers/arktype";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-
-import { useTask } from "@/contexts/TaskContext";
 import { Trash, Layers, Eye, EyeOff } from "lucide-react";
 import { UserSelectionFormItem } from "./UserSelectionFormItem";
 import { currentMonthAtom, EMPTY_MONTH } from "@/atoms";
@@ -34,6 +32,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
+import {
+  addTask,
+  updateTask,
+  updateTemplateTask,
+  deleteTask,
+  deleteTemplateTask,
+  addTemplateTask,
+} from "@/actions";
 
 // Schema for task creation
 export const TaskSchema = type({
@@ -68,14 +74,6 @@ export function EditTaskDialog({
   isTemplateTask,
   initialValues,
 }: EditTaskDialogProps) {
-  const {
-    addTask,
-    updateTask,
-    updateTemplateTask,
-    addTemplateTask,
-    deleteTask,
-    deleteTemplateTask,
-  } = useTask();
   const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
   const isMobile = useMediaQuery("(max-width: 640px)"); // Tailwind's 'sm' breakpoint
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,6 +99,16 @@ export function EditTaskDialog({
     },
   });
 
+  useEffect(() => {
+    // Reset the form only when the task being edited changes,
+    // not on every render. We use the ID to track this.
+    form.reset({
+      monthId,
+      categoryId,
+      ...initialValues,
+    });
+  }, [initialValues?.id, monthId, categoryId, form.reset]);
+
   if (!categoryId || currentMonth instanceof Error) return null;
 
   const onSubmit = async (values: TaskFormValues) => {
@@ -109,59 +117,57 @@ export function EditTaskDialog({
     try {
       if (isEditingId) {
         if (isTemplateTask === false) {
-          await updateTask(
-            isEditingId,
-            {
+          await updateTask({
+            task: {
+              id: isEditingId,
               title: values.title,
               description: values.description || null,
               storyPoints: values.storyPoints,
               targetCount: values.targetCount,
-              completedCount: values.completedCount || 0,
               isFocused: values.isFocused || 0,
               monthId: values.monthId,
-              templateTaskId: null,
               categoryId: values.categoryId,
+              userIds: values.userIds,
             },
-            values.userIds
-          );
+          });
         } else {
-          await updateTemplateTask(
-            isEditingId,
-            {
+          await updateTemplateTask({
+            task: {
+              id: isEditingId,
               title: values.title,
               description: values.description || null,
               storyPoints: values.storyPoints,
               targetCount: values.targetCount,
               categoryId: values.categoryId,
+              userIds: values.userIds,
             },
-            values.userIds
-          );
+          });
         } // FIXME: THESE USE-CASES ARE BROKEN
       } else if (isTemplateTask === false) {
-        await addTask(
-          {
+        await addTask({
+          task: {
             title: values.title,
             description: values.description || null,
             storyPoints: values.storyPoints,
             targetCount: values.targetCount,
             categoryId: categoryId,
             monthId: monthId,
+            templateTaskId: null,
             isFocused: values.isFocused || 0,
-            completedCount: 0,
+            userIds,
           },
-          userIds
-        );
+        });
       } else {
-        await addTemplateTask(
-          {
+        await addTemplateTask({
+          task: {
             title: values.title,
             description: values.description || null,
             storyPoints: values.storyPoints,
             targetCount: values.targetCount,
             categoryId: values.categoryId,
+            userIds,
           },
-          userIds
-        );
+        });
       }
 
       // Reset form and close dialog
@@ -330,10 +336,7 @@ export function EditTaskDialog({
                 />
               )}
 
-            <UserSelectionFormItem
-              control={form.control}
-              name="userIds"
-            />
+            <UserSelectionFormItem control={form.control} name="userIds" />
 
             <DialogFooter className="mt-6">
               {errorMessages.length > 0 && (

@@ -13,10 +13,10 @@ import { Label } from "@/components/ui/label";
 import { User } from "../../server/schema";
 import { useState, useEffect } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
-import { useTask } from "@/contexts/TaskContext";
 import { toast } from "sonner";
 import { type UserShape } from "../../server/index.ts";
 import { userAtoms, FAKE_USER } from "@/atoms";
+import { updateUserTask, generateAvatarTask, uploadAvatarTask } from "@/actions";
 
 interface EditUserDialogProps {
   open: boolean;
@@ -42,13 +42,11 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [newAvatar, setNewAvatar] = useState<string | undefined>(undefined);
-  const { generateAvatarTask, uploadAvatarTask, updateUserTask } = useTask();
   // FIXME: setPasswordHash is not used.
   const [newPasswordHash, setPasswordHash] = useState("");
 
   // Update the editedUser state when the user prop changes
   useEffect(() => {
-    debugger;
     setEditedUser({
       ...user.value,
       passwordHash: newPasswordHash,
@@ -62,7 +60,6 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   };
 
   const handleGenerateNewAvatar = async () => {
-    debugger;
     const generatedAvatar = await generateAvatarTask();
     if (generatedAvatar) setNewAvatar(generatedAvatar);
   };

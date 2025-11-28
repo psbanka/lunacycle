@@ -12,7 +12,6 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
-import { useTask } from "@/contexts/TaskContext";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import RecurringTaskGoal from "@/components/RecurringTaskGoal";
@@ -20,6 +19,7 @@ import { inferProcedureOutput } from "@trpc/server";
 import type { AppRouter } from "../../server/index";
 import type { Task } from "../../server/schema";
 import { statisticsAtom } from "@/atoms"
+import { startCycle } from "@/actions";
 
 const PLANNING = true;
 
@@ -40,7 +40,6 @@ type CommittedTask = {
 
 export default function Goals() {
   const statistics = useLoadable(statisticsAtom)
-  const { startCycle } = useTask();
   const [committedTasks, setCommittedTasks] = useState<CommittedTask[]>([]);
 
   if (statistics === "LOADING") {

@@ -2,7 +2,6 @@ import TaskCard from "./TaskCard";
 import { useLoadable } from "atom.io/react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useTask } from "@/contexts/TaskContext";
 import { EditTaskDialog } from "@/components/EditTaskDialog";
 import { useState } from "react";
 import { categoryAtoms, currentTasksByCategoryIdAtom, currentTaskIdsAtom, currentMonthAtom, EMPTY_MONTH, FAKE_CATEGORY } from "@/atoms";
@@ -16,7 +15,6 @@ export default function CategorySection({ categoryId, isTemplate }: CategorySect
   const tasks = useLoadable(currentTasksByCategoryIdAtom, categoryId, []);
   const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
   const category = useLoadable(categoryAtoms, categoryId, FAKE_CATEGORY);
-  const { addTask } = useTask();
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
   if (currentMonth instanceof Error || category instanceof Error) return null;

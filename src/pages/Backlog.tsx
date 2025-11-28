@@ -1,5 +1,4 @@
 import { useLoadable } from "atom.io/react"
-import { useTask } from "@/contexts/TaskContext";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Plus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -8,8 +7,6 @@ import { BacklogCategorySection } from "@/components/BacklogCategorySection";
 
 export default function Backlog() {
   const categoryIds = useLoadable(categoryIdsAtom, []);
-  const { updateTask } = useTask();
-
   if (categoryIds.error) {
     return null;
   }

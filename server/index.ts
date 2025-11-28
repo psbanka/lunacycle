@@ -5,7 +5,7 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { createMonthFromActiveTemplate } from "./createMonth.ts";
 import { TRPCError } from "@trpc/server";
 import { login } from "./login.ts";
-import { eq, isNull, and } from "drizzle-orm";
+import { eq, isNotNull, isNull, and } from "drizzle-orm";
 import { fakerEN } from "@faker-js/faker";
 import * as schema from "./schema";
 import {
@@ -213,7 +213,10 @@ const appRouter = router({
   }),
   getFocusedTaskIds: publicProcedure.query(async () => {
     const tasks = await db.query.task.findMany({
-      where: eq(schema.task.isFocused, 1),
+      where: and(
+        isNotNull(schema.task.monthId),
+        eq(schema.task.isFocused, 1),
+      )
     });
     return tasks.map((task) => task.id);
   }),
@@ -334,6 +337,7 @@ const appRouter = router({
         category: type({
           name: "string",
           description: "string | null",
+          emoji: "string | null",
         }),
       })
     )
@@ -363,6 +367,7 @@ const appRouter = router({
         id: "string",
         name: "string",
         description: "string | null",
+        emoji: "string | null",
       })
     )
     .mutation(async ({ input }) => {
