@@ -2,6 +2,9 @@ import { db } from "./db.ts";
 import { type } from "arktype";
 // import { publicProcedure, router, MyEventEmitter } from "./trpc.ts";
 import { publicProcedure, router } from "./trpc.ts";
+import { observable } from "@trpc/server/observable";
+import { serverEvents } from "./events";
+
 import { createMonthFromActiveTemplate } from "./createMonth.ts";
 import { TRPCError } from "@trpc/server";
 import { login } from "./login.ts";
@@ -485,29 +488,25 @@ export const appRouter = router({
       return updatedTask;
     }),
   onMessage: publicProcedure.subscription(() => {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "not implemented",
-    });
-    /*
     return observable<{ message: string }>((emit) => {
-      const onMessage = (data: { message: string }) => {
+      const handler = (data: { message: string }) => {
         emit.next(data);
       };
-      eventEmitter.on("message", onMessage);
+
+      // Listen for events
+      serverEvents.on("message", handler);
+
+      // Cleanup on unsubscribe
       return () => {
-        eventEmitter.off("message", onMessage);
+        serverEvents.off("message", handler);
       };
     });
-    */
   }),
   sendMessage: publicProcedure
     .input(type({ message: "string" }))
     .mutation(async ({ input, ctx }) => {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "not implemented",
+      serverEvents.emit("message", {
+        message: "Server heartbeat " + new Date().toISOString()
       });
-      // ctx.eventEmitter.emit("message", { message: input.message });
     }),
 });

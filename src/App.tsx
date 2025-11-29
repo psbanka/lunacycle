@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { trpcClient } from './trpc-client-service'
 import { useState } from "react";
 import { TRPCProvider } from "./lib/trpc";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -66,6 +67,15 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // App Core without providers for use inside providers
 const AppCore = () => {
   const { toast } = useToast();
+  trpcClient.onMessage.subscribe(undefined, {
+    onData: (data) => {
+      toast({
+        title: "New Message",
+        description: data.message,
+      });
+    },
+  });
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
