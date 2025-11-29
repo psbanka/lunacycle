@@ -17,6 +17,7 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { trpc } from "./api";
+import { useToast } from "@/components/ui/use-toast";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -64,6 +65,15 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // App Core without providers for use inside providers
 const AppCore = () => {
+  const { toast } = useToast();
+  trpc.onMessage.subscribe(undefined, {
+    onData: (data) => {
+      toast({
+        title: "New Message",
+        description: data.message,
+      });
+    },
+  });
   return (
     <Routes>
       <Route path="/login" element={<Login />} />

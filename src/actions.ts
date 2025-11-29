@@ -102,3 +102,8 @@ const deleteCategory = async (categoryId: string) => {
   toast.success("Category deleted!");
 };
 
+export const sendMessage = async (props: inferProcedureInput<AppRouter["sendMessage"]>) => {
+  await trpcClient.sendMessage.mutate(props);
+  toast.success("Message sent!");
+};
+

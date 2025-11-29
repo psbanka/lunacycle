@@ -1,7 +1,8 @@
 import { db } from "./db.ts";
 import { type } from "arktype";
-import { publicProcedure, router } from "./trpc.ts";
+import { publicProcedure, router, MyEventEmitter } from "./trpc.ts";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { createMonthFromActiveTemplate } from "./createMonth.ts";
 import { TRPCError } from "@trpc/server";
 import { login } from "./login.ts";
@@ -20,6 +21,9 @@ import {
   updateAvatar,
   updateUser,
 } from "./updateUsers.ts";
+import { observable } from "@trpc/server/observable";
+
+const eventEmitter = new MyEventEmitter();
 
 export type VelocityData = Array<{
   monthId: string;
@@ -143,26 +147,6 @@ const appRouter = router({
     .mutation(async ({ input }) => {
       return await updateUser(input);
     }),
-  /*
-  userById: publicProcedure
-    .input(type({ id: "string" }))
-    .query(async ({ input }) => {
-      const response = await db.user.findFirst({
-        where: { id: { equals: input.id } },
-      });
-      if (!response) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
-      }
-      return { ...response, passwordHash: undefined };
-    }),
-  userCreate: publicProcedure
-    .input(type({ name: "string", email: "string" }))
-    .mutation(async (options) => {
-      const { name, email } = options.input;
-      const user = await db.user.create({ name, email });
-      return user;
-    }),
-    */
   getStatistics: publicProcedure.query(async () => {
     const [overall] = await getVelocityByMonth();
 
@@ -252,7 +236,6 @@ const appRouter = router({
         templateTaskUsers: { with: { user: true } },
       },
     });
-    // TODO: DO MORE OF THIS
     if (!output) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Template task not found" });
     }
@@ -267,7 +250,7 @@ const appRouter = router({
       with: {
         taskUsers: { with: { user: true } },
       },
-      orderBy: (tasks, { asc }) => [asc(tasks.title)], // Example ordering
+      orderBy: (tasks, { asc }) => [asc(tasks.title)],
     });
     return backlogTasks;
   }),
@@ -299,7 +282,6 @@ const appRouter = router({
       }
       return output;
     }),
-  // FIXME: WHO USES THIS?
   getTasksByCategoryId: publicProcedure
     .input(type({ categoryId: "string" }))
     .query(async ({ input }) => {
@@ -395,7 +377,6 @@ const appRouter = router({
           message: "Category not found",
         });
       }
-      // TODO: Go through all tasks with categoryID and error if there are any
       const tasksOfThisCategory = await db.query.task.findMany({
         where: eq(schema.category.id, category.id),
       });
@@ -505,12 +486,45 @@ const appRouter = router({
       });
       return updatedTask;
     }),
+  onMessage: publicProcedure.subscription(() => {
+    return observable<{ message: string }>((emit) => {
+      const onMessage = (data: { message: string }) => {
+        emit.next(data);
+      };
+      eventEmitter.on("message", onMessage);
+      return () => {
+        eventEmitter.off("message", onMessage);
+      };
+    });
+  }),
+  sendMessage: publicProcedure
+    .input(type({ message: "string" }))
+    .mutation(async ({ input, ctx }) => {
+      ctx.eventEmitter.emit("message", { message: input.message });
+    }),
+});
+
+import { EventEmitter } from "node:events";
+
+const wss = new EventEmitter();
+applyWSSHandler({
+  wss: wss as any, // Cast to any to match tRPC's expected type
+  router: appRouter,
+  createContext: () => ({ eventEmitter }),
 });
 
 const server = Bun.serve({
   port: 3000,
-  async fetch(req) {
+  async fetch(req, server) {
     const url = new URL(req.url);
+
+    // Create an adapter for each potential WebSocket connection
+    const adapter = new EventEmitter();
+    if (server.upgrade(req, { data: { adapter } })) {
+      // If upgrade is successful, Bun will handle the connection
+      // and we've passed the adapter to the websocket handlers.
+      return;
+    }
 
     // Handle CORS preflight requests
     if (req.method === "OPTIONS") {
@@ -530,7 +544,7 @@ const server = Bun.serve({
         endpoint: "/api",
         req,
         router: appRouter,
-        createContext: () => ({}),
+        createContext: () => ({ eventEmitter }),
       });
 
       response.headers.set("Access-Control-Allow-Origin", "http://localhost:8080");
@@ -540,6 +554,23 @@ const server = Bun.serve({
 
     // TODO: Add logic to serve your frontend static files here
     return new Response("Not Found", { status: 404 });
+  },
+  websocket: {
+    open(ws) {
+      const { adapter } = ws.data;
+      // Wire up the adapter to the Bun WebSocket
+      adapter.send = (data: string | Buffer) => ws.send(data);
+      adapter.close = (code?: number, reason?: string) => ws.close(code, reason);
+      wss.emit("connection", adapter);
+    },
+    message(ws, message) {
+      const { adapter } = ws.data;
+      adapter.emit("message", message);
+    },
+    close(ws, code, reason) {
+      const { adapter } = ws.data;
+      adapter.emit("close", code, reason);
+    },
   },
 });
 
