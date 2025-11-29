@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
   Legend,
+  ResponsiveContainer,
   Tooltip,
 } from "recharts";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -105,29 +106,31 @@ export default function Goals() {
               Track your history of task completion versus commitment
             </p>
           </div>
-          <BarChart width={1050} height={300} data={statistics.value.overall}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <Bar dataKey="completed" fill="hsl(var(--primary))" />
-            <Bar dataKey="committed" fill="hsl(var(--muted-foreground))" />
-            <XAxis
-              dataKey="name"
-              stroke="hsl(var(--muted-foreground))"
-              axisLine={{ stroke: "hsl(var(--border))" }}
-              tickLine={false}
-            />
-            <YAxis
-              stroke="hsl(var(--muted-foreground))"
-              axisLine={{ stroke: "hsl(var(--border))" }}
-              tickLine={false}
-            />
-            <Tooltip />
-            <Legend
-              wrapperStyle={{
-                color: "hsl(var(--muted-foreground))",
-                paddingTop: "20px",
-              }}
-            />
-          </BarChart>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={statistics.value.overall}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <Bar dataKey="completed" fill="hsl(var(--primary))" />
+              <Bar dataKey="committed" fill="hsl(var(--muted-foreground))" />
+              <XAxis
+                dataKey="name"
+                stroke="hsl(var(--muted-foreground))"
+                axisLine={{ stroke: "hsl(var(--border))" }}
+                tickLine={false}
+              />
+              <YAxis
+                stroke="hsl(var(--muted-foreground))"
+                axisLine={{ stroke: "hsl(var(--border))" }}
+                tickLine={false}
+              />
+              <Tooltip />
+              <Legend
+                wrapperStyle={{
+                  color: "hsl(var(--muted-foreground))",
+                  paddingTop: "20px",
+                }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

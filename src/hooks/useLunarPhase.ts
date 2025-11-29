@@ -8,8 +8,9 @@ export default function useLunarPhase(endDate?: string) {
   const [phaseName, setPhaseName] = useState('Full Moon');
   const [inModificationWindow, setInModificationWindow] = useState(false);
 
-  const today = new Date();
-  const currentDate = today.toISOString().slice(0, 10); // "YYYY-MM-DD"
+  const now = new Date();
+  const today = now.getDate()
+  const currentDate = now.toISOString().slice(0, 10); // "YYYY-MM-DD"
 
   // Get lunar phase based on date
   useEffect(() => {
@@ -18,7 +19,8 @@ export default function useLunarPhase(endDate?: string) {
     setPhaseName(name);
     if (endDate) {
       const endDateObj = new Date(endDate);
-      const timeUntilEnd = endDateObj.getTime() - today.getTime();
+      const now = new Date()
+      const timeUntilEnd = endDateObj.getTime() - now.getTime();
       const daysUntilEnd = Math.ceil(timeUntilEnd / (1000 * 3600 * 24));
       setDaysRemaining(daysUntilEnd);
     } else {

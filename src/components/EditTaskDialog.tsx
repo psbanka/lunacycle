@@ -103,6 +103,13 @@ export function EditTaskDialog({
     // Reset the form only when the task being edited changes,
     // not on every render. We use the ID to track this.
     form.reset({
+      title: "",
+      description: "",
+      storyPoints: 1,
+      targetCount: 1,
+      completedCount: 0,
+      isFocused: 0,
+      userIds: [],
       monthId,
       categoryId,
       ...initialValues,
@@ -309,7 +316,7 @@ export function EditTaskDialog({
                 )}
               />
             )}
-            {isEditingTask &&
+            {isEditingTask && !isTemplateTask &&
               initialValues?.targetCount &&
               initialValues.targetCount > 1 && (
                 <FormField
@@ -358,6 +365,7 @@ export function EditTaskDialog({
               )}
 
               {/* --- FOCUS BUTTON --- */}
+              {isEditingId && (!isTemplateTask) && (
               <FormField
                 control={form.control}
                 name="isFocused"
@@ -377,7 +385,10 @@ export function EditTaskDialog({
                   );
                 }}
               />
+              )}
+
               {/* --- BACKLOG BUTTON --- */}
+              {isEditingId && (!isTemplateTask) && (
               <FormField
                 control={form.control}
                 name="monthId"
@@ -397,6 +408,8 @@ export function EditTaskDialog({
                   );
                 }}
               />
+              )}
+
               {/* --- CLOSE BUTTON --- */}
               <DialogClose asChild>
                 <Button type="button" variant="outline">

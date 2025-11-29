@@ -444,7 +444,6 @@ export function clearCache(keys: CacheArg) {
         resetState(statisticsAtom);
         break;
       default:
-        debugger
         console.error(`Unknown cache key: ${key}`);
         break;
     }

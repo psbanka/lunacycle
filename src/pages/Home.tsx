@@ -3,9 +3,7 @@ import LunarPhase from "@/components/Moon";
 import CategorySection from "@/components/CategorySection";
 import TaskCard from "@/components/TaskCard";
 import { Separator } from "@/components/ui/separator";
-import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import { LoadIndicator } from "@/components/LoadIndicator";
-import useLunarPhase from "@/hooks/useLunarPhase";
 import {
   focusedTaskIdsAtom,
   currentMonthAtom,
@@ -14,7 +12,6 @@ import {
 } from "@/atoms";
 
 export default function Home() {
-  const { inModificationWindow } = useLunarPhase();
   const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
   const focusedTaskIds = useLoadable(focusedTaskIdsAtom, []);
   const categoryIds = useLoadable(categoryIdsAtom, []);
@@ -48,11 +45,7 @@ export default function Home() {
       </div>
 
       <div className="mb-8">
-        {inModificationWindow ? (
-          <LoadIndicator />
-        ) : (
-          <LunarCycleProgressBand className="shadow-md" />
-        )}
+        <LoadIndicator />
       </div>
 
       <div className="mb-8">

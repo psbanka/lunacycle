@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLoadable } from "atom.io/react";
 import { getState } from "atom.io";
+import LunarCycleProgressBand from "@/components/LunarCycleProgressBand";
 import {
   currentTaskIdsAtom,
   currentTasksAtom,
@@ -9,8 +10,10 @@ import {
   EMPTY_MONTH,
   EMPTY_STATISTICS,
 } from "@/atoms";
+import useLunarPhase from "@/hooks/useLunarPhase";
 
 export function LoadIndicator() {
+  const { inModificationWindow } = useLunarPhase();
   const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
   const currentTaskIds = useLoadable(currentTaskIdsAtom, []);
   const statistics = useLoadable(statisticsAtom, EMPTY_STATISTICS);
@@ -68,30 +71,36 @@ export function LoadIndicator() {
   );
 
   return (
-    <div className="w-full mb-4">
-      <div
-        className={`relative w-full h-6 rounded-lg overflow-hidden ${getGaugeBackgroundColor()}`}>
-        {/* Indicator */}
+    <>
+      {inModificationWindow == false ? (
+        <LunarCycleProgressBand className="shadow-md" />
+      ) : (
+      <div className="w-full mb-4">
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-neutral-800 dark:bg-white rounded-full shadow-lg border-2 border-white dark:border-neutral-900"
-          style={{
-            left: `calc(${indicatorPositionPercent}% - ${
-              INDICATOR_WIDTH_PX / 2
-            }px)`,
-          }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {/*
-          <p className="text-xs font-semibold text-white mix-blend-difference">
-            {storyPoints} / {averageCompletedStoryPoints}
-          </p>
-          */}
+          className={`relative w-full h-6 rounded-lg overflow-hidden ${getGaugeBackgroundColor()}`}>
+          {/* Indicator */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-neutral-800 dark:bg-white rounded-full shadow-lg border-2 border-white dark:border-neutral-900"
+            style={{
+              left: `calc(${indicatorPositionPercent}% - ${
+                INDICATOR_WIDTH_PX / 2
+              }px)`,
+            }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {/*
+            <p className="text-xs font-semibold text-white mix-blend-difference">
+              {storyPoints} / {averageCompletedStoryPoints}
+            </p>
+            */}
+          </div>
+        </div>
+        <div className="flex justify-between text-xs text-muted-foreground mt-1 px-1">
+          <span>0</span>
+          <span>{GAUGE_VISIBLE_MAX}</span>
         </div>
       </div>
-      <div className="flex justify-between text-xs text-muted-foreground mt-1 px-1">
-        <span>0</span>
-        <span>{GAUGE_VISIBLE_MAX}</span>
-      </div>
-    </div>
+      )}
+    </>
   );
 }

@@ -48,7 +48,7 @@ export function UserSelectionFormItem({
     }
 
     getNonAdminUsers()
-  }, []);
+  }, [userIds.value]);
 
   if (userIds instanceof Error) return null;
   return (
