@@ -1,9 +1,7 @@
-// import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import {
-  createBunHttpHandler,
   createBunWSHandler,
   createBunServeHandler,
-  CreateBunContextOptions,
+  type CreateBunContextOptions,
 } from "trpc-bun-adapter";
 import { appRouter } from "./appRouter";
 
@@ -13,7 +11,6 @@ const createContext = (opts: CreateBunContextOptions) => {
 
 const wsHandler = createBunWSHandler({
   router: appRouter,
-  // optional arguments:
   createContext,
   onError: console.error,
   batching: {
@@ -24,7 +21,7 @@ const wsHandler = createBunWSHandler({
 const server = Bun.serve(createBunServeHandler(
   {
     router: appRouter,
-    responseMeta(opts: any) {
+    responseMeta(opts: unknown) {
       return {
           status: 200,
           headers: {

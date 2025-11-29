@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "./schema.ts";
 import { fakerEN } from "@faker-js/faker";
 import { getLunarPhase } from "../shared/lunarPhase.ts";
+import { clearCache } from "./events";
 
 type TaskCreationProps = Omit<
   schema.Task,
@@ -96,6 +97,11 @@ export async function updateTaskWithCategoryAndAssignments(
     .run();
 
   const output = db.query.task.findFirst({ where: eq(schema.task.id, taskInfo.id) });
+  clearCache("backlogTaskAtoms", taskInfo.id);
+  clearCache("backlogTaskIds");
+  clearCache("currentTaskAtom", taskInfo.id);
+  clearCache("taskIds");
+  clearCache("focusedTaskIds");
   return output;
 }
 
@@ -171,6 +177,7 @@ export async function updateTemplateTaskWithCategoryAndAssignments(
         isFocused: 0,
       });
     }
+    clearCache("templateTaskAtoms", templateTaskInfo.id);
   }
 }
 
@@ -265,6 +272,7 @@ export async function createTemplateTaskWithCategoryAndAssignments(
         templateTaskId: templateTaskId,
         isFocused: 0,
       });
+      clearCache("templateTaskIds");
     }
   }
 
@@ -289,7 +297,11 @@ export const addTask = publicProcedure
   )
   .mutation(async ({ input }) => {
     const { task: taskInput } = input;
-    return await createTaskWithCategoryAndAssignments(taskInput);
+    return createTaskWithCategoryAndAssignments(taskInput).then(() => {
+        clearCache("taskIds");
+        clearCache("focusedTaskIds");
+        clearCache("backlogTaskIds");
+      });
   });
 
 export const addTemplateTask = publicProcedure
@@ -307,5 +319,7 @@ export const addTemplateTask = publicProcedure
   )
   .mutation(async ({ input }) => {
     const { task: taskInput } = input;
-    return await createTemplateTaskWithCategoryAndAssignments(taskInput);
+    return createTemplateTaskWithCategoryAndAssignments(taskInput).then(() => {
+        clearCache("templateTaskIds");
+      });
   });

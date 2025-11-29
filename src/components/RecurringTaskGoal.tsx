@@ -12,7 +12,7 @@ import {
   CircleMinus,
   CircleCheckBig,
 } from "lucide-react";
-import { type RecurringTaskData, VelocityData } from "server";
+import { type RecurringTaskData, VelocityData } from "server/appRouter";
 import { Button } from "@/components/ui/button";
 
 interface RecurringTaskGoalProps {

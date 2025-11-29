@@ -19,6 +19,7 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { trpc } from "./api";
 import { useToast } from "@/components/ui/use-toast";
+import { clearCache } from "@/atoms";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -69,10 +70,17 @@ const AppCore = () => {
   const { toast } = useToast();
   trpcClient.onMessage.subscribe(undefined, {
     onData: (data) => {
+      // TODO: PUT THIS IN A DIFFERENT LOCATION ON THE SCREEN
       toast({
         title: "New Message",
         description: data.message,
       });
+    },
+  });
+  trpcClient.onClearCache.subscribe(undefined, {
+    onData: (data) => {
+      console.log("clearing cache:", data.keys);
+      clearCache(data.keys);
     },
   });
 

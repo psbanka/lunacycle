@@ -14,7 +14,7 @@ import { User } from "../../server/schema";
 import { useState, useEffect } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { toast } from "sonner";
-import { type UserShape } from "../../server/index.ts";
+import { type UserShape } from "../../server/appRouter.ts";
 import { userAtoms, FAKE_USER } from "@/atoms";
 import { updateUserTask, generateAvatarTask, uploadAvatarTask } from "@/actions";
 

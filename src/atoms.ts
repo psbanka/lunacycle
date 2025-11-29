@@ -1,7 +1,8 @@
-import { type Loadable, setState, selector, selectorFamily } from "atom.io";
+import { type Loadable, setState, resetState, selectorFamily } from "atom.io";
 import { trpcClient } from "./trpc-client-service";
 import { TRPCError, inferProcedureOutput } from "@trpc/server";
 import { atom, atomFamily } from "atom.io";
+import { type CacheArg, type CacheKey } from "../server/events";
 import type { AppRouter } from "../server/index";
 import type {
   ISO18601,
@@ -393,3 +394,59 @@ const categoryStatusSelector = selectorFamily<Loadable<StatusPageCategoryStatus>
     return status;
   },
 });
+
+// = CACHE MANAGEMENT =================================================
+
+export function clearCache(keys: CacheArg) {
+  for (const [key, arg] of Object.entries(keys)) {
+    const cacheKey = key as CacheKey;
+    switch (cacheKey) {
+      case "userAtoms":
+        resetState(userAtoms, arg);
+        break;
+      case "currentTaskAtom":
+        resetState(currentTasksAtom, arg);
+        break;
+      case "backlogTaskAtoms":
+        resetState(backlogTaskAtoms, arg);
+        break;
+      case "categoryAtoms":
+        resetState(categoryAtoms, arg);
+        break;
+      case "templateTaskAtoms":
+        resetState(templateTaskAtoms, arg);
+        break;
+      case "focusedTaskIds":
+        resetState(focusedTaskIdsAtom);
+        break;
+      case "userById":
+        resetState(userIdsAtom);
+        break;
+      case "taskIds":
+        resetState(currentTaskIdsAtom);
+        break;
+      case "backlogTaskIds":
+        resetState(backlogTaskIdsAtom);
+        break;
+      case "categoryIds":
+        resetState(categoryIdsAtom);
+        break;
+      case "templateTaskIds":
+        resetState(templateTaskIdsAtom);
+        break;
+      case "currentMonth":
+        resetState(currentMonthAtom);
+        break;
+      case "template":
+        resetState(templateAtom);
+        break;
+      case "statistics":
+        resetState(statisticsAtom);
+        break;
+      default:
+        debugger
+        console.error(`Unknown cache key: ${key}`);
+        break;
+    }
+  }
+}

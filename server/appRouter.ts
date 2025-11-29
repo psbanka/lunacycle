@@ -3,7 +3,7 @@ import { type } from "arktype";
 // import { publicProcedure, router, MyEventEmitter } from "./trpc.ts";
 import { publicProcedure, router } from "./trpc.ts";
 import { observable } from "@trpc/server/observable";
-import { serverEvents } from "./events";
+import { serverEvents, clearCache, type CacheArg } from "./events";
 
 import { createMonthFromActiveTemplate } from "./createMonth.ts";
 import { TRPCError } from "@trpc/server";
@@ -136,17 +136,21 @@ export const appRouter = router({
     }),
   generateNewAvatar: publicProcedure
     .query(async () => {
-      return await generateNewAvatar();
+      return await generateNewAvatar()
     }),
   uploadAvatar: publicProcedure
     .input(type({ userId: "string", file: "string" }))
     .mutation(async ({ input }) => {
-      return await updateAvatar(input);
+      return updateAvatar(input).then(() => {
+        clearCache("userAtoms", input.userId);
+      });
     }),
   updateUser: publicProcedure
     .input(type(UserUpdate))
     .mutation(async ({ input }) => {
-      return await updateUser(input);
+      return updateUser(input).then(() => {
+        clearCache("userAtoms", input.id);
+      });
     }),
   getStatistics: publicProcedure.query(async () => {
     const [overall] = await getVelocityByMonth();
@@ -179,7 +183,10 @@ export const appRouter = router({
     .input(StartCycleType)
     .mutation(async ({ input }) => {
       const { recurringTasks, backlogTasks } = input;
-      return await createMonthFromActiveTemplate(input);
+      return createMonthFromActiveTemplate(input).then(() => {
+        clearCache("currentMonth");
+        clearCache("taskIds"); // FIXME; this will probably be a mess
+      });
     }),
   getTemplate: publicProcedure.query(async () => {
     const template = await await db.query.template.findFirst({
@@ -256,7 +263,7 @@ export const appRouter = router({
     return backlogTasks;
   }),
   getCategories: publicProcedure.query(async () => {
-    return await db.query.category.findMany({});
+    return await db.query.category.findMany({})
   }),
   getCategory: publicProcedure
     .input(type({ categoryId: "string" }))
@@ -406,7 +413,13 @@ export const appRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      return await updateTaskWithCategoryAndAssignments(input.task);
+      return updateTaskWithCategoryAndAssignments(input.task).then(() => {
+        clearCache("currentTaskAtom", input.task.id);
+        clearCache("backlogTaskAtoms", input.task.id);
+        clearCache("backlogTaskIds");
+        clearCache("focusedTaskIds");
+        clearCache("taskIds");
+      });
     }),
   updateTemplateTask: publicProcedure
     .input(
@@ -423,7 +436,9 @@ export const appRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      await updateTemplateTaskWithCategoryAndAssignments(input.task);
+      return updateTemplateTaskWithCategoryAndAssignments(input.task).then(() => {
+        clearCache("templateTaskAtoms", input.task.id);
+      });
     }),
   addTask,
   addTemplateTask,
@@ -440,6 +455,7 @@ export const appRouter = router({
         .where(eq(schema.taskUser.taskId, input.taskId))
         .run();
       db.delete(schema.task).where(eq(schema.task.id, input.taskId)).run();
+      clearCache("taskIds");
       return { success: true };
     }),
   deleteTemplateTask: publicProcedure
@@ -460,6 +476,7 @@ export const appRouter = router({
       db.delete(schema.templateTask)
         .where(eq(schema.templateTask.id, input.templateTaskId))
         .run();
+      clearCache("templateTaskIds");
       return { success: true };
     }),
   completeTask: publicProcedure
@@ -485,6 +502,7 @@ export const appRouter = router({
       const updatedTask = await db.query.task.findFirst({
         where: eq(schema.task.id, input.taskId),
       });
+      clearCache("currentTaskAtom", input.taskId);
       return updatedTask;
     }),
   onMessage: publicProcedure.subscription(() => {
@@ -499,6 +517,21 @@ export const appRouter = router({
       // Cleanup on unsubscribe
       return () => {
         serverEvents.off("message", handler);
+      };
+    });
+  }),
+  onClearCache: publicProcedure.subscription(() => {
+    return observable<{ keys: CacheArg }>((emit) => {
+      const handler = (data: { keys: CacheArg }) => {
+        emit.next(data);
+      };
+
+      // Listen for events
+      serverEvents.on("clearCache", handler);
+
+      // Cleanup on unsubscribe
+      return () => {
+        serverEvents.off("clearCache", handler);
       };
     });
   }),

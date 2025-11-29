@@ -1,7 +1,6 @@
 import React from "react";
 import { useLoadable } from "atom.io/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { type UserShape } from "../../server/index.ts";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
