@@ -33,7 +33,7 @@ export type VelocityData = Array<{
 }>;
 
 export type RecurringTaskData = {
-  task: schema.Task;
+  templateTask: schema.TemplateTask;
   history: VelocityData;
 };
 
@@ -65,13 +65,20 @@ async function getVelocityByMonth(
       completed += task.completedCount * task.storyPoints;
       committed += task.targetCount * task.storyPoints;
       if (task.templateTaskId) {
+        const templateTask = await db.query.templateTask.findFirst({
+          where: eq(schema.templateTask.id, task.templateTaskId),
+        });
+        if (!templateTask) {
+          continue;
+        }
         if (!includedTasks[task.templateTaskId]) {
           includedTasks[task.templateTaskId] = {
-            task,
+            templateTask,
             history: [],
           };
         }
-        includedTasks[task.templateTaskId].history.push({
+
+        includedTasks[templateTask.id].history.push({
           monthId: month.id,
           name: month.name,
           completed: task.completedCount * task.storyPoints,
@@ -184,7 +191,9 @@ export const appRouter = router({
       const { recurringTasks, backlogTasks } = input;
       return createMonthFromActiveTemplate(input).then(() => {
         clearCache("currentMonth");
-        clearCache("taskIds"); // FIXME; this will probably be a mess
+        clearCache("statistics");
+        clearCache("taskIds");
+        clearCache("categoryIds");
       });
     }),
   getTemplate: publicProcedure.query(async () => {

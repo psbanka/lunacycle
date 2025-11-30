@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import RecurringTaskGoal from "@/components/RecurringTaskGoal";
 import { inferProcedureOutput } from "@trpc/server";
 import type { AppRouter } from "../../server/index";
-import type { Task } from "../../server/schema";
+import type { TemplateTask } from "../../server/schema";
 import { statisticsAtom } from "@/atoms"
 import { startCycle } from "@/actions";
 
@@ -30,7 +30,7 @@ function getTaskIds(
   if (!statistics) return [];
   return Object.values(statistics.categoryData)
     .flatMap((cd) => Object.values(cd.recurringTaskInfo ?? {}))
-    .flatMap((rtd) => rtd.task.id);
+    .flatMap((rtd) => rtd.templateTask.id);
 }
 
 type CommittedTask = {
@@ -48,13 +48,13 @@ export default function Goals() {
   }
   if (statistics.value instanceof Error) return null
 
-  function handleToggleCommitted(templateTaskId: string, task: Task, targetCount: number) {
+  function handleToggleCommitted(templateTaskId: string, templateTask: TemplateTask, targetCount: number) {
     if (committedTasks.find((c) => c.id === templateTaskId)) {
       setCommittedTasks((prev) => prev.filter((c) => c.id !== templateTaskId));
     } else {
       setCommittedTasks((prev) => [
         ...prev,
-        { id: templateTaskId, title: task.title, targetCount },
+        { id: templateTaskId, title: templateTask.title, targetCount },
       ]);
     }
   }
@@ -62,6 +62,7 @@ export default function Goals() {
   async function handleStartCycle() {
     const backlogTasks = [];
     await startCycle({ recurringTasks: committedTasks, backlogTasks });
+    setCommittedTasks([]);
   }
 
   const totalTasksCount = getTaskIds(statistics.value).length;
@@ -169,7 +170,7 @@ export default function Goals() {
                           toggleCommitted={(targetCount: number) =>
                             handleToggleCommitted(
                               key,
-                              recurringTask.task,
+                              recurringTask.templateTask,
                               targetCount
                             )
                           }
