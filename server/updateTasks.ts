@@ -178,6 +178,7 @@ export async function updateTemplateTaskWithCategoryAndAssignments(
         isFocused: 0,
       });
     }
+
     clearCache("templateTaskAtoms", templateTaskInfo.id);
   }
 }
@@ -274,6 +275,7 @@ export async function createTemplateTaskWithCategoryAndAssignments(
         isFocused: 0,
       });
       clearCache("templateTaskIds");
+      clearCache("statistics");
     }
   }
 
@@ -323,5 +325,6 @@ export const addTemplateTask = publicProcedure
     const { task: taskInput } = input;
     return createTemplateTaskWithCategoryAndAssignments(taskInput).then(() => {
         clearCache("templateTaskIds");
+        clearCache("statistics");
       });
   });

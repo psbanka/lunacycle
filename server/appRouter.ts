@@ -445,11 +445,9 @@ export const appRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      console.log('---------------------------')
-      console.log(input.task.goal)
-      console.log('---------------------------')
       return updateTemplateTaskWithCategoryAndAssignments(input.task).then(() => {
         clearCache("templateTaskAtoms", input.task.id);
+        clearCache("statistics");
       });
     }),
   addTask,

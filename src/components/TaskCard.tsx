@@ -26,9 +26,6 @@ export default function TaskCard({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // FIXME
-  // const isAssignedToUser = user && Boolean(task.assignedTo.find((u) => u.id === user.id));
-  // const isAssignedToUser = Boolean(taskUsers?.find(tu => tu.userId === user?.id && tu.taskId === userTask.taskId));
-  const isAssignedToUser = true;
   const isCompleted = task.value.targetCount === task.value.completedCount;
   const progress =
     task.value.targetCount > 0 ? (task.value.completedCount / task.value.targetCount) * 100 : 0;
@@ -99,7 +96,7 @@ export default function TaskCard({
           )}
 
           {/* Actions */}
-          {isAssignedToUser && !compact && !isCompleted && (
+          {!compact && !isCompleted && (
             <div className="mt-4 flex justify-between items-center">
               <div className="flex -space-x-2 avatar-container">
                 {(task.value.taskUsers).map((tu) => (
@@ -132,7 +129,7 @@ export default function TaskCard({
           )}
 
           {/* Compact version just has a complete button */}
-          {isAssignedToUser && compact && !isCompleted && (
+          {compact && !isCompleted && (
             <Button
               onClick={handleComplete}
               variant="ghost"
@@ -155,6 +152,7 @@ export default function TaskCard({
         categoryId={task.value.categoryId}
         monthId={currentMonth?.value.id || null}
         isTemplateTask={false}
+        readOnly={task.value.templateTaskId !== null}
         initialValues={{
           id: task.value.id,
           title: task.value.title,

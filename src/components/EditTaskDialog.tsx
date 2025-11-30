@@ -65,6 +65,7 @@ interface EditTaskDialogProps {
   categoryId?: string;
   monthId: string | null;
   isTemplateTask: boolean;
+  readOnly?: boolean;
   initialValues?: Partial<TaskFormValues>;
 }
 
@@ -74,6 +75,7 @@ export function EditTaskDialog({
   categoryId,
   monthId,
   isTemplateTask,
+  readOnly = false,
   initialValues,
 }: EditTaskDialogProps) {
   const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
@@ -112,6 +114,7 @@ export function EditTaskDialog({
       targetCount: 1,
       completedCount: 0,
       isFocused: 0,
+      goal: null,
       userIds: [],
       monthId,
       categoryId,
@@ -242,7 +245,7 @@ export function EditTaskDialog({
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Task title" {...field} />
+                    <Input disabled={readOnly} placeholder="Task title" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -257,6 +260,7 @@ export function EditTaskDialog({
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
                     <Textarea
+                      disabled={readOnly}
                       placeholder="Describe this task..."
                       className="resize-none"
                       {...field}
@@ -276,6 +280,7 @@ export function EditTaskDialog({
                   <div className="flex gap-2 flex-wrap">
                     {FIBONACCI.map((points) => (
                       <Button
+                        disabled={readOnly}
                         key={points}
                         type="button"
                         variant={field.value === points ? "default" : "outline"}
