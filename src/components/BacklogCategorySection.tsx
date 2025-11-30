@@ -2,7 +2,7 @@ import BacklogTaskCard from "@/components/BacklogTaskCard";
 import { useLoadable } from "atom.io/react"
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { backlogTasksByCategoryIdAtom, categoryByIdAtom, FAKE_CATEGORY } from "@/atoms"
+import { backlogTasksByCategoryIdAtom, categoryByIdAtom, EMPTY_CATEGORY } from "@/atoms"
 
 type Props = {
   categoryId: string;
@@ -10,7 +10,7 @@ type Props = {
 
 export function BacklogCategorySection({ categoryId }: Props) {
   const backlogTasks = useLoadable(backlogTasksByCategoryIdAtom, categoryId, [])
-  const category = useLoadable(categoryByIdAtom, categoryId, FAKE_CATEGORY)
+  const category = useLoadable(categoryByIdAtom, categoryId, EMPTY_CATEGORY)
   if (category instanceof Error) return null
 
   return (

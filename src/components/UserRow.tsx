@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useLoadable } from "atom.io/react"
-import { userAtoms, FAKE_USER } from "@/atoms"
+import { userAtoms, EMPTY_USER } from "@/atoms"
 import { toast } from "sonner";
 
 type Props = {
@@ -10,7 +10,7 @@ type Props = {
 };
 
 export function UserRow({ userId, handleEditUser }: Props) {
-  const user = useLoadable(userAtoms, userId, FAKE_USER)
+  const user = useLoadable(userAtoms, userId, EMPTY_USER)
   if (user.error) return null
 
   return (

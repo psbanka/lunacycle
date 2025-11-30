@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useLoadable, useO } from "atom.io/react";
 import { getState } from "atom.io";
 import { useEffect, useState } from "react";
-import { categoryIdsAtom, categoryAtoms, FAKE_CATEGORY } from "@/atoms";
+import { categoryIdsAtom, categoriesAtom, EMPTY_CATEGORY } from "@/atoms";
 
 interface NavBarProps {
   activeCategoryId: string | null;
@@ -25,7 +25,7 @@ export default function CategoryNav({ activeCategoryId }: NavBarProps) {
       if (!categoryIds) return null;
 
       const buttonData = categoryIds.value.map(async (categoryId) => {
-        const category = await getState(categoryAtoms, categoryId);
+        const category = await getState(categoriesAtom, categoryId);
         if (category == null || category instanceof Error) {
           console.warn("Missing category data:", category);
           return null;

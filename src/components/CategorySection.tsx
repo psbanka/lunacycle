@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { EditTaskDialog } from "@/components/EditTaskDialog";
 import { useState } from "react";
-import { categoryAtoms, currentTasksByCategoryIdAtom, currentTaskIdsAtom, currentMonthAtom, EMPTY_MONTH, FAKE_CATEGORY } from "@/atoms";
+import { categoriesAtom, currentTasksByCategoryIdAtom, currentTaskIdsAtom, currentMonthAtom, EMPTY_MONTH, EMPTY_CATEGORY } from "@/atoms";
 
 type CategorySectionProps = {
   categoryId: string;
@@ -14,7 +14,7 @@ type CategorySectionProps = {
 export default function CategorySection({ categoryId, isTemplate }: CategorySectionProps) {
   const tasks = useLoadable(currentTasksByCategoryIdAtom, categoryId, []);
   const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
-  const category = useLoadable(categoryAtoms, categoryId, FAKE_CATEGORY);
+  const category = useLoadable(categoriesAtom, categoryId, EMPTY_CATEGORY);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
   if (currentMonth instanceof Error || category instanceof Error) return null;

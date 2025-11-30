@@ -55,14 +55,14 @@ export const EMPTY_TASK: ServerGetTask = {
   taskUsers: [],
 }
 
-export const FAKE_CATEGORY: ServerGetCategory = {
+export const EMPTY_CATEGORY: ServerGetCategory = {
   id: '',
   emoji: '',
   name: '',
   description: '',
 }
 
-export const FAKE_USER: ServerGetUser = {
+export const EMPTY_USER: ServerGetUser = {
   id: '',
   email: '',
   role: 'user',
@@ -96,7 +96,7 @@ export const userAtoms = atomFamily<
   string,
   Error
 >({
-  key: `userById`,
+  key: `users`,
   default: async (userId) => {
     const user = await trpcClient.getUser.query({ userId })
     if (user === undefined) {
@@ -109,7 +109,7 @@ export const userAtoms = atomFamily<
 // - TASKS ------------------------------------------------------------
 
 export const currentTaskIdsAtom = atom<Loadable<string[]>, Error>({
-  key: `taskIds`,
+  key: `currentTaskIds`,
   default: async () => {
     const tasks = await trpcClient.getCurrentMonthTasks.query();
     tasks.forEach((task) => setState(currentTasksAtom, task.id, task));
@@ -118,7 +118,7 @@ export const currentTaskIdsAtom = atom<Loadable<string[]>, Error>({
 });
 
 export const currentTasksAtom = atomFamily<Loadable<ServerGetTask>, string, Error>({
-  key: `tasks`,
+  key: `currentTasks`,
   default: async (taskId) => {
     const task = await trpcClient.getTask.query({ taskId });
     if (!task) {
@@ -133,7 +133,7 @@ export const currentTasksByCategoryIdAtom = selectorFamily<
   string,
   Error
 >({
-  key: `currentTasksByCategory`,
+  key: `currentTasksByCategoryId`,
   get: (categoryId) =>
     async ({ get }) => {
       const currentTaskIds = await get(currentTaskIdsAtom);
@@ -167,19 +167,19 @@ export const backlogTaskIdsAtom = atom<Loadable<string[]>, Error>({
   default: async () => {
     const backlogTasks = await trpcClient.getBacklogTasks.query();
     for (const backlogTask of backlogTasks) {
-      setState(backlogTaskAtoms, backlogTask.id, backlogTask);
+      setState(backlogTasksAtom, backlogTask.id, backlogTask);
     }
     const backlogTaskIds = backlogTasks.map((backlogTask) => backlogTask.id);
     return backlogTaskIds;
   },
 });
 
-export const backlogTaskAtoms = atomFamily<
+export const backlogTasksAtom = atomFamily<
   Loadable<ServerBacklogTask>,
   string,
   Error
 >({
-  key: `backlogTask`,
+  key: `backlogTasks`,
   default: async (backlogTaskId) => {
     const backlogTask = await trpcClient.getTask.query({
       taskId: backlogTaskId,
@@ -196,7 +196,7 @@ export const backlogTasksByCategoryIdAtom = selectorFamily<
   string,
   Error
 >({
-  key: `backlogTasksByCategory`,
+  key: `backlogTasksByCategoryId`,
   get: (categoryId) =>
     async ({ get }) => {
       const backlogTaskIds = await get(backlogTaskIdsAtom);
@@ -205,7 +205,7 @@ export const backlogTasksByCategoryIdAtom = selectorFamily<
       }
       let output: ServerBacklogTasks = [];
       for (const backlogTaskId of backlogTaskIds) {
-        const backlogTask = await get(backlogTaskAtoms, backlogTaskId);
+        const backlogTask = await get(backlogTasksAtom, backlogTaskId);
         if (backlogTask instanceof Error) {
           continue;
         }
@@ -224,7 +224,7 @@ export const categoryIdsAtom = atom<Loadable<string[]>, Error>({
   default: async () => {
     const categories = await trpcClient.getCategories.query();
     categories.forEach((category) =>
-      setState(categoryAtoms, category.id, category)
+      setState(categoriesAtom, category.id, category)
     );
     const categoryIds = categories.map((category) => category.id);
     return categoryIds;
@@ -236,7 +236,7 @@ export const categoryIdsAtom = atom<Loadable<string[]>, Error>({
 export const categoryByIdAtom = selectorFamily<Loadable<Base<ServerGetCategories>>, string, Error>({
   key: `categoryById`,
   get: (categoryId) => async ({ get }) => {
-      const category = await get(categoryAtoms, categoryId);
+      const category = await get(categoriesAtom, categoryId);
       if (category instanceof Error) {
         throw new TRPCError({ code: "NOT_FOUND", message: "No categories found" });
       }
@@ -246,7 +246,7 @@ export const categoryByIdAtom = selectorFamily<Loadable<Base<ServerGetCategories
     },
   })
 
-export const categoryAtoms = atomFamily<Loadable<ServerGetCategory>, string, Error>({
+export const categoriesAtom = atomFamily<Loadable<ServerGetCategory>, string, Error>({
   key: `categories`,
   default: async (categoryId) => {
     const category = await trpcClient.getCategory.query({ categoryId });
@@ -272,7 +272,7 @@ export const templateTaskIdsAtom = atom<Loadable<string[]>, Error>({
   default: async () => {
     const templateTasks = await trpcClient.getTemplateTasks.query();
     for (const templateTask of templateTasks) {
-      setState(templateTaskAtoms, templateTask.id, templateTask);
+      setState(templateTasksAtom, templateTask.id, templateTask);
     }
     const templateTaskIds = templateTasks.map((category) => category.id);
     return templateTaskIds;
@@ -280,12 +280,12 @@ export const templateTaskIdsAtom = atom<Loadable<string[]>, Error>({
   catch: [],
 });
 
-export const templateTaskAtoms = atomFamily<
+export const templateTasksAtom = atomFamily<
   Loadable<Base<ServerGetTemplateTasks>>,
   string,
   Error
 >({
-  key: `templateTask`,
+  key: `templateTasks`,
   default: async (templateTaskId) => {
     const templateTask = await trpcClient.getTemplateTask.query({
       templateTaskId,
@@ -311,7 +311,7 @@ export const templateTasksByCategoryIdAtom = selectorFamily<
       }
       let output: ServerGetTemplateTasks = [];
       for (const templateTaskId of templateTaskIds) {
-        const templateTask = await get(templateTaskAtoms, templateTaskId);
+        const templateTask = await get(templateTasksAtom, templateTaskId);
         if (templateTask instanceof Error) {
           continue;
         }
@@ -354,7 +354,7 @@ type StatusPageCategoryStatus = {
 const categoryStatusSelector = selectorFamily<Loadable<StatusPageCategoryStatus>, string>({
   key: 'categoryStatusSelector',
   get: (categoryId) => async ({ get }) => {
-    const category = await get(categoryAtoms, categoryId)
+    const category = await get(categoriesAtom, categoryId)
     const currentTaskIds = await get (currentTaskIdsAtom)
     if (!category || currentTaskIds instanceof Error)
       throw new Error("no stuff")
@@ -407,14 +407,14 @@ export function clearCache(keys: CacheArg) {
       case "currentTaskAtom":
         resetState(currentTasksAtom, arg);
         break;
-      case "backlogTaskAtoms":
-        resetState(backlogTaskAtoms, arg);
+      case "backlogTasksAtom":
+        resetState(backlogTasksAtom, arg);
         break;
       case "categoryAtoms":
-        resetState(categoryAtoms, arg);
+        resetState(categoriesAtom, arg);
         break;
-      case "templateTaskAtoms":
-        resetState(templateTaskAtoms, arg);
+      case "templateTasksAtom":
+        resetState(templateTasksAtom, arg);
         break;
       case "focusedTaskIds":
         resetState(focusedTaskIdsAtom);
@@ -422,7 +422,7 @@ export function clearCache(keys: CacheArg) {
       case "userById":
         resetState(userIdsAtom);
         break;
-      case "taskIds":
+      case "currentTaskIds":
         resetState(currentTaskIdsAtom);
         break;
       case "backlogTaskIds":

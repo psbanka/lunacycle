@@ -8,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { userAtoms, FAKE_USER} from "@/atoms";
+import { userAtoms, EMPTY_USER} from "@/atoms";
 
 interface UserAvatarProps {
   userId: string;
@@ -22,7 +22,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   dimmed,
   updatedAvatar,
 }) => {
-  const user = useLoadable(userAtoms, userId, FAKE_USER);
+  const user = useLoadable(userAtoms, userId, EMPTY_USER);
   if (user.error) return null;
 
   const avatar = updatedAvatar

@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { UserAvatar } from "@/components/UserAvatar";
 import { UserShape } from "../../server/appRouter";
-import { userIdsAtom, userAtoms, FAKE_USER } from "@/atoms";
+import { userIdsAtom, userAtoms, EMPTY_USER } from "@/atoms";
 
 interface UserSelectionFormItemProps {
   control: Control<any>; // Using `any` for now, can be improved with form values type

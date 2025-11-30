@@ -192,7 +192,7 @@ export const appRouter = router({
       return createMonthFromActiveTemplate(input).then(() => {
         clearCache("currentMonth");
         clearCache("statistics");
-        clearCache("taskIds");
+        clearCache("currentTaskIds");
         clearCache("categoryIds");
       });
     }),
@@ -423,10 +423,10 @@ export const appRouter = router({
     .mutation(async ({ input }) => {
       return updateTaskWithCategoryAndAssignments(input.task).then(() => {
         clearCache("currentTaskAtom", input.task.id);
-        clearCache("backlogTaskAtoms", input.task.id);
+        clearCache("backlogTasksAtom", input.task.id);
         clearCache("backlogTaskIds");
         clearCache("focusedTaskIds");
-        clearCache("taskIds");
+        clearCache("currentTaskIds");
       });
     }),
   updateTemplateTask: publicProcedure
@@ -446,7 +446,7 @@ export const appRouter = router({
     )
     .mutation(async ({ input }) => {
       return updateTemplateTaskWithCategoryAndAssignments(input.task).then(() => {
-        clearCache("templateTaskAtoms", input.task.id);
+        clearCache("templateTasksAtom", input.task.id);
         clearCache("statistics");
       });
     }),
@@ -465,7 +465,7 @@ export const appRouter = router({
         .where(eq(schema.taskUser.taskId, input.taskId))
         .run();
       db.delete(schema.task).where(eq(schema.task.id, input.taskId)).run();
-      clearCache("taskIds");
+      clearCache("currentTaskIds");
       return { success: true };
     }),
   deleteTemplateTask: publicProcedure

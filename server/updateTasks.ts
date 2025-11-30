@@ -97,10 +97,10 @@ export async function updateTaskWithCategoryAndAssignments(
     .run();
 
   const output = db.query.task.findFirst({ where: eq(schema.task.id, taskInfo.id) });
-  clearCache("backlogTaskAtoms", taskInfo.id);
+  clearCache("backlogTasksAtom", taskInfo.id);
   clearCache("backlogTaskIds");
   clearCache("currentTaskAtom", taskInfo.id);
-  clearCache("taskIds");
+  clearCache("currentTaskIds");
   clearCache("focusedTaskIds");
   return output;
 }
@@ -178,8 +178,7 @@ export async function updateTemplateTaskWithCategoryAndAssignments(
         isFocused: 0,
       });
     }
-
-    clearCache("templateTaskAtoms", templateTaskInfo.id);
+    clearCache("templateTasksAtom", templateTaskInfo.id);
   }
 }
 
@@ -301,7 +300,7 @@ export const addTask = publicProcedure
   .mutation(async ({ input }) => {
     const { task: taskInput } = input;
     return createTaskWithCategoryAndAssignments(taskInput).then(() => {
-        clearCache("taskIds");
+        clearCache("currentTaskIds");
         clearCache("focusedTaskIds");
         clearCache("backlogTaskIds");
       });

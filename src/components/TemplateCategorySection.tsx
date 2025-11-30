@@ -3,7 +3,7 @@ import { useLoadable } from "atom.io/react"
 import { TemplateTaskCard } from "@/components/TemplateTaskCard";
 import { Button } from "@/components/ui/button";
 import { Plus, FolderPlus } from "lucide-react";
-import { categoryByIdAtom, templateTasksByCategoryIdAtom, FAKE_CATEGORY } from "@/atoms"
+import { categoryByIdAtom, templateTasksByCategoryIdAtom, EMPTY_CATEGORY } from "@/atoms"
 
 type Props = {
   categoryId: string;
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function TemplateCategorySection({ categoryId, handleAddTaskClick }: Props) {
-  const category = useLoadable(categoryByIdAtom, categoryId, FAKE_CATEGORY)
+  const category = useLoadable(categoryByIdAtom, categoryId, EMPTY_CATEGORY)
   if (category.error) return null
   const templateTasks = useLoadable(templateTasksByCategoryIdAtom, categoryId, [])
   if (templateTasks instanceof Error) return null

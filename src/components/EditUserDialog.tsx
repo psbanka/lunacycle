@@ -15,7 +15,7 @@ import { useState, useEffect } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { toast } from "sonner";
 import { type UserShape } from "../../server/appRouter.ts";
-import { userAtoms, FAKE_USER } from "@/atoms";
+import { userAtoms, EMPTY_USER } from "@/atoms";
 import { updateUserTask, generateAvatarTask, uploadAvatarTask } from "@/actions";
 
 interface EditUserDialogProps {
@@ -33,7 +33,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   userId,
   onUserUpdated,
 }) => {
-  const user = useLoadable(userAtoms, userId, FAKE_USER)
+  const user = useLoadable(userAtoms, userId, EMPTY_USER)
   if (user.error) return null
   if (user.loading) return null
   const [editedUser, setEditedUser] = useState<FullUser>({

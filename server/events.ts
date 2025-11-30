@@ -5,10 +5,10 @@ export type CacheKey =
   | `userById`
   | `userAtoms`
   | `currentTaskAtom`
-  | `backlogTaskAtoms`
+  | `backlogTasksAtom`
   | `categoryAtoms`
-  | `templateTaskAtoms`
-  | `taskIds`
+  | `templateTasksAtom`
+  | `currentTaskIds`
   | `currentMonth`
   | `statistics`
   | `focusedTaskIds`
@@ -16,6 +16,7 @@ export type CacheKey =
   | `template`
   | `templateTaskIds`
   | `categoryIds`
+  | `categories`
   | `categoryById`
 
   export type CacheArg = Record<CacheKey, string | null>
