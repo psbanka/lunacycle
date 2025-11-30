@@ -130,6 +130,7 @@ export async function updateTemplateTaskWithCategoryAndAssignments(
     .set({
       title: templateTaskInfo.title,
       description: templateTaskInfo.description,
+      goal: templateTaskInfo.goal,
       storyPoints: templateTaskInfo.storyPoints,
       targetCount: templateTaskInfo.targetCount,
     })
@@ -312,6 +313,7 @@ export const addTemplateTask = publicProcedure
         description: "string | null",
         storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13",
         targetCount: "number",
+        goal: "'minimize' | 'maximize' | null",
         userIds: "string[]",
         categoryId: "string",
       }),

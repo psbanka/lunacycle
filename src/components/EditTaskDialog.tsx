@@ -6,9 +6,10 @@ import { type } from "arktype";
 import { arktypeResolver } from "@hookform/resolvers/arktype";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { Trash, Layers, Eye, EyeOff } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Trash, Layers, Eye, EyeOff } from "lucide-react";
 import { UserSelectionFormItem } from "./UserSelectionFormItem";
 import { currentMonthAtom, EMPTY_MONTH } from "@/atoms";
+import { GoalType } from "../../server/schema";
 
 import {
   Dialog,
@@ -52,6 +53,7 @@ export const TaskSchema = type({
   userIds: "string[] >= 1",
   monthId: "string | null",
   categoryId: "string",
+  "goal": "string | null",
   "isFocused?": "0 | 1",
 });
 
@@ -92,6 +94,7 @@ export function EditTaskDialog({
       targetCount: 1,
       completedCount: 0,
       isFocused: 0,
+      goal: null,
       userIds: [],
       monthId,
       categoryId,
@@ -146,6 +149,7 @@ export function EditTaskDialog({
               storyPoints: values.storyPoints,
               targetCount: values.targetCount,
               categoryId: values.categoryId,
+              goal: values.goal as GoalType || null,
               userIds: values.userIds,
             },
           });
@@ -172,6 +176,7 @@ export function EditTaskDialog({
             storyPoints: values.storyPoints,
             targetCount: values.targetCount,
             categoryId: values.categoryId,
+            goal: values.goal as GoalType || null,
             userIds,
           },
         });
@@ -289,11 +294,12 @@ export function EditTaskDialog({
             />
 
             {isTemplateTask && (
+              <div className="flex gap-2">
               <FormField
                 control={form.control}
                 name="targetCount"
                 render={({ field: { value, onChange } }) => (
-                  <FormItem>
+                  <FormItem className="basis-60">
                     <FormLabel>Times per month: {value}</FormLabel>
                     <FormControl>
                       <Slider
@@ -315,6 +321,51 @@ export function EditTaskDialog({
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="goal"
+                render={({ field: { value, onChange } }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="flex gap-2 flex-wrap mt-3">
+                        <Button
+                          type="button"
+                          variant={value == null ? "default" : "outline"}
+                          className="flex items-center justify-start gap-2 h-auto p-2"
+                          onClick={() => onChange(null)}
+                        >
+                          <Minus/>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={value === "maximize" ? "default" : "outline"}
+                          className="flex items-center justify-start gap-2 h-auto p-2"
+                          onClick={() => onChange("maximize")}
+                        >
+                          <TrendingUp/>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={value === "minimize" ? "default" : "outline"}
+                          className="flex items-center justify-start gap-2 h-auto p-2"
+                          onClick={() => onChange("minimize")}
+                        >
+                          <TrendingDown/>
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      {value === "maximize"
+                        ? "much as possible"
+                        : value === "minimize"
+                        ? "little as possible"
+                        : `Keep it steady`}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              </div>
             )}
             {isEditingTask && !isTemplateTask &&
               initialValues?.targetCount &&

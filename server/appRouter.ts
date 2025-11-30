@@ -1,6 +1,5 @@
 import { db } from "./db.ts";
 import { type } from "arktype";
-// import { publicProcedure, router, MyEventEmitter } from "./trpc.ts";
 import { publicProcedure, router } from "./trpc.ts";
 import { observable } from "@trpc/server/observable";
 import { serverEvents, clearCache, type CacheArg } from "./events";
@@ -431,11 +430,15 @@ export const appRouter = router({
           storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13",
           targetCount: "number",
           userIds: "string[]",
+          goal: "'minimize' | 'maximize' | null",
           categoryId: "string",
         }),
       })
     )
     .mutation(async ({ input }) => {
+      console.log('---------------------------')
+      console.log(input.task.goal)
+      console.log('---------------------------')
       return updateTemplateTaskWithCategoryAndAssignments(input.task).then(() => {
         clearCache("templateTaskAtoms", input.task.id);
       });

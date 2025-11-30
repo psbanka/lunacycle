@@ -111,6 +111,7 @@ export const template = sqliteTable("template", {
 });
 
 export type Template = typeof template.$inferSelect;
+export type GoalType = "maximize" | "minimize";
 
 // templateTask table
 export const templateTask = sqliteTable("template_task", {
@@ -118,6 +119,7 @@ export const templateTask = sqliteTable("template_task", {
   title: text("title").notNull(),
   description: text("description"),
   categoryId: text("category_id").notNull().references(() => category.id),
+  goal: text("goal").$type<GoalType>(),
   storyPoints: integer("story_points")
     .$type<StoryPointType>()
     .notNull(),
