@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { TrendingUp, TrendingDown, Minus, Trash, Layers, Eye, EyeOff } from "lucide-react";
 import { UserSelectionFormItem } from "./UserSelectionFormItem";
-import { currentMonthAtom, EMPTY_MONTH } from "@/atoms";
+import { currentMonthAtom, getPlaceholderMonth } from "@/atoms";
 import { GoalType } from "../../server/schema";
 
 import {
@@ -78,7 +78,7 @@ export function EditTaskDialog({
   readOnly = false,
   initialValues,
 }: EditTaskDialogProps) {
-  const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
+  const currentMonth = useLoadable(currentMonthAtom, getPlaceholderMonth());
   const isMobile = useMediaQuery("(max-width: 640px)"); // Tailwind's 'sm' breakpoint
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditingId = initialValues?.id;

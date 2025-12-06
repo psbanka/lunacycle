@@ -7,15 +7,16 @@ import {
   currentTasksAtom,
   currentMonthAtom,
   statisticsAtom,
-  EMPTY_MONTH,
+  getPlaceholderMonth,
   EMPTY_STATISTICS,
+  getCurrentTaskIdsPlaceholders,
 } from "@/atoms";
 import useLunarPhase from "@/hooks/useLunarPhase";
 
 export function LoadIndicator() {
   const { inModificationWindow } = useLunarPhase();
-  const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
-  const currentTaskIds = useLoadable(currentTaskIdsAtom, []);
+  const currentMonth = useLoadable(currentMonthAtom, getPlaceholderMonth());
+  const currentTaskIds = useLoadable(currentTaskIdsAtom, getCurrentTaskIdsPlaceholders());
   const statistics = useLoadable(statisticsAtom, EMPTY_STATISTICS);
   const [storyPoints, setStoryPoints] = useState(0);
   const [averageCompletedStoryPoints, setAverageCompletedStoryPoints] =

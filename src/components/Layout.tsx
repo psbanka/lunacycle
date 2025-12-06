@@ -2,13 +2,9 @@ import { ReactNode, useState, useEffect, useRef } from "react";
 import { useLoadable } from "atom.io/react";
 import Header from "./Header";
 import CategoryNav from "./CategoryNav";
-import { useLocation } from "react-router-dom";
 import {
   categoryIdsAtom,
-  currentMonthAtom,
-  templateAtom,
-  EMPTY_TEMPLATE,
-  EMPTY_MONTH,
+  getCategoryIdPlaceholders
 } from "@/atoms";
 
 type LayoutProps = {
@@ -16,7 +12,7 @@ type LayoutProps = {
 };
 
 export default function Layout({ children }: LayoutProps) {
-  const categoryIds = useLoadable(categoryIdsAtom, []);
+  const categoryIds = useLoadable(categoryIdsAtom, getCategoryIdPlaceholders())
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 

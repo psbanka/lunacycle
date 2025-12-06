@@ -6,7 +6,12 @@ import { useState } from "react";
 import { EditTaskDialog } from "./EditTaskDialog";
 import { StoryPointsBadge } from "./StoryPointsBadge";
 import { UserAvatar } from "./UserAvatar";
-import { currentMonthAtom, currentTasksAtom, EMPTY_TASK, EMPTY_MONTH } from "@/atoms";
+import {
+  currentMonthAtom,
+  currentTasksAtom,
+  getCurrentTaskPlaceholder,
+  getPlaceholderMonth,
+} from "@/atoms";
 import { completeTask } from "@/actions";
 
 type TaskCardProps = {
@@ -20,16 +25,18 @@ export default function TaskCard({
   compact = false,
   className,
 }: TaskCardProps) {
-  const task = useLoadable(currentTasksAtom, taskId, EMPTY_TASK);
-  const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
+  const task = useLoadable(currentTasksAtom, taskId, getCurrentTaskPlaceholder(taskId));
+  const currentMonth = useLoadable(currentMonthAtom, getPlaceholderMonth());
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // FIXME
   const isCompleted = task.value.targetCount === task.value.completedCount;
   const progress =
-    task.value.targetCount > 0 ? (task.value.completedCount / task.value.targetCount) * 100 : 0;
-  
+    task.value.targetCount > 0
+      ? (task.value.completedCount / task.value.targetCount) * 100
+      : 0;
+
   const isContinuingTask = task.value.targetCount > 1;
 
   const handleComplete = (e: React.MouseEvent) => {
@@ -51,7 +58,9 @@ export default function TaskCard({
           isCompleted
             ? "bg-secondary/50 border border-secondary"
             : "glass-card hover:shadow-md",
-          isContinuingTask && !isCompleted && "border-6 border-secondary/50 bg-primary/5",
+          isContinuingTask &&
+            !isCompleted &&
+            "border-6 border-secondary/50 bg-primary/5",
           compact ? "w-full max-w-[200px]" : "w-full",
           isFocused && "ring-2 ring-primary/70",
           className
@@ -99,7 +108,7 @@ export default function TaskCard({
           {!compact && !isCompleted && (
             <div className="mt-4 flex justify-between items-center">
               <div className="flex -space-x-2 avatar-container">
-                {(task.value.taskUsers).map((tu) => (
+                {task.value.taskUsers.map((tu) => (
                   <UserAvatar
                     key={tu.userId}
                     userId={tu.userId}
@@ -116,12 +125,16 @@ export default function TaskCard({
                 {task.value.targetCount > 1 ? (
                   <>
                     <Plus className="h-3.5 w-3.5" />
-                    <span className="hidden @min-[180px]:inline">Add progress</span>
+                    <span className="hidden @min-[180px]:inline">
+                      Add progress
+                    </span>
                   </>
                 ) : (
                   <>
                     <CheckCircle className="h-3.5 w-3.5" />
-                    <span className="hidden @min-[180px]:inline">Mark complete</span>
+                    <span className="hidden @min-[180px]:inline">
+                      Mark complete
+                    </span>
                   </>
                 )}
               </Button>

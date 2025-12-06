@@ -26,6 +26,71 @@ type Base<T extends readonly unknown[]> = T[number];
 
 // = PLACEHOLDERS =====================================================
 
+// TODO: use arktype to validate the output from these things
+
+function setPlaceholderMonth(month: ServerActiveMonth) {
+  localStorage.setItem('currentMonth', JSON.stringify(month))
+}
+
+export function getPlaceholderMonth() {
+  const storage = localStorage.getItem('currentMonth')
+  if (storage === null) return EMPTY_MONTH
+  return JSON.parse(storage) as ServerActiveMonth
+}
+
+export function getCategoryIdPlaceholders() {
+  const storage = localStorage.getItem('categoryIds')
+  if (storage === null) return []
+  return JSON.parse(storage) as string[]
+}
+
+function setCategoryIdPlaceholders(categoryIds: string[]) {
+  localStorage.setItem('categoryIds', JSON.stringify(categoryIds))
+}
+
+export function getTemplateTaskIdsPlaceholders() {
+  const storage = localStorage.getItem('templateTaskIds')
+  if (storage === null) return []
+  return JSON.parse(storage) as string[]
+}
+
+function setTemplateTaskIdsPlaceholders(templateTaskIds: string[]) {
+  localStorage.setItem('templateTaskIds', JSON.stringify(templateTaskIds))
+}
+
+export function getCurrentTaskIdsPlaceholders() {
+  const storage = localStorage.getItem('currentTaskIds')
+  if (storage === null) return []
+  return JSON.parse(storage) as string[]
+}
+
+function setCurrentTaskIdsPlaceholders(currentTaskIds: string[]) {
+  localStorage.setItem('currentTaskIds', JSON.stringify(currentTaskIds))
+}
+
+export function getCurrentTaskPlaceholder(taskId: string) {
+  const storage = localStorage.getItem(`currentTaskAtom-${taskId}`)
+  if (storage === null) return EMPTY_TASK
+  return JSON.parse(storage) as ServerGetTask
+}
+
+function setCurrentTaskPlaceholder(taskId: string, task: ServerGetTask) {
+  localStorage.setItem(`currentTaskAtom-${taskId}`, JSON.stringify(task))
+}
+
+export function getCategoryPlaceholder(categoryId: string) {
+  const storage = localStorage.getItem(`categoryAtom-${categoryId}`)
+  if (storage === null) return EMPTY_CATEGORY
+  return JSON.parse(storage) as ServerGetCategory
+}
+
+function setCategoryPlaceholder(categoryId: string, category: ServerGetCategory) {
+  localStorage.setItem(`categoryAtom-${categoryId}`, JSON.stringify(category))
+}
+
+// = CONSTANTS ========================================================
+
+
 export const EMPTY_MONTH: ServerActiveMonth = {
   id: "",
   name: "",
@@ -113,7 +178,9 @@ export const currentTaskIdsAtom = atom<Loadable<string[]>, Error>({
   default: async () => {
     const tasks = await trpcClient.getCurrentMonthTasks.query();
     tasks.forEach((task) => setState(currentTasksAtom, task.id, task));
-    return tasks.map((task) => task.id);
+    const currentTaskIds = tasks.map((task) => task.id);
+    setCurrentTaskIdsPlaceholders(currentTaskIds)
+    return currentTaskIds;
   },
 });
 
@@ -124,6 +191,7 @@ export const currentTasksAtom = atomFamily<Loadable<ServerGetTask>, string, Erro
     if (!task) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
     }
+    setCurrentTaskPlaceholder(taskId, task)
     return task;
   },
 });
@@ -227,6 +295,7 @@ export const categoryIdsAtom = atom<Loadable<string[]>, Error>({
       setState(categoriesAtom, category.id, category)
     );
     const categoryIds = categories.map((category) => category.id);
+    setCategoryIdPlaceholders(categoryIds)
     return categoryIds;
   },
 });
@@ -242,6 +311,7 @@ export const categoryByIdAtom = selectorFamily<Loadable<Base<ServerGetCategories
       }
       if (category === undefined)
         throw new TRPCError({ code: "NOT_FOUND", message: "No categories found" });
+      setCategoryPlaceholder(categoryId, category);
       return category;
     },
   })
@@ -275,6 +345,7 @@ export const templateTaskIdsAtom = atom<Loadable<string[]>, Error>({
       setState(templateTasksAtom, templateTask.id, templateTask);
     }
     const templateTaskIds = templateTasks.map((category) => category.id);
+    setTemplateTaskIdsPlaceholders(templateTaskIds);
     return templateTaskIds;
   },
   catch: [],
@@ -328,7 +399,8 @@ export const templateTasksByCategoryIdAtom = selectorFamily<
 export const currentMonthAtom = atom<Loadable<ServerActiveMonth>, Error>({
   key: `currentMonth`,
   default: async () => {
-    const data = trpcClient.getActiveMonth.query();
+    const data = await trpcClient.getActiveMonth.query();
+    setPlaceholderMonth(data)
     return data;
   },
 });

@@ -8,11 +8,11 @@ import {
   focusedTaskIdsAtom,
   currentMonthAtom,
   categoryIdsAtom,
-  EMPTY_MONTH,
+  getPlaceholderMonth,
 } from "@/atoms";
 
 export default function Home() {
-  const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH);
+  const currentMonth = useLoadable(currentMonthAtom, getPlaceholderMonth());
   const focusedTaskIds = useLoadable(focusedTaskIdsAtom, []);
   const categoryIds = useLoadable(categoryIdsAtom, []);
 

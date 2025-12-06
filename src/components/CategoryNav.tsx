@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useLoadable, useO } from "atom.io/react";
 import { getState } from "atom.io";
 import { useEffect, useState } from "react";
-import { categoryIdsAtom, categoriesAtom, EMPTY_CATEGORY } from "@/atoms";
+import { categoryIdsAtom, categoriesAtom, getCategoryIdPlaceholders } from "@/atoms";
 
 interface NavBarProps {
   activeCategoryId: string | null;
@@ -17,7 +17,7 @@ interface ButtonData {
 }
 
 export default function CategoryNav({ activeCategoryId }: NavBarProps) {
-  const categoryIds = useLoadable(categoryIdsAtom, []);
+  const categoryIds = useLoadable(categoryIdsAtom, getCategoryIdPlaceholders());
   const [buttonData, setButtonData] = useState<ButtonData[]>([]);
 
   useEffect(() => {
