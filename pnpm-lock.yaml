@@ -135,8 +135,8 @@ importers:
         specifier: ^2.1.20
         version: 2.1.20
       atom.io:
-        specifier: ^0.44.8
-        version: 0.44.8(@floating-ui/react-dom@2.1.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@typescript-eslint/parser@8.38.0(eslint@9.32.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.32.0(jiti@2.6.1))(react@18.3.1)
+        specifier: ^0.44.15
+        version: 0.44.15(@floating-ui/react-dom@2.1.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@typescript-eslint/parser@8.38.0(eslint@9.32.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.32.0(jiti@2.6.1))(react@18.3.1)
       bun-types:
         specifier: ^1.3.3
         version: 1.3.3
@@ -2342,8 +2342,8 @@ packages:
   arktype@2.1.20:
     resolution: {integrity: sha512-IZCEEXaJ8g+Ijd59WtSYwtjnqXiwM8sWQ5EjGamcto7+HVN9eK0C4p0zDlCuAwWhpqr6fIBkxPuYDl4/Mcj/+Q==}
 
-  atom.io@0.44.8:
-    resolution: {integrity: sha512-wFuoW6SBpjI3ASFS6ts4Fo2JOJYYkTP2chRfoLWl5eqd6QhY3sGVUeVvQsKlTlpndPBjUDTXZpPFehLAFV0ayQ==}
+  atom.io@0.44.15:
+    resolution: {integrity: sha512-zYRkFN8EwpPyYc5YtXrzPO0OG8WA80qSda3QKbjIBB9qhNTZjIAwV54Z9H8IbCIT1irEQXZiKqe2Bqx9SS7gQg==}
     peerDependencies:
       '@floating-ui/react': '>=0.25.0'
       '@floating-ui/react-dom': '>=2.0.0'
@@ -5637,7 +5637,7 @@ snapshots:
       '@ark/schema': 0.46.0
       '@ark/util': 0.46.0
 
-  atom.io@0.44.8(@floating-ui/react-dom@2.1.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@typescript-eslint/parser@8.38.0(eslint@9.32.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.32.0(jiti@2.6.1))(react@18.3.1):
+  atom.io@0.44.15(@floating-ui/react-dom@2.1.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@typescript-eslint/parser@8.38.0(eslint@9.32.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.32.0(jiti@2.6.1))(react@18.3.1):
     optionalDependencies:
       '@floating-ui/react-dom': 2.1.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@typescript-eslint/parser': 8.38.0(eslint@9.32.0(jiti@2.6.1))(typescript@5.9.2)

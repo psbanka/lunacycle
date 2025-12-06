@@ -35,7 +35,7 @@ export function LoadIndicator() {
     setAverageCompletedStoryPoints(totalCompletedStoryPoints / totalMonths);
   }, [statistics, currentMonth]);
 
-  const GAUGE_VISIBLE_MAX = averageCompletedStoryPoints * 1.2; // Gauge visually extends to 120%
+  const GAUGE_VISIBLE_MAX = Math.floor(averageCompletedStoryPoints * 1.2); // Gauge visually extends to 120%
   const INDICATOR_WIDTH_PX = 12; // w-3 in Tailwind (0.75rem = 12px if 1rem=16px)
 
   // Calculate month load
@@ -54,7 +54,7 @@ export function LoadIndicator() {
   }, [currentTaskIds]);
 
   // Calculate fullness for color (relative to MAX_STORY_POINTS)
-  const fullnessPercent = (storyPoints / averageCompletedStoryPoints) * 100;
+  const fullnessPercent = Math.floor(storyPoints / averageCompletedStoryPoints) * 100;
 
   const getGaugeBackgroundColor = () => {
     if (fullnessPercent < 0) return "bg-gray-300"; // Should ideally not happen
