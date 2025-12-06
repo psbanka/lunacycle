@@ -1,21 +1,21 @@
-import { useTask } from "@/contexts/TaskContext";
+import { useLoadable } from "atom.io/react"
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Plus } from "lucide-react";
-import { LoadingScreen } from "@/components/LoadingScreen";
-import { LoadIndicator } from "@/components/LoadIndicator";
-import BacklogTaskCard from "@/components/BacklogTaskCard";
+import { Separator } from "@/components/ui/separator";
+import { categoryIdsAtom, backlogTaskIdsAtom } from "@/atoms";
+import { BacklogCategorySection } from "@/components/BacklogCategorySection";
 
 export default function Backlog() {
-  const { backlogTasks, loadingTasks, updateTask } = useTask();
+  const categoryIds = useLoadable(categoryIdsAtom, []);
+  const backlogTaskIds = useLoadable(backlogTaskIdsAtom, []);
 
-  if (loadingTasks) {
-    return <LoadingScreen />;
+  if (categoryIds.error) {
+    return null;
   }
-  if (!backlogTasks) return null;
 
-  if (backlogTasks?.length === 0) {
-    return (
-      <div className="max-w-6xl mx-auto">
+  return (
+    <div className="max-w-6xl mx-auto">
+      {backlogTaskIds.value.length == 0 ? (
         <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold">No Backlog Tasks!</h1>
@@ -30,60 +30,20 @@ export default function Backlog() {
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
+      ) : null}
+      <div className="max-w-6xl mx-auto">
 
-  return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex flex-row justify-between mb-8 gap-4">
-        <div>
-          <h1 className="text-left text-3xl font-bold">Backlog tasks</h1>
-        </div>
-        <LoadIndicator />
-      </div>
 
-      <h2 className="text-2xl font-semibold mb-6">Categories</h2>
+        <h2 className="text-2xl font-semibold mb-6">Categories</h2>
 
-      <div>
-        {backlogTasks
-          .sort((a, b) => a.category.name.localeCompare(b.category.name))
-          .map((blt) => (
-            <div className="mb-8" key={blt.category?.id}>
-              <div className="mb-4 flex justify-between items-center">
-                <h2 className="text-xl font-semibold">
-                  {blt.category?.emoji} {blt.category?.name}
-                </h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => console.log("todo")}
-                  className="text-xs gap-1">
-                  <Plus className="h-3.5 w-3.5" />
-                  Add Task
-                </Button>
-              </div>
+        <Separator className="my-8" />
 
-              <div className="md:glass-card md:bg-secondary/30 p-4 rounded-lg">
-                {!blt.tasks || blt.tasks?.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">
-                    No tasks in this category yet.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {blt.tasks
-                      .sort((a, b) => a.title.localeCompare(b.title))
-                      .map((task) => (
-                        <BacklogTaskCard
-                          key={task.id}
-                          taskId={task.id}
-                        />
-                      ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+        {categoryIds.value.map((categoryId) => (
+          <BacklogCategorySection
+            key={categoryId}
+            categoryId={categoryId}
+          />
+        ))}
       </div>
     </div>
   );

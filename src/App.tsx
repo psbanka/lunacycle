@@ -2,16 +2,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { trpcClient } from './trpc-client-service'
 import { useState } from "react";
 import { TRPCProvider } from "./lib/trpc";
-import { TaskProvider } from "./contexts/TaskContext";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 // TODO: MOVE FILE
-import CheckInSheet from "@/pages/CheckInSheet";
 import Template from "./pages/Template";
 import Backlog from "./pages/Backlog";
 import Goals from "./pages/Goals";
@@ -19,6 +18,8 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { trpc } from "./api";
+import { useToast } from "@/components/ui/use-toast";
+import { clearCache } from "@/atoms";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -66,6 +67,23 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // App Core without providers for use inside providers
 const AppCore = () => {
+  const { toast } = useToast();
+  trpcClient.onMessage.subscribe(undefined, {
+    onData: (data) => {
+      // TODO: PUT THIS IN A DIFFERENT LOCATION ON THE SCREEN
+      toast({
+        title: "New Message",
+        description: data.message,
+      });
+    },
+  });
+  trpcClient.onClearCache.subscribe(undefined, {
+    onData: (data) => {
+      console.log("clearing cache:", data.keys);
+      clearCache(data.keys);
+    },
+  });
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -77,15 +95,6 @@ const AppCore = () => {
             <Layout>
               <Home />
             </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/check-in"
-        element={
-          <ProtectedRoute>
-            <CheckInSheet />
           </ProtectedRoute>
         }
       />
@@ -142,18 +151,8 @@ const AppCore = () => {
 // Main App with all providers
 const App = () => {
   const queryClient = getQueryClient();
-  const [trpcClient] = useState(() =>
-    trpc
-  /*
-    createTRPCClient<AppRouter>({
-      links: [
-        httpBatchLink({
-          // TODO: remove duplicate stuff?
-          url: `http://${env.VITE_BACKEND_ORIGIN}/api/`,
-        }),
-      ],
-    })
-      */
+  const [trpcClient] = useState(
+    () => trpc
   );
 
   return (
@@ -163,13 +162,11 @@ const App = () => {
         <TooltipProvider>
           <ThemeProvider>
             <AuthProvider>
-              <TaskProvider>
               <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <AppCore />
-                </BrowserRouter>
-              </TaskProvider>
+              <Sonner />
+              <BrowserRouter>
+                <AppCore />
+              </BrowserRouter>
             </AuthProvider>
           </ThemeProvider>
         </TooltipProvider>

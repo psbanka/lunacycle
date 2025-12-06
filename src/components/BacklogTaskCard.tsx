@@ -1,4 +1,4 @@
-import { useTask } from "@/contexts/TaskContext";
+import { useLoadable } from "atom.io/react"
 import { cn } from "@/lib/utils";
 import { Trash, PencilIcon, ArrowUpToLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,19 +6,17 @@ import { useState } from "react";
 import { EditTaskDialog } from "./EditTaskDialog";
 import { UserAvatar } from "./UserAvatar";
 import { StoryPointsBadge } from "./StoryPointsBadge";
+import { type ServerBacklogTask, currentMonthAtom, EMPTY_MONTH } from "@/atoms";
+import { updateTask, deleteTask } from "@/actions";
 
 type TaskCardProps = {
-  taskId: string;
+  task: ServerBacklogTask;
   className?: string;
 };
 
-export default function BacklogTaskCard({ taskId, className }: TaskCardProps) {
-  const { backlogTasks, loadingTasks, updateTask, currentMonth, deleteTask } = useTask();
+export default function BacklogTaskCard({ task, className }: TaskCardProps) {
+  const currentMonth = useLoadable(currentMonthAtom, EMPTY_MONTH)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-
-  const task = backlogTasks
-    ?.flatMap((blt) => blt.tasks)
-    .find((task) => task.id === taskId);
 
   if (!task) return null;
 
@@ -30,23 +28,17 @@ export default function BacklogTaskCard({ taskId, className }: TaskCardProps) {
   const isContinuingTask = task.targetCount > 1;
 
   function promoteToMonth() {
-    const task = backlogTasks
-      ?.flatMap((blt) => blt.tasks)
-      .find((task) => task.id === taskId);
-    if (!currentMonth) return;
-    if (!task) return;
-    updateTask(
-      taskId,
-      {
-        ...task,
-        monthId: currentMonth?.id,
-      },
-      task.taskUsers.map((tu) => tu.userId)
-    );
+    if (currentMonth.loading) return;
+    const userIds = task.taskUsers.map((tu) => (tu.userId))
+    updateTask({ task: {
+      ...task,
+      monthId: currentMonth.value.id,
+      userIds,
+    }});
   }
 
   function handleDelete() {
-    deleteTask(taskId);
+    deleteTask(task.id);
   }
 
   const handleEditClick = () => {
@@ -92,7 +84,7 @@ export default function BacklogTaskCard({ taskId, className }: TaskCardProps) {
             <div className="mt-4 flex justify-between items-center">
               <div className="flex -space-x-2 avatar-container">
                 {task.taskUsers.map((tu) => (
-                  <UserAvatar key={tu.userId} user={tu.user} dimmed={true} />
+                  <UserAvatar key={tu.userId} userId={tu.user.id} dimmed={true} />
                 ))}
               </div>
 
@@ -124,7 +116,7 @@ export default function BacklogTaskCard({ taskId, className }: TaskCardProps) {
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         categoryId={task.categoryId}
-        monthId={currentMonth?.id || null}
+        monthId={currentMonth.value.id || null}
         isTemplateTask={false}
         initialValues={{
           id: task.id,

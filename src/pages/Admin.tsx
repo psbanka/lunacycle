@@ -1,22 +1,23 @@
-import { useState, useEffect } from "react";
+import { useLoadable } from "atom.io/react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useTask } from "@/contexts/TaskContext";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { UserAvatar } from "@/components/UserAvatar";
 import { EditUserDialog } from "@/components/EditUserDialog";
 import { User } from "../../server/schema";
+import { userIdsAtom } from "@/atoms.ts";
+import { UserRow } from "@/components/UserRow";
 
 export default function Admin() {
+  const userIds = useLoadable(userIdsAtom, []);
   const { user } = useAuth();
-  const { users } = useTask();
   const navigate = useNavigate();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const [newUser, setNewUser] = useState({
     name: "",
@@ -25,7 +26,7 @@ export default function Admin() {
     role: "user",
   });
 
-  if (!users || !user) {
+  if (userIds.value.length === 0) {
     return <LoadingScreen />;
   }
 
@@ -35,8 +36,8 @@ export default function Admin() {
     return null;
   }
 
-  const handleEditUser = (user: User) => {
-    setSelectedUser(user);
+  const handleEditUser = (userId: string) => {
+    setSelectedUserId(userId);
     setIsEditDialogOpen(true);
   };
 
@@ -49,7 +50,7 @@ export default function Admin() {
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newId = (users.length + 1).toString();
+    const newId = (userIds.value.length + 1).toString();
 
     setNewUser({
       name: "",
@@ -118,8 +119,7 @@ export default function Admin() {
                   setNewUser({ ...newUser, role: e.target.value })
                 }
                 className="w-full p-2 rounded-md border border-input"
-                required
-              >
+                required>
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
               </select>
@@ -148,58 +148,18 @@ export default function Admin() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-b">
-                  <td className="text-left p-2">{user.name}</td>
-                  <td className="text-left p-2">{user.email}</td>
-                  <td className="text-left p-2">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        user.role === "admin"
-                          ? "bg-primary/15 text-primary"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="p-2">
-                    <UserAvatar user={user}/>
-                  </td>
-                  <td className="p-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2"
-                      onClick={() => handleEditUser(user)}
-                    >
-                      Edit
-                    </Button>
-                    {user.id !== "1" && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 px-2 text-destructive"
-                        onClick={() => {
-                          console.log("do a thing?");
-                          toast.success("User removed successfully");
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    )}
-                  </td>
-                </tr>
+              {userIds.value.map((id) => (
+                <UserRow key={id} userId={id} handleEditUser={handleEditUser} />
               ))}
             </tbody>
           </table>
         </div>
       </div>
-      {selectedUser && (
+      {selectedUserId && (
         <EditUserDialog
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
-          user={selectedUser}
+          userId={selectedUserId}
           onUserUpdated={handleUserUpdated}
         />
       )}

@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "./schema.ts";
 import { fakerEN } from "@faker-js/faker";
 import { getLunarPhase } from "../shared/lunarPhase.ts";
+import { clearCache } from "./events";
 
 type TaskCreationProps = Omit<
   schema.Task,
@@ -95,7 +96,13 @@ export async function updateTaskWithCategoryAndAssignments(
     .values(taskInfo.userIds.map((userId) => ({ taskId: taskInfo.id, userId })))
     .run();
 
-  return db.query.task.findFirst({ where: eq(schema.task.id, taskInfo.id) });
+  const output = db.query.task.findFirst({ where: eq(schema.task.id, taskInfo.id) });
+  clearCache("backlogTasksAtom", taskInfo.id);
+  clearCache("backlogTaskIds");
+  clearCache("currentTaskAtom", taskInfo.id);
+  clearCache("currentTaskIds");
+  clearCache("focusedTaskIds");
+  return output;
 }
 
 type TemplateTaskModificationProps = Omit<schema.TemplateTask, "createdAt"> & {
@@ -123,6 +130,7 @@ export async function updateTemplateTaskWithCategoryAndAssignments(
     .set({
       title: templateTaskInfo.title,
       description: templateTaskInfo.description,
+      goal: templateTaskInfo.goal,
       storyPoints: templateTaskInfo.storyPoints,
       targetCount: templateTaskInfo.targetCount,
     })
@@ -170,6 +178,7 @@ export async function updateTemplateTaskWithCategoryAndAssignments(
         isFocused: 0,
       });
     }
+    clearCache("templateTasksAtom", templateTaskInfo.id);
   }
 }
 
@@ -264,6 +273,8 @@ export async function createTemplateTaskWithCategoryAndAssignments(
         templateTaskId: templateTaskId,
         isFocused: 0,
       });
+      clearCache("templateTaskIds");
+      clearCache("statistics");
     }
   }
 
@@ -288,7 +299,11 @@ export const addTask = publicProcedure
   )
   .mutation(async ({ input }) => {
     const { task: taskInput } = input;
-    return await createTaskWithCategoryAndAssignments(taskInput);
+    return createTaskWithCategoryAndAssignments(taskInput).then(() => {
+        clearCache("currentTaskIds");
+        clearCache("focusedTaskIds");
+        clearCache("backlogTaskIds");
+      });
   });
 
 export const addTemplateTask = publicProcedure
@@ -299,6 +314,7 @@ export const addTemplateTask = publicProcedure
         description: "string | null",
         storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13",
         targetCount: "number",
+        goal: "'minimize' | 'maximize' | null",
         userIds: "string[]",
         categoryId: "string",
       }),
@@ -306,5 +322,8 @@ export const addTemplateTask = publicProcedure
   )
   .mutation(async ({ input }) => {
     const { task: taskInput } = input;
-    return await createTemplateTaskWithCategoryAndAssignments(taskInput);
+    return createTemplateTaskWithCategoryAndAssignments(taskInput).then(() => {
+        clearCache("templateTaskIds");
+        clearCache("statistics");
+      });
   });

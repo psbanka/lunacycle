@@ -84,11 +84,10 @@ async function run() {
   try {
     // 4. Move tasks from Category A to Category B
     console.log(`\n🔄 Moving tasks from "${categoryA.name}" to "${categoryB.name}"...`);
-    const updatedTasksResult = await db.update(schema.task)
+    await db.update(schema.task)
       .set({ categoryId: categoryB.id })
       .where(eq(schema.task.categoryId, categoryA.id))
       .run();
-    console.log(`   - Updated ${updatedTasksResult.changes} regular tasks.`);
 
     // 5. Move templateTasks from Category A to Category B
     console.log(`🔄 Moving template tasks from "${categoryA.name}" to "${categoryB.name}"...`);
@@ -96,7 +95,6 @@ async function run() {
       .set({ categoryId: categoryB.id })
       .where(eq(schema.templateTask.categoryId, categoryA.id))
       .run();
-    console.log(`   - Updated ${updatedTemplateTasksResult.changes} template tasks.`);
 
     // 6. Delete Category A
     console.log(`\n🗑️ Deleting category "${categoryA.name}"...`);

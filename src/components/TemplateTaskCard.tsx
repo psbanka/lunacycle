@@ -1,11 +1,8 @@
-import {
-  TemplateTask,
-  TemplateTaskUser,
-  User,
-} from "../../server/schema";
+import { TemplateTask, TemplateTaskUser, User } from "../../server/schema";
 import { useState } from "react";
 import { EditTaskDialog } from "./EditTaskDialog";
 import { UserAvatar } from "./UserAvatar";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 type TemplateTaskCardProps = {
   templateTask: TemplateTask & {
@@ -14,7 +11,7 @@ type TemplateTaskCardProps = {
   className?: string; // FIXME: USED?
 };
 
-export function TemplateTaskCard( props : TemplateTaskCardProps) {
+export function TemplateTaskCard(props: TemplateTaskCardProps) {
   const { templateTask } = props;
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -22,17 +19,23 @@ export function TemplateTaskCard( props : TemplateTaskCardProps) {
     setIsEditDialogOpen(true);
   };
 
+  const TrendIcon =
+    templateTask.goal === "maximize"
+      ? TrendingUp
+      : templateTask.goal === "minimize"
+      ? TrendingDown
+      : Minus;
+
   return (
     <>
       <div
         key={templateTask.id}
         className="glass-card p-4 rounded-lg cursor-pointer"
-        onClick={handleEditClick}
-      >
+        onClick={handleEditClick}>
         <div className="flex justify-between items-start mb-2">
           <h3 className="font-medium">{templateTask.title}</h3>
           <div className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs">
-            {templateTask.storyPoints} SP
+            <TrendIcon/> {templateTask.storyPoints} SP
           </div>
         </div>
 
@@ -47,11 +50,7 @@ export function TemplateTaskCard( props : TemplateTaskCardProps) {
         <div className="mt-2 flex gap-1">
           {templateTask.templateTaskUsers.map((ttu) => {
             return (
-              <UserAvatar
-                key={ttu.userId}
-                user={ttu.user}
-                dimmed={true}
-              />
+              <UserAvatar key={ttu.userId} userId={ttu.userId} dimmed={true} />
             );
           })}
         </div>
@@ -70,6 +69,7 @@ export function TemplateTaskCard( props : TemplateTaskCardProps) {
           description: templateTask.description || "",
           storyPoints: templateTask.storyPoints,
           targetCount: templateTask.targetCount,
+          goal: templateTask.goal,
           categoryId: templateTask.categoryId,
           userIds: templateTask.templateTaskUsers.map((ttu) => ttu.userId),
         }}

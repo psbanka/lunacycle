@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { type } from "arktype";
 import { arktypeResolver } from "@hookform/resolvers/arktype"
-import { useTask } from "@/contexts/TaskContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import Picker from "@emoji-mart/react";
 import data from '@emoji-mart/data'
@@ -26,6 +25,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { addCategory } from "@/actions";
 
 // Schema for template category creation
 const categorySchema = type({
@@ -45,7 +45,6 @@ export function AddCategoryDialog({
   open,
   onOpenChange,
 }: AddCategoryDialogProps) {
-  const { addCategory } = useTask();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const themeObject = useTheme();
@@ -63,11 +62,11 @@ export function AddCategoryDialog({
     setIsSubmitting(true);
 
     try {
-      addCategory({
+      addCategory({ category: {
         emoji: values.emoji || null,
         name: values.name,
         description: values.description || null,
-      });
+      }});
 
       // Reset form and close dialog
       form.reset();

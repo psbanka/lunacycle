@@ -1,5 +1,6 @@
-import { Activity, ShieldCheck } from "lucide-react";
+import { Activity } from "lucide-react";
 import { useState } from "react";
+import { useLoadable } from "atom.io/react";
 import {
   LineChart,
   Line,
@@ -9,15 +10,17 @@ import {
   XAxis,
   YAxis,
   Legend,
+  ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { useTask } from "@/contexts/TaskContext";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import RecurringTaskGoal from "@/components/RecurringTaskGoal";
 import { inferProcedureOutput } from "@trpc/server";
 import type { AppRouter } from "../../server/index";
-import type { Task } from "../../server/schema";
+import type { TemplateTask } from "../../server/schema";
+import { statisticsAtom } from "@/atoms"
+import { startCycle } from "@/actions";
 
 const PLANNING = true;
 
@@ -27,7 +30,7 @@ function getTaskIds(
   if (!statistics) return [];
   return Object.values(statistics.categoryData)
     .flatMap((cd) => Object.values(cd.recurringTaskInfo ?? {}))
-    .flatMap((rtd) => rtd.task.id);
+    .flatMap((rtd) => rtd.templateTask.id);
 }
 
 type CommittedTask = {
@@ -37,20 +40,21 @@ type CommittedTask = {
 };
 
 export default function Goals() {
-  const { loadingTasks, statistics, startCycle } = useTask();
+  const statistics = useLoadable(statisticsAtom)
   const [committedTasks, setCommittedTasks] = useState<CommittedTask[]>([]);
 
-  if (loadingTasks) {
+  if (statistics === "LOADING") {
     return <LoadingScreen />;
   }
+  if (statistics.value instanceof Error) return null
 
-  function handleToggleCommitted(templateTaskId: string, task: Task, targetCount: number) {
+  function handleToggleCommitted(templateTaskId: string, templateTask: TemplateTask, targetCount: number) {
     if (committedTasks.find((c) => c.id === templateTaskId)) {
       setCommittedTasks((prev) => prev.filter((c) => c.id !== templateTaskId));
     } else {
       setCommittedTasks((prev) => [
         ...prev,
-        { id: templateTaskId, title: task.title, targetCount },
+        { id: templateTaskId, title: templateTask.title, targetCount },
       ]);
     }
   }
@@ -58,11 +62,12 @@ export default function Goals() {
   async function handleStartCycle() {
     const backlogTasks = [];
     await startCycle({ recurringTasks: committedTasks, backlogTasks });
+    setCommittedTasks([]);
   }
 
-  const totalTasksCount = getTaskIds(statistics).length;
+  const totalTasksCount = getTaskIds(statistics.value).length;
   const readyToStartCycle = totalTasksCount === committedTasks.length;
-  const allVariant = readyToStartCycle ? "destructive" : "outline-solid";
+  const allVariant = readyToStartCycle ? "destructive" : "outline";
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -102,29 +107,31 @@ export default function Goals() {
               Track your history of task completion versus commitment
             </p>
           </div>
-          <BarChart width={1050} height={300} data={statistics?.overall}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <Bar dataKey="completed" fill="hsl(var(--primary))" />
-            <Bar dataKey="committed" fill="hsl(var(--muted-foreground))" />
-            <XAxis
-              dataKey="name"
-              stroke="hsl(var(--muted-foreground))"
-              axisLine={{ stroke: "hsl(var(--border))" }}
-              tickLine={false}
-            />
-            <YAxis
-              stroke="hsl(var(--muted-foreground))"
-              axisLine={{ stroke: "hsl(var(--border))" }}
-              tickLine={false}
-            />
-            <Tooltip />
-            <Legend
-              wrapperStyle={{
-                color: "hsl(var(--muted-foreground))",
-                paddingTop: "20px",
-              }}
-            />
-          </BarChart>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={statistics.value.overall}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <Bar dataKey="completed" fill="hsl(var(--primary))" />
+              <Bar dataKey="committed" fill="hsl(var(--muted-foreground))" />
+              <XAxis
+                dataKey="name"
+                stroke="hsl(var(--muted-foreground))"
+                axisLine={{ stroke: "hsl(var(--border))" }}
+                tickLine={false}
+              />
+              <YAxis
+                stroke="hsl(var(--muted-foreground))"
+                axisLine={{ stroke: "hsl(var(--border))" }}
+                tickLine={false}
+              />
+              <Tooltip />
+              <Legend
+                wrapperStyle={{
+                  color: "hsl(var(--muted-foreground))",
+                  paddingTop: "20px",
+                }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -134,7 +141,7 @@ export default function Goals() {
             <h2 className="text-2xl font-semibold mr-5">By Category</h2>
           </div>
           <div className="mt-6 space-y-8">
-            {statistics?.categoryData.map((category) => (
+            {statistics.value.categoryData.map((category) => (
               <div key={category.categoryId}>
                 <div className="flex justify-between items-center py-5 px-10">
                   <h3 className="text-xl font-semibold">{category.name}</h3>
@@ -163,7 +170,7 @@ export default function Goals() {
                           toggleCommitted={(targetCount: number) =>
                             handleToggleCommitted(
                               key,
-                              recurringTask.task,
+                              recurringTask.templateTask,
                               targetCount
                             )
                           }

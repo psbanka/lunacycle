@@ -14,26 +14,10 @@ export const UserUpdate = type({
   "password?": "string",
 })
 
-export async function generateNewAvatar(userId: string) {
-  const user = await db.query.user.findFirst({
-    where: eq(schema.user.id, userId),
-  });
-  if (!user) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "User not found",
-    });
-  }
-  // TODO: Make this boy/girl relevant
-  const avatar = await fetchRandomAvatar(user.email);
-  db.update(schema.user)
-    .set({ avatar })
-    .where(eq(schema.user.id, userId))
-    .run();
-  const updatedUser = db.query.user.findFirst({
-    where: eq(schema.user.id, userId),
-  });
-  return updatedUser;
+export async function generateNewAvatar() {
+  // TODO: Make this gender-relevant
+  const avatar = await fetchRandomAvatar();
+  return avatar;
 }
 
 export async function updateAvatar({ userId, file }: {userId: string, file: string}) {
@@ -46,7 +30,7 @@ export async function updateAvatar({ userId, file }: {userId: string, file: stri
       message: "User not found",
     });
   }
-  db.update(schema.user)
+  db.update(schema.userProfile)
     .set({ avatar: file })
     .where(eq(schema.user.id, userId))
     .run();

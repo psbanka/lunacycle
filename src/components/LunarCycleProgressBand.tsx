@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useLoadable } from "atom.io/react";
 import useLunarPhase from "@/hooks/useLunarPhase";
-import { useTask } from "@/contexts/TaskContext";
+import { currentMonthAtom, getPlaceholderMonth } from "@/atoms";
 
 type LunarCycleProgressBandProps = {
   currentDate?: Date;
@@ -11,9 +12,9 @@ export default function LunarCycleProgressBand({
   currentDate,
   className,
 }: LunarCycleProgressBandProps) {
-  const { currentMonth, loadingTasks } = useTask();
+  const currentMonth = useLoadable(currentMonthAtom, getPlaceholderMonth());
   const [cyclePosition, setCyclePosition] = useState(0);
-  const { daysRemaining, phaseName } = useLunarPhase(currentMonth?.endDate);
+  const { daysRemaining } = useLunarPhase(currentMonth.value.endDate);
 
   // Calculate lunar cycle position
   useEffect(() => {

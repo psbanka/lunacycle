@@ -5,7 +5,7 @@ import { TRPCError } from "@trpc/server";
 import { fakerEN } from "@faker-js/faker";
 import { createTaskWithCategoryAndAssignments } from "./updateTasks.ts";
 import { MOON_NAMES } from "../shared/lunarPhase.ts";
-import { StartCycleType } from "./index.ts";
+import { StartCycleType } from "./appRouter.ts";
 
 export async function createMonthFromActiveTemplate(props: typeof StartCycleType.infer) {
   const template = await db.query.template.findFirst({

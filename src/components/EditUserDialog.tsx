@@ -6,36 +6,53 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useLoadable } from "atom.io/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User } from "../../server/schema";
 import { useState, useEffect } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
-import { useTask } from "@/contexts/TaskContext";
 import { toast } from "sonner";
+import { type UserShape } from "../../server/appRouter.ts";
+import { userAtoms, EMPTY_USER } from "@/atoms";
+import { updateUserTask, generateAvatarTask, uploadAvatarTask } from "@/actions";
 
 interface EditUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: User;
+  userId: string;
   onUserUpdated: (user: User) => void;
 }
+
+type FullUser = UserShape & { passwordHash: string };
 
 export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   open,
   onOpenChange,
-  user,
+  userId,
   onUserUpdated,
 }) => {
-  const [editedUser, setEditedUser] = useState<User>({ ...user });
+  const user = useLoadable(userAtoms, userId, EMPTY_USER)
+  if (user.error) return null
+  if (user.loading) return null
+  const [editedUser, setEditedUser] = useState<FullUser>({
+    ...user.value,
+    passwordHash: "",
+  });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const { generateAvatarTask, uploadAvatarTask, updateUserTask } = useTask();
+  const [newAvatar, setNewAvatar] = useState<string | undefined>(undefined);
+  // FIXME: setPasswordHash is not used.
+  const [newPasswordHash, setPasswordHash] = useState("");
 
   // Update the editedUser state when the user prop changes
   useEffect(() => {
-    setEditedUser({ ...user });
-  }, [user.avatar, user.email, user.id, user.name, user.passwordHash, user.role]); // eslint-disable-line
+    setEditedUser({
+      ...user.value,
+      passwordHash: newPasswordHash,
+      avatar: newAvatar ?? user.value.avatar,
+    });
+  }, [newAvatar, user.value.email, user.value.id, user.value.name, newPasswordHash, user.value.role]); // eslint-disable-line
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -43,10 +60,8 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   };
 
   const handleGenerateNewAvatar = async () => {
-    const newUser = await generateAvatarTask(editedUser.id);
-    if (newUser) setEditedUser(newUser);
-    // onOpenChange(false);
-    toast.success("New avatar generated!");
+    const generatedAvatar = await generateAvatarTask();
+    if (generatedAvatar) setNewAvatar(generatedAvatar);
   };
 
   const handleUpdateAvatar = async () => {
@@ -131,8 +146,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
               onChange={(e) =>
                 setEditedUser({ ...editedUser, role: e.target.value })
               }
-              className="w-full p-2 rounded-md border border-input"
-            >
+              className="w-full p-2 rounded-md border border-input">
               <option value="user">User</option>
               <option value="admin">Admin</option>
             </select>
@@ -141,15 +155,15 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
           <div className="space-y-2">
             <Label>Avatar</Label>
             <UserAvatar
-              user={editedUser}
+              userId={editedUser.id}
+              updatedAvatar={newAvatar}
               size="lg"
             />
             <div className="flex gap-2 mt-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleGenerateNewAvatar}
-              >
+                onClick={handleGenerateNewAvatar}>
                 Generate New Avatar
               </Button>
               <input
@@ -161,12 +175,14 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
               />
               <Label
                 htmlFor="avatar-upload"
-                className="cursor-pointer bg-muted rounded-md px-2 py-1 text-sm"
-              >
+                className="cursor-pointer bg-muted rounded-md px-2 py-1 text-sm">
                 Upload New Avatar
               </Label>
               {selectedFile && (
-                <Button variant="outline" size="sm" onClick={handleUpdateAvatar}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUpdateAvatar}>
                   Update Avatar
                 </Button>
               )}
@@ -178,8 +194,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
           <Button
             type="button"
             variant="secondary"
-            onClick={() => onOpenChange(false)}
-          >
+            onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button type="button" onClick={handleSave}>

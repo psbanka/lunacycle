@@ -1,15 +1,15 @@
 import { FIBONACCI } from "../../shared/types";
-import { useState } from "react";
+import { useLoadable } from "atom.io/react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { type } from "arktype";
 import { arktypeResolver } from "@hookform/resolvers/arktype";
-import { LoadingScreen } from "./LoadingScreen";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-
-import { useTask } from "@/contexts/TaskContext";
-import { Trash, Layers, Eye, EyeOff } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Trash, Layers, Eye, EyeOff } from "lucide-react";
 import { UserSelectionFormItem } from "./UserSelectionFormItem";
+import { currentMonthAtom, getPlaceholderMonth } from "@/atoms";
+import { GoalType } from "../../server/schema";
 
 import {
   Dialog,
@@ -33,7 +33,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Avatar } from "@/components/ui/avatar";
+import {
+  addTask,
+  updateTask,
+  updateTemplateTask,
+  deleteTask,
+  deleteTemplateTask,
+  addTemplateTask,
+} from "@/actions";
 
 // Schema for task creation
 export const TaskSchema = type({
@@ -46,6 +53,7 @@ export const TaskSchema = type({
   userIds: "string[] >= 1",
   monthId: "string | null",
   categoryId: "string",
+  "goal": "string | null",
   "isFocused?": "0 | 1",
 });
 
@@ -57,6 +65,7 @@ interface EditTaskDialogProps {
   categoryId?: string;
   monthId: string | null;
   isTemplateTask: boolean;
+  readOnly?: boolean;
   initialValues?: Partial<TaskFormValues>;
 }
 
@@ -66,18 +75,10 @@ export function EditTaskDialog({
   categoryId,
   monthId,
   isTemplateTask,
+  readOnly = false,
   initialValues,
 }: EditTaskDialogProps) {
-  const {
-    currentMonth,
-    addTask,
-    updateTask,
-    updateTemplateTask,
-    addTemplateTask,
-    users,
-    deleteTask,
-    deleteTemplateTask,
-  } = useTask();
+  const currentMonth = useLoadable(currentMonthAtom, getPlaceholderMonth());
   const isMobile = useMediaQuery("(max-width: 640px)"); // Tailwind's 'sm' breakpoint
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditingId = initialValues?.id;
@@ -95,6 +96,7 @@ export function EditTaskDialog({
       targetCount: 1,
       completedCount: 0,
       isFocused: 0,
+      goal: null,
       userIds: [],
       monthId,
       categoryId,
@@ -102,7 +104,25 @@ export function EditTaskDialog({
     },
   });
 
-  if (!categoryId) return null;
+  useEffect(() => {
+    // Reset the form only when the task being edited changes,
+    // not on every render. We use the ID to track this.
+    form.reset({
+      title: "",
+      description: "",
+      storyPoints: 1,
+      targetCount: 1,
+      completedCount: 0,
+      isFocused: 0,
+      goal: null,
+      userIds: [],
+      monthId,
+      categoryId,
+      ...initialValues,
+    });
+  }, [initialValues?.id, monthId, categoryId, form.reset]);
+
+  if (!categoryId || currentMonth instanceof Error) return null;
 
   const onSubmit = async (values: TaskFormValues) => {
     setIsSubmitting(true);
@@ -110,59 +130,59 @@ export function EditTaskDialog({
     try {
       if (isEditingId) {
         if (isTemplateTask === false) {
-          await updateTask(
-            isEditingId,
-            {
+          await updateTask({
+            task: {
+              id: isEditingId,
               title: values.title,
               description: values.description || null,
               storyPoints: values.storyPoints,
               targetCount: values.targetCount,
-              completedCount: values.completedCount || 0,
               isFocused: values.isFocused || 0,
               monthId: values.monthId,
-              templateTaskId: null,
               categoryId: values.categoryId,
+              userIds: values.userIds,
             },
-            values.userIds
-          );
+          });
         } else {
-          await updateTemplateTask(
-            isEditingId,
-            {
+          await updateTemplateTask({
+            task: {
+              id: isEditingId,
               title: values.title,
               description: values.description || null,
               storyPoints: values.storyPoints,
               targetCount: values.targetCount,
               categoryId: values.categoryId,
+              goal: values.goal as GoalType || null,
+              userIds: values.userIds,
             },
-            values.userIds
-          );
+          });
         } // FIXME: THESE USE-CASES ARE BROKEN
       } else if (isTemplateTask === false) {
-        await addTask(
-          {
+        await addTask({
+          task: {
             title: values.title,
             description: values.description || null,
             storyPoints: values.storyPoints,
             targetCount: values.targetCount,
             categoryId: categoryId,
             monthId: monthId,
+            templateTaskId: null,
             isFocused: values.isFocused || 0,
-            completedCount: 0,
+            userIds,
           },
-          userIds
-        );
+        });
       } else {
-        await addTemplateTask(
-          {
+        await addTemplateTask({
+          task: {
             title: values.title,
             description: values.description || null,
             storyPoints: values.storyPoints,
             targetCount: values.targetCount,
             categoryId: values.categoryId,
+            goal: values.goal as GoalType || null,
+            userIds,
           },
-          userIds
-        );
+        });
       }
 
       // Reset form and close dialog
@@ -192,10 +212,6 @@ export function EditTaskDialog({
       setIsSubmitting(false);
     }
   };
-
-  if (!users) {
-    return <LoadingScreen />;
-  }
 
   const errorMessages = Object.values(form.formState.errors).map(
     (error) => error.message
@@ -229,7 +245,7 @@ export function EditTaskDialog({
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Task title" {...field} />
+                    <Input disabled={readOnly} placeholder="Task title" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -244,6 +260,7 @@ export function EditTaskDialog({
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
                     <Textarea
+                      disabled={readOnly}
                       placeholder="Describe this task..."
                       className="resize-none"
                       {...field}
@@ -263,6 +280,7 @@ export function EditTaskDialog({
                   <div className="flex gap-2 flex-wrap">
                     {FIBONACCI.map((points) => (
                       <Button
+                        disabled={readOnly}
                         key={points}
                         type="button"
                         variant={field.value === points ? "default" : "outline"}
@@ -281,11 +299,12 @@ export function EditTaskDialog({
             />
 
             {isTemplateTask && (
+              <div className="flex gap-2">
               <FormField
                 control={form.control}
                 name="targetCount"
                 render={({ field: { value, onChange } }) => (
-                  <FormItem>
+                  <FormItem className="basis-60">
                     <FormLabel>Times per month: {value}</FormLabel>
                     <FormControl>
                       <Slider
@@ -307,8 +326,53 @@ export function EditTaskDialog({
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="goal"
+                render={({ field: { value, onChange } }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="flex gap-2 flex-wrap mt-3">
+                        <Button
+                          type="button"
+                          variant={value == null ? "default" : "outline"}
+                          className="flex items-center justify-start gap-2 h-auto p-2"
+                          onClick={() => onChange(null)}
+                        >
+                          <Minus/>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={value === "maximize" ? "default" : "outline"}
+                          className="flex items-center justify-start gap-2 h-auto p-2"
+                          onClick={() => onChange("maximize")}
+                        >
+                          <TrendingUp/>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={value === "minimize" ? "default" : "outline"}
+                          className="flex items-center justify-start gap-2 h-auto p-2"
+                          onClick={() => onChange("minimize")}
+                        >
+                          <TrendingDown/>
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      {value === "maximize"
+                        ? "much as possible"
+                        : value === "minimize"
+                        ? "little as possible"
+                        : `Keep it steady`}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              </div>
             )}
-            {isEditingTask &&
+            {isEditingTask && !isTemplateTask &&
               initialValues?.targetCount &&
               initialValues.targetCount > 1 && (
                 <FormField
@@ -335,11 +399,7 @@ export function EditTaskDialog({
                 />
               )}
 
-            <UserSelectionFormItem
-              control={form.control}
-              name="userIds"
-              users={users}
-            />
+            <UserSelectionFormItem control={form.control} name="userIds" />
 
             <DialogFooter className="mt-6">
               {errorMessages.length > 0 && (
@@ -361,6 +421,7 @@ export function EditTaskDialog({
               )}
 
               {/* --- FOCUS BUTTON --- */}
+              {isEditingId && (!isTemplateTask) && (
               <FormField
                 control={form.control}
                 name="isFocused"
@@ -380,7 +441,10 @@ export function EditTaskDialog({
                   );
                 }}
               />
+              )}
+
               {/* --- BACKLOG BUTTON --- */}
+              {isEditingId && (!isTemplateTask) && (
               <FormField
                 control={form.control}
                 name="monthId"
@@ -392,7 +456,7 @@ export function EditTaskDialog({
                       type="button"
                       onClick={() =>
                         field.onChange(
-                          field.value === null ? currentMonth : null
+                          field.value === null ? currentMonth.value : null
                         )
                       }>
                       <Layers className="w-4 h-4" />
@@ -400,6 +464,8 @@ export function EditTaskDialog({
                   );
                 }}
               />
+              )}
+
               {/* --- CLOSE BUTTON --- */}
               <DialogClose asChild>
                 <Button type="button" variant="outline">

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import type { Control } from "react-hook-form";
-import type { User } from "../../server/schema";
+import { useLoadable } from "atom.io/react";
+import { getState } from "atom.io";
 import {
   FormControl,
   FormDescription,
@@ -12,13 +13,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { UserAvatar } from "@/components/UserAvatar";
+import { UserShape } from "../../server/appRouter";
+import { userIdsAtom, userAtoms, EMPTY_USER } from "@/atoms";
 
 interface UserSelectionFormItemProps {
   control: Control<any>; // Using `any` for now, can be improved with form values type
   name: string;
   label?: string;
   description?: React.ReactNode;
-  users: User[];
   onSelectionChange?: (userIds: string[]) => void;
 }
 
@@ -27,9 +29,28 @@ export function UserSelectionFormItem({
   name,
   label = "Assign to",
   description = "Select at least one person to assign this task to",
-  users,
   onSelectionChange,
 }: UserSelectionFormItemProps) {
+  const userIds = useLoadable(userIdsAtom, [])
+  const [ nonAdminUsers, setNonAdminUsers ] = useState<UserShape[]>([])
+
+  useEffect(() => {
+    async function getNonAdminUsers() {
+      const newNonAdminUsers: UserShape[] = [];
+      for (const userId of userIds.value) {
+        const user = await getState(userAtoms, userId)
+        if (user instanceof Error) continue;
+        if (user.role !== "admin") {
+          newNonAdminUsers.push(user);
+        }
+      }
+      setNonAdminUsers(newNonAdminUsers);
+    }
+
+    getNonAdminUsers()
+  }, [userIds.value]);
+
+  if (userIds instanceof Error) return null;
   return (
     <FormField
       control={control}
@@ -45,8 +66,7 @@ export function UserSelectionFormItem({
             <FormLabel>{label}</FormLabel>
             <FormControl>
               <div className="grid grid-cols-3 gap-3">
-                {users
-                  .filter((user) => user.role !== "admin")
+                {nonAdminUsers
                   .map((user) => {
                     const isSelected = field.value?.includes(user.id);
 
@@ -73,7 +93,7 @@ export function UserSelectionFormItem({
                         }}
                       >
                         <Avatar className="h-8 w-8">
-                          <UserAvatar user={user} dimmed={!isSelected} />
+                          <UserAvatar userId={user.id} dimmed={!isSelected} />
                         </Avatar>
                         <span className="hidden sm:inline truncate">
                           {user.name}

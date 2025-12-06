@@ -3,7 +3,6 @@ import {
   text,
   integer,
   primaryKey,
-  blob,
 } from "drizzle-orm/sqlite-core";
 import type { StoryPointType } from "../shared/types";
 import { sql } from "drizzle-orm";
@@ -20,17 +19,26 @@ export const user = sqliteTable("user", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   role: text("role").notNull(), // Optionally add a CHECK constraint for ('admin','user','family')
-  avatar: text("avatar"),
-  passwordHash: text("password_hash"),
+  passwordHash: text("password_hash").notNull(),
 });
 
 export type User = typeof user.$inferSelect;
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelations = relations(user, ({ many, one }) => ({
+  profile: one(userProfile, {
+    fields: [user.id],
+    references: [userProfile.userId],
+  }),
   savedAccessTokens: many(savedAccessToken),
   tasks: many(task),
   templateTasks: many(templateTask),
 }));
+
+// userProfile table
+export const userProfile = sqliteTable("user_profile", {
+  userId: text("user_id").primaryKey().references(() => user.id),
+  avatar: text("avatar"), // The base64 encoded image
+});
 
 // savedAccessToken table
 export const savedAccessToken = sqliteTable("saved_access_token", {
@@ -103,6 +111,7 @@ export const template = sqliteTable("template", {
 });
 
 export type Template = typeof template.$inferSelect;
+export type GoalType = "maximize" | "minimize";
 
 // templateTask table
 export const templateTask = sqliteTable("template_task", {
@@ -110,6 +119,7 @@ export const templateTask = sqliteTable("template_task", {
   title: text("title").notNull(),
   description: text("description"),
   categoryId: text("category_id").notNull().references(() => category.id),
+  goal: text("goal").$type<GoalType>(),
   storyPoints: integer("story_points")
     .$type<StoryPointType>()
     .notNull(),
@@ -159,39 +169,6 @@ export const taskUserRelations = relations(taskUser, ({ one }) => ({
     references: [user.id],
   }),
 }));
-
-// template <-> templateCategory join table
-export const templateCategory = sqliteTable(
-  "template_category",
-  {
-    templateId: text("template_id")
-      .notNull()
-      .references(() => template.id),
-    categoryId: text("category_id")
-      .notNull()
-      .references(() => category.id),
-  },
-  (table) => [
-    primaryKey({
-      name: "template_category_pk",
-      columns: [table.templateId, table.categoryId],
-    }),
-  ]
-);
-
-export const templateCategoryRelations = relations(
-  templateCategory,
-  ({ one }) => ({
-    template: one(template, {
-      fields: [templateCategory.templateId],
-      references: [template.id],
-    }),
-    category: one(category, {
-      fields: [templateCategory.categoryId],
-      references: [category.id],
-    }),
-  })
-);
 
 // templateTask <-> user (user) join table
 export const templateTaskUser = sqliteTable(
