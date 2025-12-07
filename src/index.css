@@ -203,6 +203,41 @@
   }
 }
 
+/* Custom styles for react-day-picker */
+.rdp {
+  --rdp-accent-color: hsl(var(--primary));
+  --rdp-background-color: hsl(var(--accent));
+  --rdp-selected-color: hsl(var(--primary-foreground));
+
+  --rdp-button-height: 2.5rem; /* 40px */
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.rdp-day_selected,
+.rdp-day_selected:focus-visible,
+.rdp-day_selected:hover {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: hsl(var(--accent));
+}
+
+.rdp-button:focus-visible:not([disabled]) {
+  border: 1px solid hsl(var(--ring));
+  box-shadow: none;
+  outline: none;
+}
+
+.rdp-day_today:not(.rdp-day_selected) {
+  background-color: hsl(var(--accent));
+  font-weight: 500;
+  color: hsl(var(--accent-foreground));
+}
+
 .glass-card {
   @apply bg-card/80 backdrop-blur-xs border border-border/50;
   background: rgba(255, 255, 255, 0.116);

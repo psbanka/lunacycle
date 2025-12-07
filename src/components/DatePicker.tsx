@@ -152,8 +152,11 @@ export function DatePicker({ targetCount, taskCompletions, onSave }: DatePickerP
             "overflow-y-auto", // Ensure content can scroll
             isMobile
               ? "h-screen w-screen max-w-full fixed top-0 left-0 m-0 p-4 rounded-none border-none translate-x-0 translate-y-0 data-[state=open]:animate-none data-[state=closed]:animate-none"
-              : "sm:max-w-[425px]"
+              : "sm:max-w-3xl mx-auto"
           )}>
+          <DialogHeader>
+            <h1 className="text-center text-xl font-semibold">Select up to {targetCount} days</h1>
+          </DialogHeader>
           <DayPicker
             mode="multiple"
             min={1}
@@ -163,7 +166,10 @@ export function DatePicker({ targetCount, taskCompletions, onSave }: DatePickerP
             selected={selected}
             onSelect={setSelected}
             disabled={disabledDays}
-            className={cn(isMobile && "[&_.rdp-months]:flex-col")}
+            className={cn(
+              "flex justify-center",
+              isMobile && "[&_.rdp-months]:flex-col"
+            )}
           />
           <DialogClose asChild>
             <div className="flex flex-row">
