@@ -6,13 +6,14 @@ import { useState } from "react";
 import { EditTaskDialog } from "./EditTaskDialog";
 import { StoryPointsBadge } from "./StoryPointsBadge";
 import { UserAvatar } from "./UserAvatar";
+import { DatePicker } from "./DatePicker";
 import {
   currentMonthAtom,
   currentTasksAtom,
   getCurrentTaskPlaceholder,
   getPlaceholderMonth,
 } from "@/atoms";
-import { completeTask } from "@/actions";
+import { completeTask, completeTasks, type CompleteTasksProps } from "@/actions";
 
 type TaskCardProps = {
   taskId: string;
@@ -25,13 +26,21 @@ export default function TaskCard({
   compact = false,
   className,
 }: TaskCardProps) {
-  const task = useLoadable(currentTasksAtom, taskId, getCurrentTaskPlaceholder(taskId));
+  const task = useLoadable(
+    currentTasksAtom,
+    taskId,
+    getCurrentTaskPlaceholder(taskId)
+  );
   const currentMonth = useLoadable(currentMonthAtom, getPlaceholderMonth());
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // FIXME
-  const isCompleted = task.value.targetCount === task.value.taskCompletions.length;
+  const isCompleted =
+    task.value.targetCount === task.value.taskCompletions.length;
+  console.log(`name: ${task.value.title} / taskCompletions: ${task.value.taskCompletions.length} / targetCount: ${task.value.targetCount}`);
+  for (let taskCompletion of task.value.taskCompletions) {
+    console.log("taskCompletion: ", taskCompletion);
+  }
   const progress =
     task.value.targetCount > 0
       ? (task.value.taskCompletions.length / task.value.targetCount) * 100
@@ -43,6 +52,14 @@ export default function TaskCard({
     e.stopPropagation(); // Prevent the click from propagating to the parent div
     completeTask(taskId);
   };
+
+  const handleCompletionSave = (dates: Date[]) => {
+    const info: CompleteTasksProps['info'] = dates.map((date) => ({
+      userId: null,
+      completedAt: date.toISOString(),
+    }));
+    completeTasks({ taskId, info });
+  }
 
   const handleEditClick = () => {
     setIsEditDialogOpen(true);
@@ -138,6 +155,11 @@ export default function TaskCard({
                   </>
                 )}
               </Button>
+              <DatePicker
+                targetCount={task.value.targetCount}
+                taskCompletions={task.value.taskCompletions}
+                onSave={handleCompletionSave}
+              />
             </div>
           )}
 

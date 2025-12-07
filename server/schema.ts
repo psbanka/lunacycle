@@ -65,7 +65,7 @@ export const month = sqliteTable("month", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   startDate: timestamp('start_date').default(SQL_NOW).notNull(), // Store ISO date string
-  endDate: text("end_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
   newMoonDate: text("new_moon_date").notNull(),
   fullMoonDate: text("full_moon_date").notNull(),
   isActive: integer("is_active").$type<0 | 1>().notNull(),
