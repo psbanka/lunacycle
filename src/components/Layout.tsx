@@ -9,9 +9,10 @@ import {
 
 type LayoutProps = {
   children: ReactNode;
+  useCategoryNav?: boolean;
 };
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout({ children, useCategoryNav = true }: LayoutProps) {
   const categoryIds = useLoadable(categoryIdsAtom, getCategoryIdPlaceholders())
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -55,7 +56,9 @@ export default function Layout({ children }: LayoutProps) {
           {/* On mobile (default), w-16 matches CategoryNav's fixed width, ensuring main content is offset */}
           {/* On md screens and up, it takes w-64 (adjust as needed) */}
           {/* overflow-y-auto allows categories to scroll if they exceed the available height */}
-          <CategoryNav activeCategoryId={activeCategoryId} />
+          { useCategoryNav ? (
+            <CategoryNav activeCategoryId={activeCategoryId} />
+          ) : null }
         </div>
 
         <main

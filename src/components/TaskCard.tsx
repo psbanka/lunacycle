@@ -136,21 +136,21 @@ export default function TaskCard({
 
               <Button
                 onClick={handleComplete}
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 className="text-xs gap-1 hover:bg-primary/10">
                 {task.value.targetCount > 1 ? (
                   <>
                     <Plus className="h-3.5 w-3.5" />
-                    <span className="hidden @min-[180px]:inline">
-                      Add progress
+                    <span className="hidden @min-[200px]:inline">
+                      Progress
                     </span>
                   </>
                 ) : (
                   <>
                     <CheckCircle className="h-3.5 w-3.5" />
-                    <span className="hidden @min-[180px]:inline">
-                      Mark complete
+                    <span className="hidden @min-[200px]:inline">
+                      Complete
                     </span>
                   </>
                 )}

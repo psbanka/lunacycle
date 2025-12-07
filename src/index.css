@@ -238,6 +238,12 @@
   color: hsl(var(--accent-foreground));
 }
 
+.rdp-day_selected.rdp-day_future:not(:hover) {
+  background-color: hsl(var(--secondary-foreground));
+  color: hsl(var(--accent));
+  border: 1px solid hsl(var(--secondary));
+}
+
 .glass-card {
   @apply bg-card/80 backdrop-blur-xs border border-border/50;
   background: rgba(255, 255, 255, 0.116);

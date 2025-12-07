@@ -125,7 +125,7 @@ const AppCore = () => {
         path="/goals"
         element={
           <ProtectedRoute>
-            <Layout>
+            <Layout useCategoryNav={false}>
               <Goals />
             </Layout>
           </ProtectedRoute>
@@ -136,7 +136,7 @@ const AppCore = () => {
         path="/admin"
         element={
           <ProtectedRoute>
-            <Layout>
+            <Layout useCategoryNav={false}>
               <Admin />
             </Layout>
           </ProtectedRoute>

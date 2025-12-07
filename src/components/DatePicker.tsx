@@ -99,6 +99,8 @@ type DatePickerProps = {
 export function DatePicker({ targetCount, taskCompletions, onSave }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Date[]>();
+  const [variant, setVariant] = useState<"default" | "destructive">("default");
+
   const { startDate, endDate } = useLunarPhase();
 
   const handleSave = () => {
@@ -114,7 +116,10 @@ export function DatePicker({ targetCount, taskCompletions, onSave }: DatePickerP
 
   useEffect(() => {
     const processedDates = pickUniqueDates(startDate, endDate, taskCompletions);
+    if (processedDates === undefined) return;
     setSelected(processedDates);
+    const variant = processedDates.length === targetCount ? "default" : "destructive";
+    setVariant(variant);
   }, [taskCompletions, startDate, endDate]);
 
   function onOpenChange() {
@@ -142,7 +147,7 @@ export function DatePicker({ targetCount, taskCompletions, onSave }: DatePickerP
         }}
         size="sm"
         className="text-xs gap-1 hover:bg-primary/10"
-        variant="ghost">
+        variant={variant}>
         <CalendarPlus />
       </Button>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -166,6 +171,10 @@ export function DatePicker({ targetCount, taskCompletions, onSave }: DatePickerP
             selected={selected}
             onSelect={setSelected}
             disabled={disabledDays}
+            modifiers={{ future: (date) => date > new Date() }}
+            modifiersClassNames={{
+              future: "rdp-day_future",
+            }}
             className={cn(
               "flex justify-center",
               isMobile && "[&_.rdp-months]:flex-col"
