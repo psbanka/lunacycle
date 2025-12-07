@@ -233,7 +233,6 @@ export const focusedTaskIdsAtom = atom<Loadable<ServerFocusedTaskIds>, Error>({
 export const backlogTaskIdsAtom = atom<Loadable<string[]>, Error>({
   key: `backlogTaskIds`,
   default: async () => {
-    debugger;
     const backlogTasks = await trpcClient.getBacklogTasks.query();
     for (const backlogTask of backlogTasks) {
       setState(backlogTasksAtom, backlogTask.id, backlogTask);

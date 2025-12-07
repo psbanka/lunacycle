@@ -40,6 +40,12 @@ export const completeTask = async (taskId: string) => {
   toast.success("Progress updated!");
 };
 
+export type CompleteTasksProps = inferProcedureInput<AppRouter["completeTasks"]>
+export const completeTasks = async (props: CompleteTasksProps) => {
+  await trpcClient.completeTasks.mutate(props);
+  toast.success("Progress updated!");
+};
+
 export type AddTaskProps = inferProcedureInput<AppRouter["addTask"]>
 export const addTask = async (props: AddTaskProps) => {
   await trpcClient.addTask.mutate({
@@ -105,4 +111,3 @@ const deleteCategory = async (categoryId: string) => {
 export const sendMessage = async (props: inferProcedureInput<AppRouter["sendMessage"]>) => {
   await trpcClient.sendMessage.mutate(props);
 };
-

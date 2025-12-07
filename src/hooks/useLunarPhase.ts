@@ -1,33 +1,36 @@
-import { useEffect, useState } from 'react';
-import { getLunarPhase, calculateDaysUntilNextFullMoon, type MoonPhase } from "../../shared/lunarPhase";
-import { Moon } from "lunarphase-js"
+import { useEffect, useState } from "react";
+import {
+  getLunarPhase,
+  calculateDaysUntilNextFullMoon,
+  type MoonPhase,
+} from "../../shared/lunarPhase";
+import { Moon } from "lunarphase-js";
+import { useLoadable } from "atom.io/react";
+import { currentMonthAtom, getPlaceholderMonth } from "@/atoms";
 
-export default function useLunarPhase(endDate?: string) {
-  const [daysRemaining, setDaysRemaining] = useState(0);
-  const [phase, setPhase] = useState<MoonPhase>('full-moon');
-  const [phaseName, setPhaseName] = useState('Full Moon');
+export default function useLunarPhase() {
+  const [phase, setPhase] = useState<MoonPhase>("full-moon");
+  const [phaseName, setPhaseName] = useState("Full Moon");
+  const currentMonth = useLoadable(currentMonthAtom, getPlaceholderMonth());
   const [inModificationWindow, setInModificationWindow] = useState(false);
+  const { startDate, endDate } = currentMonth.value;
 
   const now = new Date();
-  const today = now.getDate()
-  const currentDate = now.toISOString().slice(0, 10); // "YYYY-MM-DD"
+  // To ensure we are comparing just dates, we zero out the time part of today's date.
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const end = new Date(endDate);
 
-  // Get lunar phase based on date
-  useEffect(() => {
-    const { phase: currentPhase, name, inWindow } = getLunarPhase();
-    setPhase(currentPhase);
-    setPhaseName(name);
-    if (endDate) {
-      const endDateObj = new Date(endDate);
-      const now = new Date()
-      const timeUntilEnd = endDateObj.getTime() - now.getTime();
-      const daysUntilEnd = Math.ceil(timeUntilEnd / (1000 * 3600 * 24));
-      setDaysRemaining(daysUntilEnd);
-    } else {
-      setDaysRemaining(calculateDaysUntilNextFullMoon());
-    }
-    setInModificationWindow(inWindow)
-  }, [currentDate, endDate, today]);
-  
-  return { phase, phaseName, daysRemaining, inModificationWindow };
+  // Calculate the difference in time (milliseconds), then convert to days.
+  const timeRemaining = end.getTime() - today.getTime();
+  const daysRemaining = Math.ceil(timeRemaining / (1000 * 60 * 60 * 24));
+
+  return {
+    phase,
+    phaseName,
+    daysRemaining,
+    startDate,
+    endDate,
+    inModificationWindow,
+    currentDate: now.toISOString().slice(0, 10),
+  };
 }

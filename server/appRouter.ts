@@ -218,6 +218,11 @@ export const StartCycleType = type({
   backlogTasks: "string[]",
 });
 
+const UserAndDateStrings = type({
+  userId: "string | null",
+  completedAt: "string",
+})
+
 export type UserShape = {
   id: string;
   name: string;
@@ -631,6 +636,52 @@ export const appRouter = router({
         .where(eq(schema.templateTask.id, input.templateTaskId))
         .run();
       clearCache("templateTaskIds");
+      return { success: true };
+    }),
+  completeTasks: publicProcedure
+    .input(type({ taskId: "string", info: UserAndDateStrings.array() }))
+    .mutation(async ({ input }) => {
+      // We expect that this is the canonical list
+      // of taskCompletions for this task. So we therefore
+      // have to remove all existing ones first and validate
+      // that this is not MORE taskCompletions than the
+      // task requires (fewer is okay)
+      const { taskId, info } = input;
+      const task = await db.query.task.findFirst({
+        where: eq(schema.task.id, taskId),
+      });
+      if (task === undefined) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Task not found",
+        });
+      }
+      const maxCompletions = task.targetCount;
+      if (info.length > maxCompletions) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Completions exceeds targetGoal",
+        });
+      }
+      await db.delete(schema.taskCompletion)
+        .where(eq(schema.taskCompletion.taskId, taskId))
+        .run();
+
+      for (const { userId, completedAt } of info) {
+        const user = userId ? await db.query.user.findFirst({
+          where: eq(schema.user.id, userId),
+        }) : await db.query.user.findFirst({
+          where: eq(schema.user.email, 'admin@example.com')
+        });
+        if (user == null) {
+          throw new TRPCError({ code: "FORBIDDEN" })
+        }
+        const id = fakerEN.string.uuid();
+        db.insert(schema.taskCompletion)
+          .values({ id, taskId, userId: user.id, completedAt })
+          .run();
+      }
+      clearCache("currentTaskAtom", input.taskId);
       return { success: true };
     }),
   completeTask: publicProcedure
