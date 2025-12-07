@@ -1,4 +1,5 @@
 import { db } from "./db.ts";
+import { sql, asc, inArray } from "drizzle-orm";
 import { type } from "arktype";
 import { publicProcedure, router } from "./trpc.ts";
 import { observable } from "@trpc/server/observable";
@@ -40,6 +41,89 @@ export type RecurringTaskData = {
 async function getVelocityByMonth(
   categoryId?: string
 ): Promise<[VelocityData, Record<string, RecurringTaskData>]> {
+  const overall: VelocityData = [];
+  const includedTasks: Record<string, RecurringTaskData> = {};
+
+  const months = await db.query.month.findMany({});
+  if (!months || months.length === 0) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "No data" });
+  }
+
+  for (const month of months) {
+    const where = categoryId
+      ? and(
+          eq(schema.task.monthId, month.id),
+          eq(schema.task.categoryId, categoryId)
+        )
+      : eq(schema.task.monthId, month.id);
+
+    const rows = await db
+      .select({
+        taskId: schema.task.id,
+        storyPoints: schema.task.storyPoints,
+        targetCount: schema.task.targetCount,
+        templateTaskId: schema.task.templateTaskId,
+        completionCount: sql<number>`count(${schema.taskCompletion.id})`,
+      })
+      .from(schema.task)
+      .leftJoin(
+        schema.taskCompletion,
+        eq(schema.task.id, schema.taskCompletion.taskId)
+      )
+      .where(where)
+      .groupBy(schema.task.id);
+
+    let completed = 0;
+    let committed = 0;
+
+    for (const row of rows) {
+      const {
+        taskId,
+        storyPoints,
+        targetCount,
+        templateTaskId,
+        completionCount,
+      } = row;
+
+      completed += completionCount * storyPoints;
+      committed += targetCount * storyPoints;
+
+      if (templateTaskId) {
+        const tmpl = await db.query.templateTask.findFirst({
+          where: eq(schema.templateTask.id, templateTaskId),
+        });
+        if (!tmpl) continue;
+
+        if (!includedTasks[templateTaskId]) {
+          includedTasks[templateTaskId] = {
+            templateTask: tmpl,
+            history: [],
+          };
+        }
+
+        includedTasks[templateTaskId].history.push({
+          monthId: month.id,
+          name: month.name,
+          completed: completionCount * storyPoints,
+          committed: targetCount * storyPoints,
+        });
+      }
+    }
+
+    overall.push({
+      monthId: month.id,
+      name: month.name,
+      completed,
+      committed,
+    });
+  }
+
+  return [overall, includedTasks];
+}
+
+async function old_getVelocityByMonth(
+  categoryId?: string
+): Promise<[VelocityData, Record<string, RecurringTaskData>]> {
   const overall = [] as VelocityData;
   const includedTasks = {} as Record<string, RecurringTaskData>;
   const months = await db.query.month.findMany({});
@@ -61,8 +145,40 @@ async function getVelocityByMonth(
         });
     let completed = 0;
     let committed = 0;
+
+    const where = categoryId
+      ? and(
+          eq(schema.task.monthId, month.id),
+          eq(schema.task.categoryId, categoryId)
+        )
+      : eq(schema.task.monthId, month.id);
+
+    const rows = await db
+      .select({
+        taskId: schema.task.id,
+        storyPoints: schema.task.storyPoints,
+        targetCount: schema.task.targetCount,
+        templateTaskId: schema.task.templateTaskId,
+        completionCount: sql<number>`count(${schema.taskCompletion.id})`,
+      })
+      .from(schema.task)
+      .leftJoin(
+        schema.taskCompletion,
+        eq(schema.task.id, schema.taskCompletion.taskId)
+      )
+      .where(where)
+      .groupBy(schema.task.id);
+
+    for (const row of rows) {
+      completed += row.completionCount * row.storyPoints;
+      committed += row.targetCount * row.storyPoints;
+    }
+
     for (const task of tasks) {
-      completed += task.completedCount * task.storyPoints;
+      const completions = await db.query.taskCompletion.findMany({
+        where: eq(schema.taskCompletion.taskId, task.id),
+      });
+      completed += completions.length * task.storyPoints;
       committed += task.targetCount * task.storyPoints;
       if (task.templateTaskId) {
         const templateTask = await db.query.templateTask.findFirst({
@@ -81,7 +197,7 @@ async function getVelocityByMonth(
         includedTasks[templateTask.id].history.push({
           monthId: month.id,
           name: month.name,
-          completed: task.completedCount * task.storyPoints,
+          completed: completions.length * task.storyPoints,
           committed: task.targetCount * task.storyPoints,
         });
       }
@@ -108,42 +224,41 @@ export type UserShape = {
   email: string;
   role: string;
   avatar: string | null;
-}
+};
 
 export const appRouter = router({
   login,
   getUsers: publicProcedure.query(async () => {
     const users = await db.query.user.findMany();
-    const userProfiles = await db.query.userProfile.findMany()
-    const output: UserShape[] = users.map(({ id, name, email, role}) => {
-      const profile = userProfiles.find(p => p.userId === id)
-      return { id, name, email, role, avatar: profile?.avatar ?? null};
-    })
+    const userProfiles = await db.query.userProfile.findMany();
+    const output: UserShape[] = users.map(({ id, name, email, role }) => {
+      const profile = userProfiles.find((p) => p.userId === id);
+      return { id, name, email, role, avatar: profile?.avatar ?? null };
+    });
     return output;
   }),
   getUser: publicProcedure
     .input(type({ userId: "string" }))
     .query(async ({ input }) => {
       const user = await db.query.user.findFirst({
-        where: eq(schema.user.id, input.userId)
+        where: eq(schema.user.id, input.userId),
       });
       if (user === undefined) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "User not found"})
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
       }
       const userProfile = await db.query.userProfile.findFirst({
-        where: eq(schema.userProfile.userId, input.userId)
-      })
+        where: eq(schema.userProfile.userId, input.userId),
+      });
       return {
         id: user.id,
         name: user.name,
         email: user.email,
-        avatar: userProfile?.avatar ?? null
-      } as UserShape
+        avatar: userProfile?.avatar ?? null,
+      } as UserShape;
     }),
-  generateNewAvatar: publicProcedure
-    .query(async () => {
-      return await generateNewAvatar()
-    }),
+  generateNewAvatar: publicProcedure.query(async () => {
+    return await generateNewAvatar();
+  }),
   uploadAvatar: publicProcedure
     .input(type({ userId: "string", file: "string" }))
     .mutation(async ({ input }) => {
@@ -213,10 +328,7 @@ export const appRouter = router({
   }),
   getFocusedTaskIds: publicProcedure.query(async () => {
     const tasks = await db.query.task.findMany({
-      where: and(
-        isNotNull(schema.task.monthId),
-        eq(schema.task.isFocused, 1),
-      )
+      where: and(isNotNull(schema.task.monthId), eq(schema.task.isFocused, 1)),
     });
     return tasks.map((task) => task.id);
   }),
@@ -231,6 +343,7 @@ export const appRouter = router({
       where: eq(schema.task.monthId, currentMonth.id),
       with: {
         taskUsers: { with: { user: true } },
+        taskCompletions: true,
       },
     });
     return output;
@@ -246,32 +359,52 @@ export const appRouter = router({
   getTemplateTask: publicProcedure
     .input(type({ templateTaskId: "string" }))
     .query(async ({ input }) => {
-    const output = await db.query.templateTask.findFirst({
-      where: eq(schema.templateTask.id, input.templateTaskId),
-      with: {
-        templateTaskUsers: { with: { user: true } },
-      },
-    });
-    if (!output) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Template task not found" });
-    }
-    return output;
-  }),
+      const output = await db.query.templateTask.findFirst({
+        where: eq(schema.templateTask.id, input.templateTaskId),
+        with: {
+          templateTaskUsers: { with: { user: true } },
+        },
+      });
+      if (!output) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Template task not found",
+        });
+      }
+      return output;
+    }),
   getBacklogTasks: publicProcedure.query(async () => {
+    // Step 1: find backlog task IDs using join
+    const rows = await db
+      .select({ taskId: schema.task.id })
+      .from(schema.task)
+      .leftJoin(
+        schema.taskCompletion,
+        eq(schema.task.id, schema.taskCompletion.taskId)
+      )
+      .where(
+        and(isNull(schema.task.monthId), isNull(schema.taskCompletion.taskId))
+      )
+      .orderBy(asc(schema.task.title));
+
+    const taskIds = rows.map((r) => r.taskId);
+
+    if (taskIds.length === 0) return [];
+
+    // Step 2: load the full task objects with relations
     const backlogTasks = await db.query.task.findMany({
-      where: and(
-        isNull(schema.task.monthId),
-        eq(schema.task.completedCount, 0)
-      ),
+      where: inArray(schema.task.id, taskIds),
       with: {
         taskUsers: { with: { user: true } },
+        taskCompletions: true,
       },
       orderBy: (tasks, { asc }) => [asc(tasks.title)],
     });
+
     return backlogTasks;
   }),
   getCategories: publicProcedure.query(async () => {
-    return await db.query.category.findMany({})
+    return await db.query.category.findMany({});
   }),
   getCategory: publicProcedure
     .input(type({ categoryId: "string" }))
@@ -280,7 +413,10 @@ export const appRouter = router({
         where: eq(schema.category.id, input.categoryId),
       });
       if (output === undefined) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Category not found",
+        });
       }
       return output;
     }),
@@ -291,10 +427,14 @@ export const appRouter = router({
         where: eq(schema.task.id, input.taskId),
         with: {
           taskUsers: { with: { user: true } },
+          taskCompletions: true,
         },
       });
       if (output === undefined) {
-        throw new TRPCError({ code: "NOT_FOUND", message: `could not find task ${input.taskId}` })
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `could not find task ${input.taskId}`,
+        });
       }
       return output;
     }),
@@ -320,6 +460,7 @@ export const appRouter = router({
     .query(async ({ input }) => {
       const tasks = await db.query.task.findMany({
         with: {
+          taskCompletions: true,
           taskUsers: {
             with: {
               user: { columns: { id: true } },
@@ -445,10 +586,12 @@ export const appRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      return updateTemplateTaskWithCategoryAndAssignments(input.task).then(() => {
-        clearCache("templateTasksAtom", input.task.id);
-        clearCache("statistics");
-      });
+      return updateTemplateTaskWithCategoryAndAssignments(input.task).then(
+        () => {
+          clearCache("templateTasksAtom", input.task.id);
+          clearCache("statistics");
+        }
+      );
     }),
   addTask,
   addTemplateTask,
@@ -465,6 +608,7 @@ export const appRouter = router({
         .where(eq(schema.taskUser.taskId, input.taskId))
         .run();
       db.delete(schema.task).where(eq(schema.task.id, input.taskId)).run();
+      // todo: delete compltions
       clearCache("currentTaskIds");
       return { success: true };
     }),
@@ -498,22 +642,35 @@ export const appRouter = router({
       if (!task) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
       }
-      if (task.completedCount >= task.targetCount) {
+      const completions = await db
+        .select({ taskId: schema.task.id })
+        .from(schema.task)
+        .leftJoin(
+          schema.taskCompletion,
+          eq(schema.task.id, schema.taskCompletion.taskId)
+        )
+
+      if (completions.length >= task.targetCount) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Task already completed",
         });
       }
-      db.update(schema.task)
-        .set({ completedCount: task.completedCount + 1 })
-        .where(eq(schema.task.id, input.taskId))
-        .run();
-
-      const updatedTask = await db.query.task.findFirst({
-        where: eq(schema.task.id, input.taskId),
+      const adminUser = await db.query.user.findFirst({
+        where: eq(schema.user.email, 'admin@example.com')
       });
+      if (adminUser == null) {
+        throw new TRPCError({ code: "FORBIDDEN" })
+      }
+      const completedAt = new Date().toISOString()
+      const id = fakerEN.string.uuid();
+      db
+        .insert(schema.taskCompletion)
+        .values({ id, taskId: task.id, userId: adminUser.id, completedAt })
+        .run()
+
       clearCache("currentTaskAtom", input.taskId);
-      return updatedTask;
+      return;
     }),
   onMessage: publicProcedure.subscription(() => {
     return observable<{ message: string }>((emit) => {
@@ -549,7 +706,7 @@ export const appRouter = router({
     .input(type({ message: "string" }))
     .mutation(async ({ input, ctx }) => {
       serverEvents.emit("message", {
-        message: "Server heartbeat " + new Date().toISOString()
+        message: "Server heartbeat " + new Date().toISOString(),
       });
     }),
 });

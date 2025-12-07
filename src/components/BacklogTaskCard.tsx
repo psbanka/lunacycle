@@ -21,9 +21,9 @@ export default function BacklogTaskCard({ task, className }: TaskCardProps) {
   if (!task) return null;
 
   const isAssignedToUser = true;
-  const isCompleted = task.targetCount === task.completedCount;
+  const isCompleted = task.targetCount === task.taskCompletions.length;
   const progress =
-    task.targetCount > 0 ? (task.completedCount / task.targetCount) * 100 : 0;
+    task.targetCount > 0 ? (task.taskCompletions.length / task.targetCount) * 100 : 0;
 
   const isContinuingTask = task.targetCount > 1;
 
@@ -125,7 +125,6 @@ export default function BacklogTaskCard({ task, className }: TaskCardProps) {
           storyPoints: task.storyPoints,
           targetCount: task.targetCount,
           isFocused: task.isFocused,
-          completedCount: task.completedCount,
           monthId: task.monthId,
           userIds: task.taskUsers.map((tu) => tu.userId),
         }}

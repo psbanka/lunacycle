@@ -49,7 +49,6 @@ export const TaskSchema = type({
   "description?": "string",
   storyPoints: "0 | 1 | 2 | 3 | 5 | 8 | 13",
   targetCount: "1 <= number.integer <= 31",
-  "completedCount?": "number",
   userIds: "string[] >= 1",
   monthId: "string | null",
   categoryId: "string",
@@ -94,7 +93,6 @@ export function EditTaskDialog({
       description: "",
       storyPoints: 1,
       targetCount: 1,
-      completedCount: 0,
       isFocused: 0,
       goal: null,
       userIds: [],
@@ -112,7 +110,6 @@ export function EditTaskDialog({
       description: "",
       storyPoints: 1,
       targetCount: 1,
-      completedCount: 0,
       isFocused: 0,
       goal: null,
       userIds: [],
@@ -372,33 +369,6 @@ export function EditTaskDialog({
               />
               </div>
             )}
-            {isEditingTask && !isTemplateTask &&
-              initialValues?.targetCount &&
-              initialValues.targetCount > 1 && (
-                <FormField
-                  control={form.control}
-                  name="completedCount"
-                  render={({ field: { value, onChange } }) => (
-                    <FormItem>
-                      <FormLabel>Completed Count: {value}</FormLabel>
-                      <FormControl>
-                        <Slider
-                          min={0}
-                          max={initialValues.targetCount}
-                          step={1}
-                          value={[value ?? 0]}
-                          onValueChange={(vals) => onChange(vals[0])}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Set the number of times this task has been completed.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
             <UserSelectionFormItem control={form.control} name="userIds" />
 
             <DialogFooter className="mt-6">

@@ -9,6 +9,8 @@ export default function Backlog() {
   const categoryIds = useLoadable(categoryIdsAtom, []);
   const backlogTaskIds = useLoadable(backlogTaskIdsAtom, []);
 
+  console.log('>>>>>>>>>>>>>>>>', backlogTaskIds.value.length)
+
   if (categoryIds.error) {
     return null;
   }

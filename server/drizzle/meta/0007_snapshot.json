@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "eecf4e31-134b-46b0-b1a0-418bcada26e3",
-  "prevId": "347d109e-e97f-4fb2-aeff-d3571a93b460",
+  "id": "9e786d66-32f5-4795-a89f-df2942befcc3",
+  "prevId": "eecf4e31-134b-46b0-b1a0-418bcada26e3",
   "tables": {
     "category": {
       "name": "category",
@@ -277,6 +277,71 @@
           "tableTo": "month",
           "columnsFrom": [
             "month_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "task_completion": {
+      "name": "task_completion",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "task_id": {
+          "name": "task_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "task_completion_task_id_task_id_fk": {
+          "name": "task_completion_task_id_task_id_fk",
+          "tableFrom": "task_completion",
+          "tableTo": "task",
+          "columnsFrom": [
+            "task_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "task_completion_user_id_user_id_fk": {
+          "name": "task_completion_user_id_user_id_fk",
+          "tableFrom": "task_completion",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
           ],
           "columnsTo": [
             "id"

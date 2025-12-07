@@ -29,6 +29,7 @@ export const userRelations = relations(user, ({ many, one }) => ({
     fields: [user.id],
     references: [userProfile.userId],
   }),
+  completions: many(taskCompletion),
   savedAccessTokens: many(savedAccessToken),
   tasks: many(task),
   templateTasks: many(templateTask),
@@ -90,7 +91,6 @@ export const task = sqliteTable("task", {
   storyPoints: integer("story_points")
     .$type<StoryPointType>().notNull(),
   targetCount: integer("target_count").notNull(),
-  completedCount: integer("completed_count").notNull(),
   templateTaskId: text("template_task_id")
     .references(() => templateTask.id),
   isFocused: integer("is_focused").$type<0 | 1>().notNull().default(0),
@@ -100,7 +100,30 @@ export const task = sqliteTable("task", {
 
 export type Task = typeof task.$inferSelect;
 
+export const taskCompletion = sqliteTable("task_completion", {
+  id: text("id").primaryKey(), // or use a composite key
+  taskId: text("task_id")
+    .notNull()
+    .references(() => task.id),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id),
+  completedAt: text("completed_at").notNull(), // ISO timestamp
+});
+
+export const taskCompletionRelations = relations(taskCompletion, ({ one }) => ({
+  task: one(task, {
+    fields: [taskCompletion.taskId],
+    references: [task.id],
+  }),
+  user: one(user, {
+    fields: [taskCompletion.userId],
+    references: [user.id],
+  }),
+}));
+
 export const taskRelations = relations(task, ({ many, one }) => ({
+  taskCompletions: many(taskCompletion),
   taskUsers: many(taskUser),
 }));
 

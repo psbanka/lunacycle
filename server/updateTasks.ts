@@ -31,7 +31,6 @@ export async function createTaskWithCategoryAndAssignments(
       description: taskInfo.description,
       storyPoints: taskInfo.storyPoints,
       targetCount: taskInfo.targetCount,
-      completedCount: 0,
       categoryId: taskInfo.categoryId,
       templateTaskId: taskInfo.templateTaskId,
       monthId: taskInfo.monthId,

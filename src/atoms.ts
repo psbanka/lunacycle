@@ -115,8 +115,8 @@ export const EMPTY_TASK: ServerGetTask = {
   categoryId: '',
   templateTaskId: null,
   isFocused: 0,
+  taskCompletions: [],
   monthId: '',
-  completedCount: 0,
   taskUsers: [],
 }
 
@@ -233,6 +233,7 @@ export const focusedTaskIdsAtom = atom<Loadable<ServerFocusedTaskIds>, Error>({
 export const backlogTaskIdsAtom = atom<Loadable<string[]>, Error>({
   key: `backlogTaskIds`,
   default: async () => {
+    debugger;
     const backlogTasks = await trpcClient.getBacklogTasks.query();
     for (const backlogTask of backlogTasks) {
       setState(backlogTasksAtom, backlogTask.id, backlogTask);

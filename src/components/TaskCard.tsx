@@ -31,10 +31,10 @@ export default function TaskCard({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // FIXME
-  const isCompleted = task.value.targetCount === task.value.completedCount;
+  const isCompleted = task.value.targetCount === task.value.taskCompletions.length;
   const progress =
     task.value.targetCount > 0
-      ? (task.value.completedCount / task.value.targetCount) * 100
+      ? (task.value.taskCompletions.length / task.value.targetCount) * 100
       : 0;
 
   const isContinuingTask = task.value.targetCount > 1;
@@ -90,7 +90,7 @@ export default function TaskCard({
               <div className="flex items-center">
                 <CheckSquare className="h-4 w-4 mr-1" />
                 <span>
-                  {task.value.completedCount} / {task.value.targetCount}
+                  {task.value.taskCompletions.length} / {task.value.targetCount}
                 </span>
               </div>
 
@@ -173,7 +173,6 @@ export default function TaskCard({
           storyPoints: task.value.storyPoints,
           targetCount: task.value.targetCount,
           isFocused: task.value.isFocused,
-          completedCount: task.value.completedCount,
           monthId: task.value.monthId,
           userIds: task.value.taskUsers.map((tu) => tu.userId),
         }}
