@@ -112,6 +112,7 @@ export default function TaskCard({
                 </span>
               </div>
 
+              {/* TODO: DIFFERENTIATE FUTURE FROM PATH IN BAR FROM DONE */}
               {/* Progress bar */}
               <div className="ml-2 flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                 <div

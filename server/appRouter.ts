@@ -693,13 +693,9 @@ export const appRouter = router({
       if (!task) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
       }
-      const completions = await db
-        .select({ taskId: schema.task.id })
-        .from(schema.task)
-        .leftJoin(
-          schema.taskCompletion,
-          eq(schema.task.id, schema.taskCompletion.taskId)
-        )
+      const completions = await db.query.taskCompletion.findMany({
+        where: eq(schema.taskCompletion.taskId, input.taskId)
+      });
 
       if (completions.length >= task.targetCount) {
         throw new TRPCError({
@@ -713,6 +709,10 @@ export const appRouter = router({
       if (adminUser == null) {
         throw new TRPCError({ code: "FORBIDDEN" })
       }
+      // TODO: make sure that when this function throws an exception
+      // that it gets caught by the frontend.
+      // TODO: Throw an exception if the task already has a completion for today.
+      // throw new TRPCError({ code: "FORBIDDEN" })
       const completedAt = new Date().toISOString()
       const id = fakerEN.string.uuid();
       db
@@ -720,6 +720,7 @@ export const appRouter = router({
         .values({ id, taskId: task.id, userId: adminUser.id, completedAt })
         .run()
 
+      console.log('------------------------------- G', id)
       clearCache("currentTaskAtom", input.taskId);
       return;
     }),
