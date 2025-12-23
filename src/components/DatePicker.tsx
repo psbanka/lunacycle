@@ -92,14 +92,22 @@ type TaskCompletion = {
 
 type DatePickerProps = {
   targetCount: number;
+  isScheduled: boolean;
+  isCompleted: boolean;
   taskCompletions: TaskCompletion[];
   onSave: (dates: Date[]) => void;
 };
 
-export function DatePicker({ targetCount, taskCompletions, onSave }: DatePickerProps) {
+export function DatePicker({
+  targetCount,
+  isScheduled,
+  isCompleted,
+  taskCompletions,
+  onSave,
+}: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Date[]>();
-  const [variant, setVariant] = useState<"default" | "destructive">("default");
+  const [variant, setVariant] = useState<"ghost" | "outline" | "destructive">("ghost");
 
   const { startDate, endDate } = useLunarPhase();
 
@@ -112,13 +120,14 @@ export function DatePicker({ targetCount, taskCompletions, onSave }: DatePickerP
     // Just re-run default setup
     const processedDates = pickUniqueDates(startDate, endDate, taskCompletions);
     setSelected(processedDates);
-  }
+  };
 
   useEffect(() => {
     const processedDates = pickUniqueDates(startDate, endDate, taskCompletions);
     if (processedDates === undefined) return;
     setSelected(processedDates);
-    const variant = processedDates.length === targetCount ? "default" : "destructive";
+    
+    const variant = isCompleted ? "ghost" : isScheduled ? "outline" : "destructive";
     setVariant(variant);
   }, [taskCompletions, startDate, endDate]);
 
@@ -160,7 +169,9 @@ export function DatePicker({ targetCount, taskCompletions, onSave }: DatePickerP
               : "sm:max-w-3xl mx-auto"
           )}>
           <DialogHeader>
-            <h1 className="text-center text-xl font-semibold">Select up to {targetCount} days</h1>
+            <h1 className="text-center text-xl font-semibold">
+              Select up to {targetCount} days
+            </h1>
           </DialogHeader>
           <DayPicker
             mode="multiple"
@@ -186,16 +197,16 @@ export function DatePicker({ targetCount, taskCompletions, onSave }: DatePickerP
                 onClick={handleSave}
                 type="button"
                 className="flex-grow gap-1 hover:bg-primary/10"
-                variant="default"
-              >
+                variant="default">
                 Save
               </Button>
               <Button
                 onClick={handleCancel}
                 type="button"
                 className="flex-grow gap-1 hover:bg-primary/10"
-                variant="secondary"
-              >Cancel</Button>
+                variant="secondary">
+                Cancel
+              </Button>
             </div>
           </DialogClose>
         </DialogContent>

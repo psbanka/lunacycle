@@ -1,5 +1,5 @@
 import { Activity } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLoadable } from "atom.io/react";
 import {
   LineChart,
@@ -63,6 +63,19 @@ export default function Goals() {
     const backlogTasks = [];
     await startCycle({ recurringTasks: committedTasks, backlogTasks });
     setCommittedTasks([]);
+  }
+
+  async function handleCommitAll() {
+    if (statistics === "LOADING") return;
+    if (statistics.value instanceof Error) return;
+    statistics.value.categoryData.forEach((category) => {
+      const recurringTasks = category.recurringTaskInfo ?? {}
+      Object.entries(recurringTasks).map(([key, recurringTask]) => handleToggleCommitted(
+        key,
+        recurringTask.templateTask,
+        recurringTask.templateTask.targetCount
+      ));
+    });
   }
 
   const totalTasksCount = getTaskIds(statistics.value).length;
@@ -137,8 +150,12 @@ export default function Goals() {
 
       <div className="text-center my-10 py-10 glass-card rounded-lg">
         <div className="flex-row items-center justify-stretch">
-          <div>
+          <div className="flex flex-row items-center justify-center">
             <h2 className="text-2xl font-semibold mr-5">By Category</h2>
+            <Button
+              onClick={handleCommitAll}>
+              Commit all
+            </Button>
           </div>
           <div className="mt-6 space-y-8">
             {statistics.value.categoryData.map((category) => (

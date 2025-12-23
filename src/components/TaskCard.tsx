@@ -12,6 +12,8 @@ import {
   currentTasksAtom,
   getCurrentTaskPlaceholder,
   getPlaceholderMonth,
+  taskCompletions,
+  taskSchedules,
 } from "@/atoms";
 import { completeTask, completeTasks, type CompleteTasksProps } from "@/actions";
 
@@ -32,15 +34,14 @@ export default function TaskCard({
     getCurrentTaskPlaceholder(taskId)
   );
   const currentMonth = useLoadable(currentMonthAtom, getPlaceholderMonth());
+  const completions = useLoadable(taskCompletions, taskId, 0);
+  const schedules = useLoadable(taskSchedules, taskId, 0);
+  const targetCount = task.value?.targetCount || 0;
+  const isCompleted = completions.value >= targetCount;
+  const isScheduled = schedules.value > 0;
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const isCompleted =
-    task.value.targetCount === task.value.taskCompletions.length;
-  console.log(`name: ${task.value.title} / taskCompletions: ${task.value.taskCompletions.length} / targetCount: ${task.value.targetCount}`);
-  for (let taskCompletion of task.value.taskCompletions) {
-    console.log("taskCompletion: ", taskCompletion);
-  }
   const progress =
     task.value.targetCount > 0
       ? (task.value.taskCompletions.length / task.value.targetCount) * 100
@@ -122,7 +123,7 @@ export default function TaskCard({
           )}
 
           {/* Actions */}
-          {!compact && !isCompleted && (
+          {!compact && (
             <div className="mt-4 flex justify-between items-center">
               <div className="flex -space-x-2 avatar-container">
                 {task.value.taskUsers.map((tu) => (
@@ -138,6 +139,7 @@ export default function TaskCard({
                 onClick={handleComplete}
                 variant="secondary"
                 size="sm"
+                disabled={isCompleted}
                 className="text-xs gap-1 hover:bg-primary/10">
                 {task.value.targetCount > 1 ? (
                   <>
@@ -159,6 +161,8 @@ export default function TaskCard({
                 targetCount={task.value.targetCount}
                 taskCompletions={task.value.taskCompletions}
                 onSave={handleCompletionSave}
+                isScheduled={isScheduled}
+                isCompleted={isCompleted}
               />
             </div>
           )}

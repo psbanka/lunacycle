@@ -1,4 +1,4 @@
-import { type Loadable, setState, resetState, selectorFamily } from "atom.io";
+import { type Loadable, selector, setState, resetState, selectorFamily } from "atom.io";
 import { trpcClient } from "./trpc-client-service";
 import { TRPCError, inferProcedureOutput } from "@trpc/server";
 import { atom, atomFamily } from "atom.io";
@@ -95,7 +95,7 @@ export const EMPTY_MONTH: ServerActiveMonth = {
   id: "",
   name: "",
   startDate: "start_date" as ISO18601,
-  endDate: "-",
+  endDate: "-" as ISO18601,
   newMoonDate: "-",
   fullMoonDate: "-",
   isActive: 0,
@@ -172,6 +172,40 @@ export const userAtoms = atomFamily<
 });
 
 // - TASKS ------------------------------------------------------------
+
+export const taskCompletions = selectorFamily<Loadable<number>, string, Error>({
+  key: `isTaskComplete`,
+  get: (taskId) => async ({ get }) => {
+    const task = await get(currentTasksAtom, taskId);
+    if (task instanceof Error) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "no tasks found" });
+    }
+    const completions = task.taskCompletions
+    const now = new Date()
+    const actualCompletions = completions
+      .map((completion) => new Date(completion.completedAt))
+      .filter((completionDate) => now >= completionDate)
+
+    return actualCompletions.length
+  }
+})
+
+export const taskSchedules = selectorFamily<Loadable<number>, string, Error>({
+  key: `isTaskScheduled`,
+  get: (taskId) => async ({ get }) => {
+    const task = await get(currentTasksAtom, taskId);
+    if (task instanceof Error) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "no tasks found" });
+    }
+    const completions = task.taskCompletions
+    const now = new Date()
+    const futureCompletions = completions
+      .map((completion) => new Date(completion.completedAt))
+      .filter((completionDate) => now < completionDate)
+
+    return futureCompletions.length
+  }
+})
 
 export const currentTaskIdsAtom = atom<Loadable<string[]>, Error>({
   key: `currentTaskIds`,

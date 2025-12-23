@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { TemplateTask } from "../../server/schema";
 import {
   ArrowBigRightDash,
@@ -40,35 +40,6 @@ function getTrend(history: VelocityData): 'neutral' | 'upward' | 'downward' {
   if (last < secondLast) return "downward";
   return "neutral";
 }
-
-/*
-  const getTrend = ():
-    | "upward"
-    | "trend-upward"
-    | "neutral"
-    | "trend-downward"
-    | "downward" => {
-    if (history.length < 2) {
-      return "neutral";
-    }
-    const last = history[history.length - 1].completed;
-    const secondLast = history[history.length - 2].completed;
-    if (history.length < 3) {
-      if (last > secondLast) return "trend-upward";
-      if (last < secondLast) return "trend-downward";
-      return "neutral";
-    }
-    const thirdLast = history[history.length - 3].completed;
-    if (last > secondLast) {
-      if (secondLast > thirdLast) return "upward";
-      return "trend-upward";
-    } else if (last < secondLast) {
-      if (secondLast < thirdLast) return "downward";
-      return "trend-downward";
-    }
-    return "neutral";
-  };
-*/
 
 
 function generateStats(history: VelocityData, templateTask: TemplateTask) {
