@@ -7,9 +7,10 @@ import { toast } from "sonner";
 type Props = {
   userId: string;
   handleEditUser: (userId: string) => void;
+  handleDeleteUser: (userId: string) => void;
 };
 
-export function UserRow({ userId, handleEditUser }: Props) {
+export function UserRow({ userId, handleEditUser, handleDeleteUser }: Props) {
   const user = useLoadable(userAtoms, userId, EMPTY_USER)
   if (user.error) return null
 
@@ -45,10 +46,7 @@ export function UserRow({ userId, handleEditUser }: Props) {
             variant="ghost"
             size="sm"
             className="h-8 px-2 text-destructive"
-            onClick={() => {
-              console.log("do a thing?");
-              toast.success("User removed successfully");
-            }}
+            onClick={() => handleDeleteUser(userId)}
           >
             Delete
           </Button>

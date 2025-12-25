@@ -22,7 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { addUser } from "@/actions";
+import { addUser, deleteUser } from "@/actions";
 
 // Schema for user creation
 export const UserSchema = type({
@@ -68,6 +68,10 @@ export default function Admin() {
   const handleEditUser = (userId: string) => {
     setSelectedUserId(userId);
     setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    await deleteUser(userId);
   };
 
   const handleUserUpdated = (updatedUser: User) => {
@@ -180,7 +184,12 @@ export default function Admin() {
             </thead>
             <tbody>
               {userIds.value.map((id) => (
-                <UserRow key={id} userId={id} handleEditUser={handleEditUser} />
+                <UserRow
+                  key={id}
+                  userId={id}
+                  handleEditUser={handleEditUser}
+                  handleDeleteUser={handleDeleteUser}
+                />
               ))}
             </tbody>
           </table>

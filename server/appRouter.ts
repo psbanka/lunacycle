@@ -272,6 +272,16 @@ export const appRouter = router({
         clearCache("userAtoms", input.userId);
       });
     }),
+  deleteUser: publicProcedure
+    .input(type({ userId: "string" }))
+    .mutation(async ({ input }) => {
+      db.delete(schema.user).where(eq(schema.user.id, input.userId)).run();
+      db.delete(schema.userProfile)
+        .where(eq(schema.userProfile.userId, input.userId))
+        .run();
+      clearCache("userAtoms", input.userId);
+      return { success: true };
+    }),
   addUser: publicProcedure
     .input(type({ name: "string", email: "string", password: "string", role: "string" }))
     .mutation(async ({ input }) => {

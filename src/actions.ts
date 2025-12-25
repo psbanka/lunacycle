@@ -23,6 +23,11 @@ export const addUser = async (user: ServerAddUser) => {
   }
 };
 
+export const deleteUser = async (userId: string) => {
+  await trpcClient.deleteUser.mutate({ userId });
+  toast.success("User deleted!");
+};
+
 export const uploadAvatarTask = async (userId: string, file: File) => {
   // Convert File to Base64 string
   const reader = new FileReader();
