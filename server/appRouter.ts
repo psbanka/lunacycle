@@ -570,6 +570,7 @@ export const appRouter = router({
       return updateTaskWithCategoryAndAssignments(input.task).then(() => {
         clearCache("currentTaskAtom", input.task.id);
         clearCache("backlogTasksAtom", input.task.id);
+        clearCache("currentTaskIds");
         clearCache("backlogTaskIds");
         clearCache("focusedTaskIds");
         clearCache("currentTaskIds");
