@@ -1,16 +1,38 @@
 import { useLoadable } from "atom.io/react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { arktypeResolver } from "@hookform/resolvers/arktype";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { type } from "arktype";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { EditUserDialog } from "@/components/EditUserDialog";
 import { User } from "../../server/schema";
 import { userIdsAtom } from "@/atoms.ts";
 import { UserRow } from "@/components/UserRow";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { addUser } from "@/actions";
+
+// Schema for user creation
+export const UserSchema = type({
+  name: "string > 0",
+  email: "string > 0",
+  password: "string > 0",
+  role: "string > 0",
+});
+
+type UserFormValues = typeof UserSchema.infer;
 
 export default function Admin() {
   const userIds = useLoadable(userIdsAtom, []);
@@ -19,12 +41,19 @@ export default function Admin() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  const [newUser, setNewUser] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "user",
+  const form = useForm<UserFormValues>({
+    resolver: arktypeResolver(UserSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      role: "user",
+    },
   });
+
+  const errorMessages = Object.values(form.formState.errors).map(
+    (error) => error.message
+  );
 
   if (userIds.value.length === 0) {
     return <LoadingScreen />;
@@ -47,18 +76,9 @@ export default function Admin() {
     console.log("User updated:", updatedUser);
   };
 
-  const handleAddUser = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const newId = (userIds.value.length + 1).toString();
-
-    setNewUser({
-      name: "",
-      email: "",
-      password: "",
-      role: "user",
-    });
-
+  const handleAddUser = (values: UserFormValues) => {
+    addUser(values);
+    form.reset();
     toast.success("User added successfully!");
   };
 
@@ -70,66 +90,77 @@ export default function Admin() {
       <div className="glass-card p-6 rounded-lg mb-8">
         <h2 className="text-xl font-semibold mb-4">Add New User</h2>
 
-        <form onSubmit={handleAddUser} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={newUser.name}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, name: e.target.value })
-                }
-                required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleAddUser)}>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="user@example.com"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className="w-full p-2 rounded-md border border-input h-10">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newUser.email}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, email: e.target.value })
-                }
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={newUser.password}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, password: e.target.value })
-                }
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <select
-                id="role"
-                value={newUser.role}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, role: e.target.value })
-                }
-                className="w-full p-2 rounded-md border border-input"
-                required>
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-          </div>
-
-          <Button type="submit" className="w-full">
-            Add User
-          </Button>
-        </form>
+            <Button type="submit" className="w-full">
+              Add User
+            </Button>
+          </form>
+        </Form>
       </div>
 
       {/* User List */}

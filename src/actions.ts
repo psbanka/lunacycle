@@ -8,7 +8,21 @@ export const updateUserTask = async(updates: ServerUpdateUser) => {
   await trpcClient.updateUser.mutate(updates);
   toast.success("User updated!");
 }
-  
+
+export type ServerAddUser = inferProcedureInput<AppRouter["addUser"]>;
+export const addUser = async (user: ServerAddUser) => {
+  try {
+    await trpcClient.addUser.mutate(user);
+    toast.success("User added!");
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      toast.error(error.message);
+    } else {
+      toast.error("An unknown error occurred while adding the user.");
+    }
+  }
+};
+
 export const uploadAvatarTask = async (userId: string, file: File) => {
   // Convert File to Base64 string
   const reader = new FileReader();

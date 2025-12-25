@@ -18,6 +18,7 @@ import {
   updateTaskWithCategoryAndAssignments,
 } from "./updateTasks.ts";
 import {
+  addUser,
   UserUpdate,
   generateNewAvatar,
   updateAvatar,
@@ -269,6 +270,13 @@ export const appRouter = router({
     .mutation(async ({ input }) => {
       return updateAvatar(input).then(() => {
         clearCache("userAtoms", input.userId);
+      });
+    }),
+  addUser: publicProcedure
+    .input(type({ name: "string", email: "string", password: "string", role: "string" }))
+    .mutation(async ({ input }) => {
+      return addUser(input).then(() => {
+        clearCache("userAtoms");
       });
     }),
   updateUser: publicProcedure

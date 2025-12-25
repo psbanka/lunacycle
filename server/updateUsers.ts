@@ -12,7 +12,7 @@ export const UserUpdate = type({
   role: "string",
   email: "string",
   "password?": "string",
-})
+});
 
 export async function generateNewAvatar() {
   // TODO: Make this gender-relevant
@@ -20,7 +20,13 @@ export async function generateNewAvatar() {
   return avatar;
 }
 
-export async function updateAvatar({ userId, file }: {userId: string, file: string}) {
+export async function updateAvatar({
+  userId,
+  file,
+}: {
+  userId: string;
+  file: string;
+}) {
   const user = await db.query.user.findFirst({
     where: eq(schema.user.id, userId),
   });
@@ -38,7 +44,7 @@ export async function updateAvatar({ userId, file }: {userId: string, file: stri
 }
 
 export async function updateUser(input: typeof UserUpdate.infer) {
-  let update: Partial<schema.User> | null = null
+  let update: Partial<schema.User> | null = null;
   if (input.password) {
     const passwordHash = await hash(input.password, 10);
     update = {
@@ -53,8 +59,8 @@ export async function updateUser(input: typeof UserUpdate.infer) {
       id: input.id,
       name: input.name,
       role: input.role,
-      email: input.email
-    }
+      email: input.email,
+    };
   }
   // TODO: Check the user ID of the person who is logged in
   db.update(schema.user)
@@ -66,3 +72,72 @@ export async function updateUser(input: typeof UserUpdate.infer) {
     where: eq(schema.user.id, input.id),
   });
 }
+
+export async function addUser(input: {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+}) {
+  const existingUser = await db.query.user.findFirst({
+    where: eq(schema.user.email, input.email),
+  });
+  if (existingUser) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "User already exists",
+    });
+  }
+
+  const passwordHash = await hash(input.password, 10);
+  const id = crypto.randomUUID();
+  const user = db
+    .insert(schema.user)
+    .values({
+      id,
+      name: input.name,
+      email: input.email,
+      role: input.role,
+      passwordHash,
+    })
+    .returning()
+    .run();
+
+  const avatar = await generateNewAvatar();
+  db.insert(schema.userProfile)
+    .values({
+      userId: id,
+      avatar,
+    })
+    .run();
+  return { success: true };
+}
+
+/*
+export async function addUser(input: { name: string, email: string, password: string }) {
+  await db.insert(schema.user)
+    .values({
+      name: input.name,
+      email: input.email,
+      passwordHash: await hash(input.password, 10),
+    })
+    .run();
+    const user = await db.query.user.findFirst({
+      where: eq(schema.user.email, input.email),
+    });
+    if (!user) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "User not found",
+      });
+    }
+    const avatar = await generateNewAvatar();
+    db.insert(schema.userProfile)
+      .values({
+        userId: user.id,
+        avatar,
+      })
+      .run();
+    return { success: true };
+}
+    */
