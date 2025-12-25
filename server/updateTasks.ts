@@ -96,11 +96,6 @@ export async function updateTaskWithCategoryAndAssignments(
     .run();
 
   const output = db.query.task.findFirst({ where: eq(schema.task.id, taskInfo.id) });
-  clearCache("backlogTasksAtom", taskInfo.id);
-  clearCache("backlogTaskIds");
-  clearCache("currentTaskAtom", taskInfo.id);
-  clearCache("currentTaskIds");
-  clearCache("focusedTaskIds");
   return output;
 }
 

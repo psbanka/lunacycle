@@ -79,7 +79,7 @@ const AppCore = () => {
   });
   trpcClient.onClearCache.subscribe(undefined, {
     onData: (data) => {
-      console.log("clearing cache:", data.keys);
+      console.log("client-side clearing cache:", data.keys);
       clearCache(data.keys);
     },
   });

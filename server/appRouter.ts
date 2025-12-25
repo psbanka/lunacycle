@@ -568,12 +568,11 @@ export const appRouter = router({
     )
     .mutation(async ({ input }) => {
       return updateTaskWithCategoryAndAssignments(input.task).then(() => {
+        clearCache("currentTaskIds");
+        clearCache("focusedTaskIds");
+        clearCache("backlogTaskIds");
         clearCache("currentTaskAtom", input.task.id);
         clearCache("backlogTasksAtom", input.task.id);
-        clearCache("currentTaskIds");
-        clearCache("backlogTaskIds");
-        clearCache("focusedTaskIds");
-        clearCache("currentTaskIds");
       });
     }),
   updateTemplateTask: publicProcedure
