@@ -11,35 +11,8 @@ type CategorySectionProps = {
   isTemplate: boolean;
 };
 
-const FOO_TASK_ID = "c8a02c62-bcad-4f22-96b6-cb8c385162a0"
-const COMMUNITY_CATEGORY_ID = "243b3bc5-0319-40ce-b84b-b5906f69eaca"
-/*
-  issue:
-  1. edit FOO_TASK_ID so that it no longer has a monthId.
-  2. that should result in the task disappearing from this view:
-    a. calls updateTask() in appRouter.
-    b. server updates task to remove the monthId
-    c. server sends clearCache for `currentTaskIds`
-    d. client receives the message and calls `resetState(currentTaskIdsAtom)`
-    e. this component relies on `useLoadable(currentTasksByCategoryIdAtom)` for the COMMUNITY_CATEGORY_ID
-    f. currentTasksByCategoryIdAtom is a selectorFamily that depends on currentTaskIdsAtom
-    g. currentTaskIdsAtom performs a trpc call to getCurrentMonthTasks and sets currentTasksAtom for that FOO_TASK_ID
-
-  What actually happens:
-  1. calls updateTask() in appRouter
-  2. server sends clearCache for `currentTaskIds`
-  3. this component receives new tasks, with foo in the list with the monthId set to null
-     despite the fact that currentMonthTasks does not have foo in the list
-  4. AND the currentTasksByCategoryIdAtom is never re-run.
-*/
-
-
 export default function CategorySection({ categoryId, isTemplate }: CategorySectionProps) {
   const tasks = useLoadable(currentTasksByCategoryIdAtom, categoryId, []);
-  if (tasks.loading === false && categoryId === COMMUNITY_CATEGORY_ID) {
-    console.log(tasks.value)
-    debugger
-  }
   const currentMonth = useLoadable(currentMonthAtom, getPlaceholderMonth());
   const category = useLoadable(categoriesAtom, categoryId, getCategoryPlaceholder(categoryId));
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);

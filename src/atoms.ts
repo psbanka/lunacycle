@@ -207,17 +207,11 @@ export const taskSchedules = selectorFamily<Loadable<number>, string, Error>({
   }
 })
 
-const FOO_TASK_ID = "c8a02c62-bcad-4f22-96b6-cb8c385162a0"
-const COMMUNITY_CATEGORY_ID = "243b3bc5-0319-40ce-b84b-b5906f69eaca"
-
 export const currentTaskIdsAtom = atom<Loadable<string[]>, Error>({
   key: `currentTaskIds`,
   default: async () => {
     const tasks = await trpcClient.getCurrentMonthTasks.query();
     tasks.forEach((task) => setState(currentTasksAtom, task.id, task));
-    if (tasks.find((task) => task.id === FOO_TASK_ID)) {
-      debugger
-    }
     const currentTaskIds = tasks.map((task) => task.id);
     setCurrentTaskIdsPlaceholders(currentTaskIds)
     return currentTaskIds;
@@ -244,9 +238,6 @@ export const currentTasksByCategoryIdAtom = selectorFamily<
   key: `currentTasksByCategoryId`,
   get: (categoryId) =>
     async ({ get }) => {
-      if (categoryId === COMMUNITY_CATEGORY_ID) {
-        debugger
-      }
       const currentTaskIds = await get(currentTaskIdsAtom);
       if (currentTaskIds instanceof Error) {
         throw new TRPCError({ code: "NOT_FOUND", message: "no tasks found" });
