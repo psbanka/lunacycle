@@ -38,14 +38,19 @@ export default function TaskCard({
   const schedules = useLoadable(taskSchedules, taskId, 0);
   const targetCount = task.value?.targetCount || 0;
   const isCompleted = completions.value >= targetCount;
-  const isScheduled = schedules.value > 0;
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const progress =
+  const completedPercent =
     task.value.targetCount > 0
-      ? (task.value.taskCompletions.length / task.value.targetCount) * 100
+      ? (completions.value / task.value.targetCount) * 100
       : 0;
+
+  const scheduledPercent =
+    task.value.targetCount > 0
+      ? (schedules.value / task.value.targetCount) * 100
+      : 0;
+  const isScheduled = Math.round(scheduledPercent + completedPercent) === 100;
 
   const isContinuingTask = task.value.targetCount > 1;
 
@@ -55,7 +60,7 @@ export default function TaskCard({
   };
 
   const handleCompletionSave = (dates: Date[]) => {
-    const info: CompleteTasksProps['info'] = dates.map((date) => ({
+    const info: CompleteTasksProps["info"] = dates.map((date) => ({
       userId: null,
       completedAt: date.toISOString(),
     }));
@@ -112,12 +117,13 @@ export default function TaskCard({
                 </span>
               </div>
 
-              {/* TODO: DIFFERENTIATE FUTURE FROM PATH IN BAR FROM DONE */}
               {/* Progress bar */}
-              <div className="ml-2 flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+              <div className="ml-2 flex-1 h-1.5 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary rounded-full transition-all duration-500"
-                  style={{ width: `${progress}%` }}
+                  className="h-full w-full transition-all duration-500"
+                  style={{
+                    background: `linear-gradient(to right, hsl(var(--primary)) ${completedPercent}%, hsl(var(--primary) / 0.3) ${completedPercent}%, hsl(var(--primary) / 0.3) ${completedPercent + scheduledPercent}%, hsl(var(--secondary)) ${completedPercent + scheduledPercent}%)`,
+                  }}
                 />
               </div>
             </div>
@@ -160,7 +166,7 @@ export default function TaskCard({
               </Button>
               <DatePicker
                 targetCount={task.value.targetCount}
-                taskCompletions={task.value.taskCompletions}
+                taskCompletions={task.value.taskCompletions.map((c) => ({...c, completedAt: c.completedAt}))}
                 onSave={handleCompletionSave}
                 isScheduled={isScheduled}
                 isCompleted={isCompleted}

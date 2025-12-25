@@ -18,39 +18,7 @@ import useLunarPhase from "@/hooks/useLunarPhase";
 
 // -================================ HELPER FUNCTIONS
 
-function toDayString(date: Date): string {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString().split("T")[0];
-}
-
-function findDate(
-  occupiedDates: Set<string>,
-  completionDate: Date,
-  end: Date,
-  start: Date,
-  direction = 1
-) {
-  let dayString = toDayString(completionDate);
-  let newCompletionDate = new Date(completionDate);
-
-  const dateIsBad = (x: string) =>
-    occupiedDates.has(x) &&
-    newCompletionDate <= end &&
-    newCompletionDate >= start;
-
-  while (dateIsBad(dayString)) {
-    newCompletionDate.setDate(newCompletionDate.getDate() + direction); // Move to the next day
-    dayString = toDayString(newCompletionDate);
-  }
-
-  const dayHasNotBeenChanged = dayString === toDayString(completionDate);
-  const dayShouldBeChanged = dateIsBad(dayString);
-  const failure = dayHasNotBeenChanged && dayShouldBeChanged;
-  return failure ? null : dayString;
-}
-
-function pickUniqueDates(
+function convertToDates(
   startDate: ISO18601,
   endDate: ISO18601,
   taskCompletions: TaskCompletion[]
@@ -58,29 +26,12 @@ function pickUniqueDates(
   if (!startDate || !endDate) return;
 
   const processedDates: Date[] = [];
-  const occupiedDates = new Set<string>();
-
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-
-  // Helper to normalize a date to the start of its day and get its string representation
 
   for (const completion of taskCompletions) {
     let completionDate = new Date(completion.completedAt);
-
-    let dayString = findDate(occupiedDates, completionDate, end, start, 1);
-    if (dayString === null) {
-      dayString = findDate(occupiedDates, completionDate, end, start, -1);
-    }
-    if (dayString == null)
-      throw new Error("could not find a place for this date");
-
-    if (completionDate >= start && completionDate <= end) {
-      occupiedDates.add(dayString);
-      processedDates.push(completionDate);
-    }
+    processedDates.push(completionDate);
   }
-  return Array.from(occupiedDates).map((x) => new Date(x));
+  return processedDates;
 }
 
 // ======================================= COMPONENT
@@ -107,7 +58,9 @@ export function DatePicker({
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Date[]>();
-  const [variant, setVariant] = useState<"ghost" | "outline" | "destructive">("ghost");
+  const [variant, setVariant] = useState<"ghost" | "outline" | "destructive">(
+    "ghost"
+  );
 
   const { startDate, endDate } = useLunarPhase();
 
@@ -118,16 +71,20 @@ export function DatePicker({
 
   const handleCancel = () => {
     // Just re-run default setup
-    const processedDates = pickUniqueDates(startDate, endDate, taskCompletions);
+    const processedDates = convertToDates(startDate, endDate, taskCompletions);
     setSelected(processedDates);
   };
 
   useEffect(() => {
-    const processedDates = pickUniqueDates(startDate, endDate, taskCompletions);
+    const processedDates = convertToDates(startDate, endDate, taskCompletions);
     if (processedDates === undefined) return;
     setSelected(processedDates);
-    
-    const variant = isCompleted ? "ghost" : isScheduled ? "outline" : "destructive";
+
+    const variant = isCompleted
+      ? "ghost"
+      : isScheduled
+      ? "outline"
+      : "destructive";
     setVariant(variant);
   }, [taskCompletions, startDate, endDate]);
 
@@ -180,7 +137,7 @@ export function DatePicker({
             month={startMonth}
             numberOfMonths={2}
             selected={selected}
-            onSelect={setSelected}
+            onSelect={(dates) => setSelected(dates)}
             disabled={disabledDays}
             modifiers={{ future: (date) => date > new Date() }}
             modifiersClassNames={{
