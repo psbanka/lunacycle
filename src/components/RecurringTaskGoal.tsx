@@ -14,6 +14,12 @@ import {
 } from "lucide-react";
 import { type RecurringTaskData, VelocityData } from "server/appRouter";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface RecurringTaskGoalProps {
   recurringTask: RecurringTaskData;
@@ -110,18 +116,20 @@ const RecurringTaskGoal = (props: RecurringTaskGoalProps) => {
   const targetValue = templateTask.targetCount;
   const stats = generateStats(history, templateTask);
   const trend = stats.trend;
+  const hoverText = `Your average is ${stats.average}, trending ${trend}.`
+
   const target  = determineSuggestedTarget(stats, templateTask);
 
   const trendClasses =
     trend === "upward"
-      ? "bg-green-500/10 border-green-500/20 text-accent"
+      ? "bg-green-500/10 border-green-500/20 text-danger"
       : trend === "downward"
       ? "bg-red-500/10 border-red-500/20 text-danger"
       // : trend === "trend-downward"
       // ? "bg-red-100/10 border-red-100/20 text-primary dark:text-red-300"
       // : trend === "trend-upward"
-      // ? "bg-green-100/10 border-green-100/20 text-primary"
-      : "bg-muted/30 border-border text-muted-foreground";
+      // ? "bg-green-100/10 border-green-100/20 text-danger"
+      : "bg-muted/30 border-border text-danger";
 
   const committedClasses =
     props.planning && props.committed
@@ -145,50 +153,61 @@ const RecurringTaskGoal = (props: RecurringTaskGoalProps) => {
 
 
   return (
-    <div
-      className={cn(
-        "p-3 rounded-lg border flex items-center gap-3",
-        trendClasses,
-        committedClasses
-      )}>
-      <TrendIcon className="h-5 w-5 shrink-0" />
-      <h3 className="font-medium grow text-left">{templateTask.title}</h3>
-      <div className="flex flex-row items-center gap-2">
-        <h2>{targetValue}</h2>
-        <ArrowBigRightDash />
-        <h2>{committedGoal ?? target}</h2>
-      </div>
-      {props.planning && (
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-6 w-6"
-            disabled={disabled}
-            onClick={() => updateCommittedGoal("up")}>
-            <CirclePlus className="h-3 w-3" />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-6 w-6"
-            disabled={disabled}
-            onClick={() => updateCommittedGoal("down")}>
-            <CircleMinus className="h-3 w-3" />
-          </Button>
-          <Button
-            type="button"
-            variant={props.committed ? "default" : "outline"}
-            size="icon"
-            className="h-6 w-6"
-            onClick={handleCommit}>
-            <CircleCheckBig className="h-3 w-3" />
-          </Button>
-        </div>
-      )}
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={cn(
+              "p-3 rounded-lg border flex items-center gap-3",
+              trendClasses,
+              committedClasses
+            )}>
+            <TrendIcon className="h-5 w-5 shrink-0" />
+            <h3 className="font-medium grow text-left">
+              {templateTask.title}
+            </h3>
+            <div className="flex flex-row items-center gap-2">
+              <h2>{targetValue}</h2>
+              <ArrowBigRightDash />
+              <h2>{committedGoal ?? target}</h2>
+            </div>
+            {props.planning && (
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-6 w-6"
+                  disabled={disabled}
+                  onClick={() => updateCommittedGoal("up")}>
+                  <CirclePlus className="h-3 w-3" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-6 w-6"
+                  disabled={disabled}
+                  onClick={() => updateCommittedGoal("down")}>
+                  <CircleMinus className="h-3 w-3" />
+                </Button>
+                <Button
+                  type="button"
+                  variant={props.committed ? "default" : "outline"}
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={handleCommit}>
+                  <CircleCheckBig className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="text-xl">{hoverText}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 

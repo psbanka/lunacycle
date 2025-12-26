@@ -12,9 +12,8 @@ export default function LunarCycleProgressBand({
   currentDate,
   className,
 }: LunarCycleProgressBandProps) {
-  const currentMonth = useLoadable(currentMonthAtom, getPlaceholderMonth());
   const [cyclePosition, setCyclePosition] = useState(0);
-  const { daysRemaining } = useLunarPhase(currentMonth.value.endDate);
+  const { daysRemaining } = useLunarPhase();
 
   // Calculate lunar cycle position
   useEffect(() => {

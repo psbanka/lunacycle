@@ -166,6 +166,7 @@ export default function TaskCard({
               </Button>
               <DatePicker
                 targetCount={task.value.targetCount}
+                taskId={task.value.id}
                 taskCompletions={task.value.taskCompletions.map((c) => ({...c, completedAt: c.completedAt}))}
                 onSave={handleCompletionSave}
                 isScheduled={isScheduled}

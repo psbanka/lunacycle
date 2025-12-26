@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogClose,
@@ -47,6 +46,7 @@ type DatePickerProps = {
   isCompleted: boolean;
   taskCompletions: TaskCompletion[];
   onSave: (dates: Date[]) => void;
+  taskId?: string;
 };
 
 export function DatePicker({
@@ -55,6 +55,7 @@ export function DatePicker({
   isCompleted,
   taskCompletions,
   onSave,
+  taskId,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Date[]>();

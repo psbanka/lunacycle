@@ -1,6 +1,7 @@
 import { db } from "./db.ts";
 import { eq, and, isNull } from "drizzle-orm";
 import * as schema from "./schema";
+import type { ISO18601 } from "./schema";
 import { TRPCError } from "@trpc/server";
 import { fakerEN } from "@faker-js/faker";
 import { createTaskWithCategoryAndAssignments } from "./updateTasks.ts";
@@ -124,6 +125,7 @@ async function createNewMonth() {
   const thirtyDaysFromNow = new Date(
     today.getTime() + 30 * 24 * 60 * 60 * 1000
   );
+  const endDate = thirtyDaysFromNow.toISOString() as ISO18601;
   const lastTwoDigitsOfYear = today.getFullYear().toString().slice(-2);
 
   const monthName = `${moonName()} - ${lastTwoDigitsOfYear}`;
@@ -134,7 +136,7 @@ async function createNewMonth() {
       id: monthId,
       name: monthName,
       startDate: todayString,
-      endDate: thirtyDaysFromNow.toISOString(),
+      endDate,
       newMoonDate: "TODO",
       fullMoonDate: "TODO",
       isActive: 1,
