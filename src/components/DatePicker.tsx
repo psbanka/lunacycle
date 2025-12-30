@@ -36,8 +36,8 @@ function convertToDates(
 // ======================================= COMPONENT
 
 type TaskCompletion = {
-  userId: string;
-  completedAt: string;
+  userId: string | null;
+  completedAt: ISO18601;
 };
 
 type DatePickerProps = {

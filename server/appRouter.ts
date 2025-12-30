@@ -222,7 +222,7 @@ export const StartCycleType = type({
 const UserAndDateStrings = type({
   userId: "string | null",
   completedAt: "string",
-})
+});
 
 export type UserShape = {
   id: string;
@@ -283,7 +283,14 @@ export const appRouter = router({
       return { success: true };
     }),
   addUser: publicProcedure
-    .input(type({ name: "string", email: "string", password: "string", role: "string" }))
+    .input(
+      type({
+        name: "string",
+        email: "string",
+        password: "string",
+        role: "string",
+      })
+    )
     .mutation(async ({ input }) => {
       return addUser(input).then(() => {
         clearCache("userAtoms");
@@ -681,22 +688,30 @@ export const appRouter = router({
           message: "Completions exceeds targetGoal",
         });
       }
-      await db.delete(schema.taskCompletion)
+      await db
+        .delete(schema.taskCompletion)
         .where(eq(schema.taskCompletion.taskId, taskId))
         .run();
 
       for (const { userId, completedAt } of info) {
-        const user = userId ? await db.query.user.findFirst({
-          where: eq(schema.user.id, userId),
-        }) : await db.query.user.findFirst({
-          where: eq(schema.user.email, 'admin@example.com')
-        });
+        const user = userId
+          ? await db.query.user.findFirst({
+              where: eq(schema.user.id, userId),
+            })
+          : await db.query.user.findFirst({
+              where: eq(schema.user.email, "admin@example.com"),
+            });
         if (user == null) {
-          throw new TRPCError({ code: "FORBIDDEN" })
+          throw new TRPCError({ code: "FORBIDDEN" });
         }
         const id = fakerEN.string.uuid();
         db.insert(schema.taskCompletion)
-          .values({ id, taskId, userId: user.id, completedAt })
+          .values({
+            id,
+            taskId,
+            userId: user.id,
+            completedAt: completedAt as schema.ISO18601,
+          })
           .run();
       }
       clearCache("currentTaskAtom", input.taskId);
@@ -712,7 +727,7 @@ export const appRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
       }
       const completions = await db.query.taskCompletion.findMany({
-        where: eq(schema.taskCompletion.taskId, input.taskId)
+        where: eq(schema.taskCompletion.taskId, input.taskId),
       });
 
       if (completions.length >= task.targetCount) {
@@ -722,23 +737,27 @@ export const appRouter = router({
         });
       }
       const adminUser = await db.query.user.findFirst({
-        where: eq(schema.user.email, 'admin@example.com')
+        where: eq(schema.user.email, "admin@example.com"),
       });
       if (adminUser == null) {
-        throw new TRPCError({ code: "FORBIDDEN" })
+        throw new TRPCError({ code: "FORBIDDEN" });
       }
       // TODO: make sure that when this function throws an exception
       // that it gets caught by the frontend.
       // TODO: Throw an exception if the task already has a completion for today.
       // throw new TRPCError({ code: "FORBIDDEN" })
-      const completedAt = new Date().toISOString()
+      const completedAt = new Date().toISOString();
       const id = fakerEN.string.uuid();
-      db
-        .insert(schema.taskCompletion)
-        .values({ id, taskId: task.id, userId: adminUser.id, completedAt })
-        .run()
+      db.insert(schema.taskCompletion)
+        .values({
+          id,
+          taskId: task.id,
+          userId: adminUser.id,
+          completedAt: completedAt as schema.ISO18601,
+        })
+        .run();
 
-      console.log('------------------------------- G', id)
+      console.log("------------------------------- G", id);
       clearCache("currentTaskAtom", input.taskId);
       return;
     }),

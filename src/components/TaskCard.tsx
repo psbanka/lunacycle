@@ -7,6 +7,7 @@ import { EditTaskDialog } from "./EditTaskDialog";
 import { StoryPointsBadge } from "./StoryPointsBadge";
 import { UserAvatar } from "./UserAvatar";
 import { DatePicker } from "./DatePicker";
+import type { ISO18601 } from "../../server/schema";
 import {
   currentMonthAtom,
   currentTasksAtom,
@@ -15,7 +16,11 @@ import {
   taskCompletions,
   taskSchedules,
 } from "@/atoms";
-import { completeTask, completeTasks, type CompleteTasksProps } from "@/actions";
+import {
+  completeTask,
+  completeTasks,
+  type CompleteTasksProps,
+} from "@/actions";
 
 type TaskCardProps = {
   taskId: string;
@@ -65,7 +70,7 @@ export default function TaskCard({
       completedAt: date.toISOString(),
     }));
     completeTasks({ taskId, info });
-  }
+  };
 
   const handleEditClick = () => {
     setIsEditDialogOpen(true);
@@ -122,7 +127,11 @@ export default function TaskCard({
                 <div
                   className="h-full w-full transition-all duration-500"
                   style={{
-                    background: `linear-gradient(to right, hsl(var(--primary)) ${completedPercent}%, hsl(var(--primary) / 0.3) ${completedPercent}%, hsl(var(--primary) / 0.3) ${completedPercent + scheduledPercent}%, hsl(var(--secondary)) ${completedPercent + scheduledPercent}%)`,
+                    background: `linear-gradient(to right, hsl(var(--primary)) ${completedPercent}%, hsl(var(--primary) / 0.3) ${completedPercent}%, hsl(var(--primary) / 0.3) ${
+                      completedPercent + scheduledPercent
+                    }%, hsl(var(--secondary)) ${
+                      completedPercent + scheduledPercent
+                    }%)`,
                   }}
                 />
               </div>
@@ -151,23 +160,22 @@ export default function TaskCard({
                 {task.value.targetCount > 1 ? (
                   <>
                     <Plus className="h-3.5 w-3.5" />
-                    <span className="hidden @min-[200px]:inline">
-                      Progress
-                    </span>
+                    <span className="hidden @min-[200px]:inline">Progress</span>
                   </>
                 ) : (
                   <>
                     <CheckCircle className="h-3.5 w-3.5" />
-                    <span className="hidden @min-[200px]:inline">
-                      Complete
-                    </span>
+                    <span className="hidden @min-[200px]:inline">Complete</span>
                   </>
                 )}
               </Button>
               <DatePicker
                 targetCount={task.value.targetCount}
                 taskId={task.value.id}
-                taskCompletions={task.value.taskCompletions.map((c) => ({...c, completedAt: c.completedAt}))}
+                taskCompletions={task.value.taskCompletions.map((c) => ({
+                  ...c,
+                  completedAt: c.completedAt as ISO18601,
+                }))}
                 onSave={handleCompletionSave}
                 isScheduled={isScheduled}
                 isCompleted={isCompleted}
