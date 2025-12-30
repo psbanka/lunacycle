@@ -57,6 +57,13 @@
       "when": 1765065864489,
       "tag": "0007_nappy_jubilee",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1766879820123,
+      "tag": "0008_complex_lizard",
+      "breakpoints": true
     }
   ]
 }

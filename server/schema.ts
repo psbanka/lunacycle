@@ -101,14 +101,43 @@ export const task = sqliteTable("task", {
 export type Task = typeof task.$inferSelect;
 
 export const taskCompletion = sqliteTable("task_completion", {
-  id: text("id").primaryKey(), // or use a composite key
+  id: text("id").primaryKey(),
   taskId: text("task_id")
     .notNull()
     .references(() => task.id),
+  completedAt: timestamp("completed_at").notNull(),
   userId: text("user_id")
-    .notNull()
     .references(() => user.id),
-  completedAt: text("completed_at").notNull(), // ISO timestamp
+  scheduleId: text("schedule_id")
+    .references(() => taskSchedule.id),
+});
+
+export type ScheduleStatus = "scheduled" | "done" | "missed" | "canceled";
+
+export const taskSchedule = sqliteTable("task_schedule", {
+  id: text("id").primaryKey(),
+  taskId: text("task_id")
+    .notNull()
+    .references(() => task.id),
+  scheduledFor: timestamp("scheduled_for").notNull(),
+  status: text("status")
+    .$type<ScheduleStatus>()
+    .notNull()
+    .default("scheduled"),
+  scheduledByUserId: text("scheduled_by_user_id")
+    .references(() => user.id),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .default(SQL_NOW),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .default(SQL_NOW),
+
+  // calendar sync
+  externalCalendarProvider: text("external_calendar_provider")
+    .$type<"google">(), // expand later if needed
+  externalCalendarEventId: text("external_calendar_event_id"),
+  lastSyncedAt: timestamp("last_synced_at"),
 });
 
 export const taskCompletionRelations = relations(taskCompletion, ({ one }) => ({
