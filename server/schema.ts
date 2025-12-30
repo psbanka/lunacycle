@@ -29,10 +29,10 @@ export const userRelations = relations(user, ({ many, one }) => ({
     fields: [user.id],
     references: [userProfile.userId],
   }),
-  completions: many(taskCompletion),
   savedAccessTokens: many(savedAccessToken),
   tasks: many(task),
   templateTasks: many(templateTask),
+  scheduledTasks: many(taskSchedule),
 }));
 
 // userProfile table
@@ -94,7 +94,7 @@ export const task = sqliteTable("task", {
   templateTaskId: text("template_task_id")
     .references(() => templateTask.id),
   isFocused: integer("is_focused").$type<0 | 1>().notNull().default(0),
-  categoryId: text("category_id").notNull().references(() => category.id),
+  categoryId: text("category_id").references(() => category.id),
   monthId: text("month_id").references(() => month.id), // Nullable: if NULL, task is in backlog
 });
 
@@ -111,6 +111,21 @@ export const taskCompletion = sqliteTable("task_completion", {
   scheduleId: text("schedule_id")
     .references(() => taskSchedule.id),
 });
+
+export const taskCompletionRelations = relations(taskCompletion, ({ one }) => ({
+  task: one(task, {
+    fields: [taskCompletion.taskId],
+    references: [task.id],
+  }),
+  user: one(user, {
+    fields: [taskCompletion.userId],
+    references: [user.id],
+  }),
+  schedule: one(taskSchedule, {
+    fields: [taskCompletion.scheduleId],
+    references: [taskSchedule.id],
+  }),
+}));
 
 export type ScheduleStatus = "scheduled" | "done" | "missed" | "canceled";
 
@@ -140,19 +155,21 @@ export const taskSchedule = sqliteTable("task_schedule", {
   lastSyncedAt: timestamp("last_synced_at"),
 });
 
-export const taskCompletionRelations = relations(taskCompletion, ({ one }) => ({
+export const taskScheduleRelations = relations(taskSchedule, ({ one, many }) => ({
   task: one(task, {
-    fields: [taskCompletion.taskId],
+    fields: [taskSchedule.taskId],
     references: [task.id],
   }),
-  user: one(user, {
-    fields: [taskCompletion.userId],
+  scheduledByUser: one(user, {
+    fields: [taskSchedule.scheduledByUserId],
     references: [user.id],
   }),
+  completions: many(taskCompletion), // because task_completion.schedule_id references task_schedule.id
 }));
 
 export const taskRelations = relations(task, ({ many, one }) => ({
   taskCompletions: many(taskCompletion),
+  taskSchedules: many(taskSchedule),
   taskUsers: many(taskUser),
 }));
 

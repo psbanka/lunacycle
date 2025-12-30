@@ -51,7 +51,7 @@ export const TaskSchema = type({
   targetCount: "1 <= number.integer <= 31",
   userIds: "string[] >= 1",
   monthId: "string | null",
-  categoryId: "string",
+  categoryId: "string | null",
   "goal": "string | null",
   "isFocused?": "0 | 1",
 });
@@ -61,7 +61,7 @@ type TaskFormValues = typeof TaskSchema.infer;
 interface EditTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  categoryId?: string;
+  categoryId?: string | null;
   monthId: string | null;
   isTemplateTask: boolean;
   readOnly?: boolean;
@@ -124,6 +124,10 @@ export function EditTaskDialog({
   const onSubmit = async (values: TaskFormValues) => {
     setIsSubmitting(true);
     const userIds = values.userIds;
+    if (values.categoryId == null) {
+      console.log('not supported with no category ID')
+      return
+    }
     try {
       if (isEditingId) {
         if (isTemplateTask === false) {

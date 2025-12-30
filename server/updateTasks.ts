@@ -8,10 +8,7 @@ import { fakerEN } from "@faker-js/faker";
 import { getLunarPhase } from "../shared/lunarPhase.ts";
 import { clearCache } from "./events";
 
-type TaskCreationProps = Omit<
-  schema.Task,
-  "id" | "createdAt" | "completedCount" | "monthId"
-> & {
+type TaskCreationProps = Omit<schema.Task, "id" | "createdAt" | "monthId"> & {
   userIds: string[];
   categoryId: string;
   templateTaskId: string | null;
@@ -61,15 +58,19 @@ export async function createTaskWithCategoryAndAssignments(
 
 type TaskModificationProps = Omit<
   schema.Task,
-  "createdAt" | "completedCount" | "templateTaskId"
+  "createdAt" | "templateTaskId"
 > & {
   userIds: string[];
-  categoryId: string;
+  categoryId: string | null;
 };
 
 export async function updateTaskWithCategoryAndAssignments(
   taskInfo: TaskModificationProps
 ) {
+  if (taskInfo.categoryId === null) {
+    throw new Error("Category required");
+  }
+
   // 1. Update the task details
   await db
     .update(schema.task)
@@ -95,7 +96,9 @@ export async function updateTaskWithCategoryAndAssignments(
     .values(taskInfo.userIds.map((userId) => ({ taskId: taskInfo.id, userId })))
     .run();
 
-  const output = db.query.task.findFirst({ where: eq(schema.task.id, taskInfo.id) });
+  const output = db.query.task.findFirst({
+    where: eq(schema.task.id, taskInfo.id),
+  });
   return output;
 }
 
@@ -146,7 +149,10 @@ export async function updateTemplateTaskWithCategoryAndAssignments(
   }
 
   // 4. If moon is gibbous waning, modify the monthly task
-  if (getLunarPhase().phase === "waning-gibbous" || getLunarPhase().phase === "last-quarter") {
+  if (
+    getLunarPhase().phase === "waning-gibbous" ||
+    getLunarPhase().phase === "last-quarter"
+  ) {
     const category = await db.query.category.findFirst({
       where: eq(schema.category.id, templateTaskInfo.categoryId),
     });
@@ -225,7 +231,10 @@ export async function createTemplateTaskWithCategoryAndAssignments(
   }
 
   // 4. If moon is gibbous waning, add OR MODIFY the monthly task
-  if (getLunarPhase().phase === "waning-gibbous" || getLunarPhase().phase === "last-quarter") {
+  if (
+    getLunarPhase().phase === "waning-gibbous" ||
+    getLunarPhase().phase === "last-quarter"
+  ) {
     const category = await db.query.category.findFirst({
       where: eq(schema.category.id, taskInfo.categoryId),
     });
@@ -294,10 +303,10 @@ export const addTask = publicProcedure
   .mutation(async ({ input }) => {
     const { task: taskInput } = input;
     return createTaskWithCategoryAndAssignments(taskInput).then(() => {
-        clearCache("currentTaskIds");
-        clearCache("focusedTaskIds");
-        clearCache("backlogTaskIds");
-      });
+      clearCache("currentTaskIds");
+      clearCache("focusedTaskIds");
+      clearCache("backlogTaskIds");
+    });
   });
 
 export const addTemplateTask = publicProcedure
@@ -317,7 +326,7 @@ export const addTemplateTask = publicProcedure
   .mutation(async ({ input }) => {
     const { task: taskInput } = input;
     return createTemplateTaskWithCategoryAndAssignments(taskInput).then(() => {
-        clearCache("templateTaskIds");
-        clearCache("statistics");
-      });
+      clearCache("templateTaskIds");
+      clearCache("statistics");
+    });
   });

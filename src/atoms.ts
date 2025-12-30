@@ -116,6 +116,7 @@ export const EMPTY_TASK: ServerGetTask = {
   templateTaskId: null,
   isFocused: 0,
   taskCompletions: [],
+  taskSchedules: [],
   monthId: '',
   taskUsers: [],
 }

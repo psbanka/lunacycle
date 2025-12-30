@@ -122,97 +122,6 @@ async function getVelocityByMonth(
   return [overall, includedTasks];
 }
 
-async function old_getVelocityByMonth(
-  categoryId?: string
-): Promise<[VelocityData, Record<string, RecurringTaskData>]> {
-  const overall = [] as VelocityData;
-  const includedTasks = {} as Record<string, RecurringTaskData>;
-  const months = await db.query.month.findMany({});
-  if (!months) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "No data" });
-  }
-
-  // Velocity data
-  for (const month of months) {
-    const tasks = categoryId
-      ? await db.query.task.findMany({
-          where: and(
-            eq(schema.task.monthId, month.id),
-            eq(schema.task.categoryId, categoryId)
-          ),
-        })
-      : await db.query.task.findMany({
-          where: eq(schema.task.monthId, month.id),
-        });
-    let completed = 0;
-    let committed = 0;
-
-    const where = categoryId
-      ? and(
-          eq(schema.task.monthId, month.id),
-          eq(schema.task.categoryId, categoryId)
-        )
-      : eq(schema.task.monthId, month.id);
-
-    const rows = await db
-      .select({
-        taskId: schema.task.id,
-        storyPoints: schema.task.storyPoints,
-        targetCount: schema.task.targetCount,
-        templateTaskId: schema.task.templateTaskId,
-        completionCount: sql<number>`count(${schema.taskCompletion.id})`,
-      })
-      .from(schema.task)
-      .leftJoin(
-        schema.taskCompletion,
-        eq(schema.task.id, schema.taskCompletion.taskId)
-      )
-      .where(where)
-      .groupBy(schema.task.id);
-
-    for (const row of rows) {
-      completed += row.completionCount * row.storyPoints;
-      committed += row.targetCount * row.storyPoints;
-    }
-
-    for (const task of tasks) {
-      const completions = await db.query.taskCompletion.findMany({
-        where: eq(schema.taskCompletion.taskId, task.id),
-      });
-      completed += completions.length * task.storyPoints;
-      committed += task.targetCount * task.storyPoints;
-      if (task.templateTaskId) {
-        const templateTask = await db.query.templateTask.findFirst({
-          where: eq(schema.templateTask.id, task.templateTaskId),
-        });
-        if (!templateTask) {
-          continue;
-        }
-        if (!includedTasks[task.templateTaskId]) {
-          includedTasks[task.templateTaskId] = {
-            templateTask,
-            history: [],
-          };
-        }
-
-        includedTasks[templateTask.id].history.push({
-          monthId: month.id,
-          name: month.name,
-          completed: completions.length * task.storyPoints,
-          committed: task.targetCount * task.storyPoints,
-        });
-      }
-    }
-    overall.push({
-      monthId: month.id,
-      name: month.name,
-      completed,
-      committed,
-    });
-  }
-  return [overall, includedTasks];
-}
-
 export const RecurringTask = type({ id: "string", targetCount: "number" });
 export const StartCycleType = type({
   recurringTasks: RecurringTask.array(),
@@ -374,6 +283,7 @@ export const appRouter = router({
       with: {
         taskUsers: { with: { user: true } },
         taskCompletions: true,
+        taskSchedules: true,
       },
     });
     return output;
@@ -458,6 +368,7 @@ export const appRouter = router({
         with: {
           taskUsers: { with: { user: true } },
           taskCompletions: true,
+          taskSchedules: true,
         },
       });
       if (output === undefined) {
@@ -491,6 +402,7 @@ export const appRouter = router({
       const tasks = await db.query.task.findMany({
         with: {
           taskCompletions: true,
+          taskSchedules: true,
           taskUsers: {
             with: {
               user: { columns: { id: true } },
@@ -586,7 +498,7 @@ export const appRouter = router({
           targetCount: "number",
           userIds: "string[]",
           monthId: "string | null",
-          categoryId: "string",
+          categoryId: "string | null",
           isFocused: "1 | 0",
         }),
       })
@@ -638,7 +550,7 @@ export const appRouter = router({
         .where(eq(schema.taskUser.taskId, input.taskId))
         .run();
       db.delete(schema.task).where(eq(schema.task.id, input.taskId)).run();
-      // todo: delete compltions
+      // todo: delete completions
       clearCache("currentTaskIds");
       return { success: true };
     }),
@@ -663,15 +575,25 @@ export const appRouter = router({
       clearCache("templateTaskIds");
       return { success: true };
     }),
+  scheduleTasks: publicProcedure
+    .input(type({ taskId: "string", info: UserAndDateStrings.array() }))
+    .mutation(async ({ input }) => {
+      const { taskId, info } = input;
+      // TODO, finish this work
+    }),
   completeTasks: publicProcedure
     .input(type({ taskId: "string", info: UserAndDateStrings.array() }))
     .mutation(async ({ input }) => {
+      // TODO: ENSURE THERE ARE NO *FUTURE* TASK-COMPLETIONS
+      // OR CONVERT THEM INTO SCHEDULES.
+
       // We expect that this is the canonical list
       // of taskCompletions for this task. So we therefore
       // have to remove all existing ones first and validate
       // that this is not MORE taskCompletions than the
       // task requires (fewer is okay)
       const { taskId, info } = input;
+      // TODO: Find the nearest taskSchedule when completing.
       const task = await db.query.task.findFirst({
         where: eq(schema.task.id, taskId),
       });
@@ -729,6 +651,7 @@ export const appRouter = router({
       const completions = await db.query.taskCompletion.findMany({
         where: eq(schema.taskCompletion.taskId, input.taskId),
       });
+      // TODO: Grab the nearest schedule and complete it.
 
       if (completions.length >= task.targetCount) {
         throw new TRPCError({
@@ -757,7 +680,6 @@ export const appRouter = router({
         })
         .run();
 
-      console.log("------------------------------- G", id);
       clearCache("currentTaskAtom", input.taskId);
       return;
     }),
