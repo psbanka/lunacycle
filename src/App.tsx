@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import { trpc } from "./api";
 import { useToast } from "@/components/ui/use-toast";
 import { clearCache } from "@/atoms";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -165,7 +166,9 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <AppCore />
+                <ErrorBoundary>
+                  <AppCore />
+                </ErrorBoundary>
               </BrowserRouter>
             </AuthProvider>
           </ThemeProvider>
