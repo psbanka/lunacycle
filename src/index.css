@@ -15,6 +15,10 @@
   }
 }
 
+.bold-border {
+  border-color: hsl(var(--secondary-foreground)) !important;
+}
+
 @theme {
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));

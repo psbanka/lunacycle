@@ -126,7 +126,7 @@ export function DatePicker({
     return { before: new Date(startDate), after: new Date(endDate) };
   }, [startDate, endDate]);
 
-  const modifiers = activeDate ? { active: activeDate } : undefined
+  const modifiers = activeDate ? { active: [activeDate] } : undefined
 
   return (
     <div onClick={swallowClicks}>
@@ -147,7 +147,7 @@ export function DatePicker({
             "overflow-y-auto", // Ensure content can scroll
             isMobile
               ? "h-screen w-screen max-w-full fixed top-0 left-0 m-0 p-4 rounded-none border-none translate-x-0 translate-y-0 data-[state=open]:animate-none data-[state=closed]:animate-none"
-              : "sm:max-w-4xl mx-auto"
+              : "sm:max-w-5xl mx-auto"
           )}>
           <DialogHeader>
             <h1 className="text-center text-xl font-semibold">
@@ -163,10 +163,11 @@ export function DatePicker({
               onMonthChange={setDisplayMonth}
               numberOfMonths={isMobile ? 1 : 2}
               selected={selected}
+              modifiers={modifiers}
               onSelect={handleSelect}
               disabled={disabledDays}
               modifiersClassNames={{
-                active: "border-2 border-primary",
+                active: "bold-border",
               }}
               className={cn(
                 "flex justify-center",
