@@ -8,6 +8,11 @@ import { fakerEN } from "@faker-js/faker";
 import { getLunarPhase } from "../shared/lunarPhase.ts";
 import { clearCache } from "./events";
 
+export const UserAndDateString = type({
+  userId: "string | null",
+  timestamp: "string",
+});
+
 type TaskCreationProps = Omit<schema.Task, "id" | "createdAt" | "monthId"> & {
   userIds: string[];
   categoryId: string;
@@ -54,6 +59,127 @@ export async function createTaskWithCategoryAndAssignments(
       .run();
   }
   return taskRecord;
+}
+
+async function getUserOrAdmin(userId: string | null | undefined) {
+  const user = userId
+    ? await db.query.user.findFirst({
+        where: eq(schema.user.id, userId),
+      })
+    : await db.query.user.findFirst({
+        where: eq(schema.user.email, "admin@example.com"),
+      });
+  if (user == null) {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+  return user;
+}
+
+const UserAndDateStringArray = UserAndDateString.array();
+
+export async function completeTasks(taskId: string, info: typeof UserAndDateStringArray.infer) {
+  const now = new Date();
+  const futureCompletions = info.find((i) => 
+    new Date(i.timestamp) > now ? true : false
+  );
+  if (futureCompletions) {
+    throw new TRPCError({
+      message: "Completion dates cannot be in the future",
+      code: "BAD_REQUEST",
+    });
+  }
+
+  // We expect that this is the canonical list
+  // of taskCompletions for this task. So we therefore
+  // have to remove all existing ones first and validate
+  // that this is not MORE taskCompletions than the
+  // task requires (fewer is okay)
+  // TODO: Find the nearest taskSchedule when completing.
+  const task = await db.query.task.findFirst({
+    where: eq(schema.task.id, taskId),
+  });
+  if (task === undefined) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Task not found",
+    });
+  }
+  const maxCompletions = task.targetCount;
+  if (info.length > maxCompletions) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Completions exceeds targetGoal",
+    });
+  }
+  await db
+    .delete(schema.taskCompletion)
+    .where(eq(schema.taskCompletion.taskId, taskId))
+    .run();
+
+  for (const { userId, timestamp } of info) {
+    await completeTask(taskId, timestamp, userId);
+  }
+}
+
+export async function completeTask(taskId: string, completedAt?: string, userId?: string | null) {
+  completedAt = completedAt ? completedAt : new Date().toISOString();
+  const completedDate = new Date(completedAt);
+
+  const user = await getUserOrAdmin(userId);
+  const task = await db.query.task.findFirst({
+    where: eq(schema.task.id, taskId),
+  });
+  if (!task) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
+  }
+  const completions = await db.query.taskCompletion.findMany({
+    where: eq(schema.taskCompletion.taskId, taskId),
+  });
+  if (completions.length >= task.targetCount) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Task already completed",
+    });
+  }
+
+  const schedules = await db.query.taskSchedule.findMany({
+    where: eq(schema.taskSchedule.taskId, taskId),
+  });
+  let scheduleId: string | null = null;
+
+  // Find a schedule with the same date as the completion
+  // If found, set the schedule Id.
+  for (const schedule of schedules) {
+    const scheduleDate = new Date(schedule.scheduledFor);
+    // strip the time from scheduleDate and completedDate and see if they are the same
+    if (
+      scheduleDate.getDate() === completedDate.getDate() &&
+      scheduleDate.getMonth() === completedDate.getMonth() &&
+      scheduleDate.getFullYear() === completedDate.getFullYear()
+    ) {
+      scheduleId = schedule.id;
+      await db.update(schema.taskSchedule)
+        .set({ status: "done" })
+        .where(eq(schema.taskSchedule.id, schedule.id))
+        .run();
+      break;
+    }
+  }
+
+  // TODO: make sure that when this function throws an exception
+  // that it gets caught by the frontend.
+  // TODO: Throw an exception if the task already has a completion for today.
+  // throw new TRPCError({ code: "FORBIDDEN" })
+  const id = fakerEN.string.uuid();
+  await db.insert(schema.taskCompletion)
+    .values({
+      id,
+      taskId: task.id,
+      userId: user.id,
+      completedAt: completedAt as schema.ISO18601,
+      scheduleId,
+    })
+    .run();
 }
 
 type TaskModificationProps = Omit<

@@ -14,8 +14,11 @@ import * as schema from "./schema";
 import {
   addTask,
   addTemplateTask,
+  completeTask,
+  completeTasks,
   updateTemplateTaskWithCategoryAndAssignments,
   updateTaskWithCategoryAndAssignments,
+  UserAndDateString,
 } from "./updateTasks.ts";
 import {
   addUser,
@@ -126,11 +129,6 @@ export const RecurringTask = type({ id: "string", targetCount: "number" });
 export const StartCycleType = type({
   recurringTasks: RecurringTask.array(),
   backlogTasks: "string[]",
-});
-
-const UserAndDateStrings = type({
-  userId: "string | null",
-  completedAt: "string",
 });
 
 export type UserShape = {
@@ -576,24 +574,20 @@ export const appRouter = router({
       return { success: true };
     }),
   scheduleTasks: publicProcedure
-    .input(type({ taskId: "string", info: UserAndDateStrings.array() }))
+    .input(type({ taskId: "string", info: UserAndDateString.array() }))
     .mutation(async ({ input }) => {
       const { taskId, info } = input;
+      const now = new Date();
+      const pastSchedules = info.find((info) =>
+        new Date(info.timestamp) < now ? true : false
+      );
+      if (pastSchedules) {
+        throw new TRPCError({
+          message: "Scheduled dates cannot be in the past",
+          code: "BAD_REQUEST",
+        });
+      }
       // TODO, finish this work
-    }),
-  completeTasks: publicProcedure
-    .input(type({ taskId: "string", info: UserAndDateStrings.array() }))
-    .mutation(async ({ input }) => {
-      // TODO: ENSURE THERE ARE NO *FUTURE* TASK-COMPLETIONS
-      // OR CONVERT THEM INTO SCHEDULES.
-
-      // We expect that this is the canonical list
-      // of taskCompletions for this task. So we therefore
-      // have to remove all existing ones first and validate
-      // that this is not MORE taskCompletions than the
-      // task requires (fewer is okay)
-      const { taskId, info } = input;
-      // TODO: Find the nearest taskSchedule when completing.
       const task = await db.query.task.findFirst({
         where: eq(schema.task.id, taskId),
       });
@@ -603,19 +597,13 @@ export const appRouter = router({
           message: "Task not found",
         });
       }
-      const maxCompletions = task.targetCount;
-      if (info.length > maxCompletions) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Completions exceeds targetGoal",
-        });
-      }
+
       await db
-        .delete(schema.taskCompletion)
-        .where(eq(schema.taskCompletion.taskId, taskId))
+        .delete(schema.taskSchedule)
+        .where(eq(schema.taskSchedule.taskId, taskId))
         .run();
 
-      for (const { userId, completedAt } of info) {
+      for (const { userId, timestamp } of info) {
         const user = userId
           ? await db.query.user.findFirst({
               where: eq(schema.user.id, userId),
@@ -627,61 +615,33 @@ export const appRouter = router({
           throw new TRPCError({ code: "FORBIDDEN" });
         }
         const id = fakerEN.string.uuid();
-        db.insert(schema.taskCompletion)
+        db.insert(schema.taskSchedule)
           .values({
             id,
             taskId,
-            userId: user.id,
-            completedAt: completedAt as schema.ISO18601,
+            status: "scheduled",
+            scheduledByUserId: user.id,
+            scheduledFor: timestamp as schema.ISO18601,
           })
           .run();
       }
       clearCache("currentTaskAtom", input.taskId);
       return { success: true };
     }),
+  completeTasks: publicProcedure
+    .input(type({ taskId: "string", info: UserAndDateString.array() }))
+    .mutation(async ({ input }) => {
+      const { taskId, info } = input;
+      await completeTasks(taskId, info);
+      clearCache("currentTaskAtom", input.taskId);
+      return { success: true };
+    }),
   completeTask: publicProcedure
     .input(type({ taskId: "string" }))
     .mutation(async ({ input }) => {
-      const task = await db.query.task.findFirst({
-        where: eq(schema.task.id, input.taskId),
-      });
-      if (!task) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
-      }
-      const completions = await db.query.taskCompletion.findMany({
-        where: eq(schema.taskCompletion.taskId, input.taskId),
-      });
-      // TODO: Grab the nearest schedule and complete it.
-
-      if (completions.length >= task.targetCount) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Task already completed",
-        });
-      }
-      const adminUser = await db.query.user.findFirst({
-        where: eq(schema.user.email, "admin@example.com"),
-      });
-      if (adminUser == null) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      // TODO: make sure that when this function throws an exception
-      // that it gets caught by the frontend.
-      // TODO: Throw an exception if the task already has a completion for today.
-      // throw new TRPCError({ code: "FORBIDDEN" })
-      const completedAt = new Date().toISOString();
-      const id = fakerEN.string.uuid();
-      db.insert(schema.taskCompletion)
-        .values({
-          id,
-          taskId: task.id,
-          userId: adminUser.id,
-          completedAt: completedAt as schema.ISO18601,
-        })
-        .run();
-
-      clearCache("currentTaskAtom", input.taskId);
-      return;
+      return completeTask(input.taskId).then(() => {
+        clearCache("currentTaskAtom", input.taskId);
+      })
     }),
   onMessage: publicProcedure.subscription(() => {
     return observable<{ message: string }>((emit) => {

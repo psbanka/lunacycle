@@ -1,6 +1,7 @@
 import { DayPicker } from "react-day-picker";
 import type { ISO18601 } from "server/schema";
 import { CalendarPlus } from "lucide-react";
+import { type TaskCompletion, type TaskSchedule } from "../../server/schema";
 import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +21,8 @@ import useLunarPhase from "@/hooks/useLunarPhase";
 function convertToDates(
   startDate: ISO18601,
   endDate: ISO18601,
-  taskCompletions: TaskCompletion[]
+  taskCompletions: TaskCompletion[],
+  taskSchedules: TaskSchedule[]
 ) {
   if (!startDate || !endDate) return;
 
@@ -30,21 +32,21 @@ function convertToDates(
     let completionDate = new Date(completion.completedAt);
     processedDates.push(completionDate);
   }
+  for (const schedule of taskSchedules) {
+    let scheduledDate = new Date(schedule.scheduledFor);
+    processedDates.push(scheduledDate);
+  }
   return processedDates;
 }
 
 // ======================================= COMPONENT
-
-type TaskCompletion = {
-  userId: string | null;
-  completedAt: ISO18601;
-};
 
 type DatePickerProps = {
   targetCount: number;
   isScheduled: boolean;
   isCompleted: boolean;
   taskCompletions: TaskCompletion[];
+  taskSchedules: TaskSchedule[];
   onSave: (dates: Date[]) => void;
   taskId?: string;
 };
@@ -54,6 +56,7 @@ export function DatePicker({
   isScheduled,
   isCompleted,
   taskCompletions,
+  taskSchedules,
   onSave,
   taskId,
 }: DatePickerProps) {
@@ -72,12 +75,12 @@ export function DatePicker({
 
   const handleCancel = () => {
     // Just re-run default setup
-    const processedDates = convertToDates(startDate, endDate, taskCompletions);
+    const processedDates = convertToDates(startDate, endDate, taskCompletions, taskSchedules);
     setSelected(processedDates);
   };
 
   useEffect(() => {
-    const processedDates = convertToDates(startDate, endDate, taskCompletions);
+    const processedDates = convertToDates(startDate, endDate, taskCompletions, taskSchedules);
     if (processedDates === undefined) return;
     setSelected(processedDates);
 

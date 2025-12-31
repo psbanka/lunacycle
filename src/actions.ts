@@ -65,6 +65,12 @@ export const completeTasks = async (props: CompleteTasksProps) => {
   toast.success("Progress updated!");
 };
 
+export type ScheduleTasksProps = inferProcedureInput<AppRouter["scheduleTasks"]>
+export const scheduleTasks = async (props: ScheduleTasksProps) => {
+  await trpcClient.scheduleTasks.mutate(props);
+  toast.success("Tasks scheduled!");
+};
+
 export type AddTaskProps = inferProcedureInput<AppRouter["addTask"]>
 export const addTask = async (props: AddTaskProps) => {
   await trpcClient.addTask.mutate({

@@ -19,6 +19,8 @@ import {
 import {
   completeTask,
   completeTasks,
+  scheduleTasks,
+  type ScheduleTasksProps,
   type CompleteTasksProps,
 } from "@/actions";
 
@@ -64,12 +66,23 @@ export default function TaskCard({
     completeTask(taskId);
   };
 
-  const handleCompletionSave = (dates: Date[]) => {
-    const info: CompleteTasksProps["info"] = dates.map((date) => ({
-      userId: null,
-      completedAt: date.toISOString(),
-    }));
-    completeTasks({ taskId, info });
+  const handleCompletionSave = async (dates: Date[]) => {
+    const now = new Date()
+    const completedTasks: CompleteTasksProps["info"] = dates
+      .filter((date) => date <= now)
+      .map((date) => ({
+        userId: null,
+        timestamp: date.toISOString(),
+      }));
+
+    const futureTasks: ScheduleTasksProps["info"] = dates
+      .filter((date) => date > now)
+      .map((date) => ({
+        userId: null,
+        timestamp: date.toISOString(),
+      }));
+    await completeTasks({ taskId, info: completedTasks });
+    await scheduleTasks({ taskId, info: futureTasks });
   };
 
   const handleEditClick = () => {
@@ -176,9 +189,13 @@ export default function TaskCard({
                   ...c,
                   completedAt: c.completedAt as ISO18601,
                 }))}
-                onSave={handleCompletionSave}
+                taskSchedules={task.value.taskSchedules.map((s) => ({
+                  ...s,
+                  scheduledFor: s.scheduledFor as ISO18601,
+                }))}
                 isScheduled={isScheduled}
                 isCompleted={isCompleted}
+                onSave={handleCompletionSave}
               />
             </div>
           )}

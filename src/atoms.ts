@@ -198,13 +198,8 @@ export const taskSchedules = selectorFamily<Loadable<number>, string, Error>({
     if (task instanceof Error) {
       throw new TRPCError({ code: "NOT_FOUND", message: "no tasks found" });
     }
-    const completions = task.taskCompletions
-    const now = new Date()
-    const futureCompletions = completions
-      .map((completion) => new Date(completion.completedAt))
-      .filter((completionDate) => now < completionDate)
-
-    return futureCompletions.length
+    const schedules = task.taskSchedules
+    return schedules.length
   }
 })
 

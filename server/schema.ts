@@ -112,6 +112,8 @@ export const taskCompletion = sqliteTable("task_completion", {
     .references(() => taskSchedule.id),
 });
 
+export type TaskCompletion = typeof taskCompletion.$inferSelect;
+
 export const taskCompletionRelations = relations(taskCompletion, ({ one }) => ({
   task: one(task, {
     fields: [taskCompletion.taskId],
@@ -154,6 +156,8 @@ export const taskSchedule = sqliteTable("task_schedule", {
   externalCalendarEventId: text("external_calendar_event_id"),
   lastSyncedAt: timestamp("last_synced_at"),
 });
+
+export type TaskSchedule = typeof taskSchedule.$inferSelect;
 
 export const taskScheduleRelations = relations(taskSchedule, ({ one, many }) => ({
   task: one(task, {
