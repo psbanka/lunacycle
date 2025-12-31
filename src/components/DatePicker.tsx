@@ -1,6 +1,7 @@
 import { DayPicker } from "react-day-picker";
 import type { ISO18601 } from "server/schema";
 import { CalendarPlus } from "lucide-react";
+import { DateTimeList } from "@/components/DateTimeList";
 import { type TaskCompletion, type TaskSchedule } from "../../server/schema";
 import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -62,20 +63,38 @@ export function DatePicker({
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Date[]>();
+  const [activeDate, setActiveDate] = useState<Date | undefined>();
+  const [displayMonth, setDisplayMonth] = useState<Date>();
   const [variant, setVariant] = useState<"ghost" | "outline" | "destructive">(
     "ghost"
   );
 
   const { startDate, endDate } = useLunarPhase();
 
+  const handleSelect = (newDates: Date[] | undefined) => {
+    if (newDates == undefined) return
+    // Find the newly added date by comparing with the previous state
+    if (newDates.length > (selected?.length || 0)) {
+      const oldDateTimes = new Set(selected?.map(d => d.getTime()));
+      const newlyAddedDate = newDates.find(d => !oldDateTimes.has(d.getTime()));
+      setActiveDate(newlyAddedDate);
+    } else {
+      // A date was removed, so no date should be active
+      setActiveDate(undefined);
+    }
+    setSelected(newDates);
+  }
+
   const handleSave = () => {
     if (selected === undefined) return;
+    setActiveDate(undefined);
     onSave(selected);
   };
 
   const handleCancel = () => {
     // Just re-run default setup
     const processedDates = convertToDates(startDate, endDate, taskCompletions, taskSchedules);
+    setActiveDate(undefined);
     setSelected(processedDates);
   };
 
@@ -83,6 +102,7 @@ export function DatePicker({
     const processedDates = convertToDates(startDate, endDate, taskCompletions, taskSchedules);
     if (processedDates === undefined) return;
     setSelected(processedDates);
+    setDisplayMonth(new Date(startDate));
 
     const variant = isCompleted
       ? "ghost"
@@ -90,7 +110,7 @@ export function DatePicker({
       ? "outline"
       : "destructive";
     setVariant(variant);
-  }, [taskCompletions, startDate, endDate]);
+  }, [taskCompletions, startDate, endDate, isCompleted, isScheduled]);
 
   function onOpenChange() {
     setOpen(!open);
@@ -106,7 +126,7 @@ export function DatePicker({
     return { before: new Date(startDate), after: new Date(endDate) };
   }, [startDate, endDate]);
 
-  const startMonth = useMemo(() => new Date(startDate), [startDate]);
+  const modifiers = activeDate ? { active: activeDate } : undefined
 
   return (
     <div onClick={swallowClicks}>
@@ -127,31 +147,40 @@ export function DatePicker({
             "overflow-y-auto", // Ensure content can scroll
             isMobile
               ? "h-screen w-screen max-w-full fixed top-0 left-0 m-0 p-4 rounded-none border-none translate-x-0 translate-y-0 data-[state=open]:animate-none data-[state=closed]:animate-none"
-              : "sm:max-w-3xl mx-auto"
+              : "sm:max-w-4xl mx-auto"
           )}>
           <DialogHeader>
             <h1 className="text-center text-xl font-semibold">
               Select up to {targetCount} days
             </h1>
           </DialogHeader>
-          <DayPicker
-            mode="multiple"
-            min={1}
-            max={targetCount}
-            month={startMonth}
-            numberOfMonths={2}
-            selected={selected}
-            onSelect={(dates) => setSelected(dates)}
-            disabled={disabledDays}
-            modifiers={{ future: (date) => date > new Date() }}
-            modifiersClassNames={{
-              future: "rdp-day_future",
-            }}
-            className={cn(
-              "flex justify-center",
-              isMobile && "[&_.rdp-months]:flex-col"
-            )}
-          />
+          <div className="sm:flex">
+            <DayPicker
+              mode="multiple"
+              min={1}
+              max={targetCount}
+              month={displayMonth}
+              onMonthChange={setDisplayMonth}
+              numberOfMonths={isMobile ? 1 : 2}
+              selected={selected}
+              onSelect={handleSelect}
+              disabled={disabledDays}
+              modifiersClassNames={{
+                active: "border-2 border-primary",
+              }}
+              className={cn(
+                "flex justify-center",
+                isMobile && "[&_.rdp-months]:flex-col"
+              )}
+            />
+            <DateTimeList
+              isMobile={isMobile}
+              selectedDates={selected || []}
+              onDatesChange={setSelected}
+              activeDate={activeDate}
+              onActiveDateChange={setActiveDate}
+            />
+          </div>
           <DialogClose asChild>
             <div className="flex flex-row">
               <Button
