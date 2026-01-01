@@ -3,7 +3,9 @@ import { trpcClient } from "./trpc-client-service";
 import { TRPCError, inferProcedureOutput } from "@trpc/server";
 import { atom, atomFamily } from "atom.io";
 import { type CacheArg, type CacheKey } from "../server/events";
+import { addHours } from "date-fns";
 import type { AppRouter } from "../server/index";
+import type { EventInput } from '@fullcalendar/core';
 import type {
   ISO18601,
 } from "../server/schema";
@@ -89,7 +91,6 @@ function setCategoryPlaceholder(categoryId: string, category: ServerGetCategory)
 }
 
 // = CONSTANTS ========================================================
-
 
 export const EMPTY_MONTH: ServerActiveMonth = {
   id: "",
@@ -314,6 +315,44 @@ export const backlogTasksByCategoryIdAtom = selectorFamily<
       return output;
     },
 });
+
+export const calendarEntriesSelector = selector<Loadable<EventInput[]>, Error>({
+  key: `calendarEntries`,
+  get: async ({ get }) => {
+    const currentTaskIds = await get(currentTaskIdsAtom);
+    if (currentTaskIds instanceof Error) {
+      // TODO
+      return [];
+    }
+    const output: EventInput[] = [];
+    for (const taskId of currentTaskIds) {
+      const task = await get(currentTasksAtom, taskId);
+      if (task instanceof Error) {
+        continue;
+      }
+      for (const schedule of task.taskSchedules) {
+        output.push({
+          id: task.id,
+          title: task.title,
+          start: schedule.scheduledFor,
+          end: addHours(new Date(schedule.scheduledFor), 1).toISOString(),
+        });
+      }
+      for (const completion of task.taskCompletions) {
+        output.push({
+          id: task.id,
+          title: task.title,
+          start: completion.completedAt,
+          end: addHours(new Date(completion.completedAt), 1).toISOString(),
+        });
+      }
+    }
+    
+    return output;
+  },
+});
+
+
 
 // - CATEGORIES -------------------------------------------------------
 
