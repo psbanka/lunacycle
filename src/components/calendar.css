@@ -1,0 +1,32 @@
+:root {
+  --fc-border-color: var(--color-primary);
+  --fc-daygrid-day-bg-color: var(--color-primary);
+  --fc-list-event-hover-bg-color: var(--color-destructive); /* gray-700 */
+}
+
+.fc .fc-toolbar-title {
+  color: var(--color-foreground);
+}
+
+.fc .fc-col-header-cell-cushion {
+  color: var(--color-primary);
+}
+
+.fc .fc-daygrid-day-number {
+  color: var(--color-primary);
+}
+
+.fc .fc-button {
+  background-color: var(--color-background);
+  color: var(--color-primary);
+  border: 1px solid #4b5563; /* gray-600 */
+}
+
+.fc .fc-button:hover {
+  background-color: #4b5563; /* gray-600 */
+}
+
+.fc .fc-button-primary:disabled {
+    background-color: #374151;
+    color: #6b7280;
+}

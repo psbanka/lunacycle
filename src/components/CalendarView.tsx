@@ -4,13 +4,8 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import type { EventInput, DateSelectArg, EventClickArg } from '@fullcalendar/core';
 import { useLoadable } from "atom.io/react";
+import './calendar.css';
 import { calendarEntriesSelector } from "@/atoms";
-import { useEffect, useState } from 'react';
-
-
-const initialEvents: EventInput[] = [
-  { id: '1', title: 'All-day event', start: new Date().toISOString().slice(0, 10) },
-];
 
 export function CalendarView() {
   const calendarEntries = useLoadable(calendarEntriesSelector, []);
