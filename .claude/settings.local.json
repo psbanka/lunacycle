@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm dlx:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm build:client:*)",
+      "Bash(pnpm nx g:*)",
+      "Bash(git mv:*)",
+      "Bash(for file in server/*.ts)",
+      "Bash(do git mv \"$file\" apps/lunacycle-server/src/)",
+      "Bash(done)",
+      "Bash(timeout 5 pnpm nx serve:*)",
+      "Bash(timeout 5 bun run:*)",
+      "Bash(bun run:*)",
+      "Bash(pkill:*)",
+      "Bash(while read f)",
+      "Bash(do git mv \"$f\" \"apps/lunacycle-web/$f\")",
+      "Bash(pnpm nx build:*)",
+      "Bash(openssl rand:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(curl:*)",
+      "Bash(docker ps:*)",
+      "Bash(echo:*)",
+      "Bash(kill:*)",
+      "Bash(lsof:*)",
+      "Bash(find:*)",
+      "Bash(sqlite3:*)",
+      "Bash(timeout 10 pnpm vite:*)",
+      "Bash(chmod:*)",
+      "Bash(ls:*)",
+      "Bash(nx lint:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(grep:*)",
+      "Bash(pnpm check:*)"
+    ]
+  }
+}

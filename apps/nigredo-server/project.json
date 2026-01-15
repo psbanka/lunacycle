@@ -1,0 +1,40 @@
+{
+  "name": "nigredo-server",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/nigredo-server/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/nigredo-server",
+        "main": "apps/nigredo-server/src/index.ts",
+        "tsConfig": "apps/nigredo-server/tsconfig.json",
+        "assets": ["apps/nigredo-server/src/nigredo.sqlite"]
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun run src/index.ts --hot",
+        "cwd": "apps/nigredo-server"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/nigredo-server/**/*.ts"]
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "apps/nigredo-server"
+      }
+    }
+  }
+}

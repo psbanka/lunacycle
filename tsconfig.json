@@ -1,4 +1,5 @@
 {
+  "extends": "./tsconfig.base.json",
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
@@ -7,13 +8,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    },
-    "noImplicitAny": false,
-    "noUnusedParameters": false,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "noUnusedLocals": false,
-    "strictNullChecks": true
+      "@/*": ["./src/*"],
+      "@lunacycle/types": ["libs/shared/types/src/index.ts"],
+      "@lunacycle/lunar-phase": ["libs/shared/lunar-phase/src/index.ts"],
+      "@lunacycle/auth-client": ["libs/shared/auth-client/src/index.ts"]
+    }
   }
 }

@@ -32,3 +32,6 @@ repomix-output.xml
 *.tsbuildinfo
 
 backup/
+
+vite.config.*.timestamp*infrastructure/authentik/.env
+.nx/*
