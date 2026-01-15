@@ -25,6 +25,9 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@lunacycle/types": path.resolve(__dirname, "./libs/shared/types/src/index.ts"),
+      "@lunacycle/lunar-phase": path.resolve(__dirname, "./libs/shared/lunar-phase/src/index.ts"),
+      "@lunacycle/auth-client": path.resolve(__dirname, "./libs/shared/auth-client/src/index.ts"),
     },
   },
 }));
